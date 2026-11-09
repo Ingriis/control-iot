@@ -1,0 +1,20 @@
+# Local browser profiles, screenshots, probes, and temporary work
+work/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Dependencies, caches, and generated files
+node_modules/
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
