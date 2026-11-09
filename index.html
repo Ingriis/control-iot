@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=footer-20261108-1" />
+    <link rel="stylesheet" href="./styles.css?v=power-button-20261109-1" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -46,6 +46,12 @@
                   <div class="joystick" id="joystick" role="group" aria-label="Joystick: usa flechas del teclado o arrastra con el mouse o el dedo" tabindex="0"><div class="joy-base" data-direction="neutral"><img class="joy-base-art" src="./assets/joystick-base.png" alt="" /><div class="joy-neutral-sprite" aria-hidden="true"></div><div class="joy-direction-sprite" aria-hidden="true"></div><div class="joy-knob" id="joyKnob"><img class="joy-handle" src="./assets/joystick-handle.png" alt="" /></div></div></div>
                 </div>
                 <div class="stop-panel">
+                  <div class="power-control">
+                    <button class="power-button" id="powerButton" type="button" aria-label="Interruptor encender o apagar el vehículo" aria-pressed="false" disabled>
+                      <span class="power-lamp" aria-hidden="true"></span>
+                      <span class="power-label">ENCENDER/APAGAR</span>
+                    </button>
+                  </div>
                   <div class="stop-control">
                     <span class="stop-caption">PARO DE EMERGENCIA</span>
                     <div class="stop-bezel">

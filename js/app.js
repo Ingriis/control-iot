@@ -53,6 +53,22 @@ function activeCommandByName(name) {
   return commands.find((command) => command.nombre === name && Number(command.activo) === 1);
 }
 
+function getPowerCommand(isCurrentlyOn = false) {
+  if (isCurrentlyOn) {
+    const offCmd = activeCommandByName('APAGAR_AUTO') || activeCommandByName('APAGAR');
+    if (offCmd) return offCmd;
+  } else {
+    const onCmd = activeCommandByName('ENCENDER_AUTO') || activeCommandByName('ENCENDER');
+    if (onCmd) return onCmd;
+  }
+  return activeCommandByName('ENCENDER_AUTO')
+    || activeCommandByName('ENCENDER')
+    || activeCommandByName('ENCENDER_APAGAR')
+    || activeCommandByName('POWER')
+    || activeCommandByName('APAGAR_AUTO')
+    || activeCommandByName('APAGAR');
+}
+
 function directionsAvailable() {
   return ['AVANZAR', 'RETROCEDER', 'GIRAR_IZQUIERDA', 'GIRAR_DERECHA'].every((name) => activeCommandByName(name));
 }
@@ -60,7 +76,7 @@ function directionsAvailable() {
 function renderCommands() {
   const host = $('commandButtons');
   host.replaceChildren();
-  const special = new Set([...Object.values(names), 'LUCES', 'SONIDO']);
+  const special = new Set([...Object.values(names), 'LUCES', 'SONIDO', 'ENCENDER_AUTO', 'ENCENDER', 'APAGAR', 'APAGAR_AUTO', 'ENCENDER_APAGAR', 'POWER']);
   const available = commands.filter((item) => !special.has(item.nombre) && Number(item.activo) === 1);
   if (!available.length) {
     const note = document.createElement('p');
@@ -86,6 +102,7 @@ function renderCommands() {
 
 function updateControls() {
   const stopReady = Boolean(activeCommandByName('DETENER'));
+  const powerCmd = getPowerCommand($('powerButton')?.getAttribute('aria-pressed') === 'true');
   const joystickDisabled = !apiReady || !directionsAvailable() || demoRunning || commandPending;
   const forkJoystickDisabled = !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
   $('joystick').setAttribute('aria-disabled', String(joystickDisabled));
@@ -93,6 +110,8 @@ function updateControls() {
   $('forkJoystick').setAttribute('aria-disabled', String(forkJoystickDisabled));
   $('forkJoystick').classList.toggle('is-disabled', forkJoystickDisabled);
   if (!apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning) forkJoystick?.reset();
+  $('powerButton').disabled = !apiReady || !powerCmd || demoRunning || commandPending;
+  $('powerButton').title = powerCmd ? '' : 'El catálogo no contiene un comando de encendido/apagado activo.';
   $('stopButton').disabled = !apiReady || !stopReady;
   $('stopButton').title = stopReady ? '' : 'El catálogo no contiene un comando DETENER activo.';
   $('lightsButton').disabled = !apiReady || !activeCommandByName('LUCES') || demoRunning || commandPending;
@@ -288,6 +307,17 @@ async function toggleUtility(name, buttonId) {
   button.setAttribute('aria-label', `Interruptor de ${name === 'LUCES' ? 'luces' : 'sonido'}; indicador visual ${isOn ? 'encendido' : 'apagado'}. El vehículo no informa el estado físico.`);
 }
 
+async function togglePower() {
+  const button = $('powerButton');
+  const isCurrentlyOn = button.getAttribute('aria-pressed') === 'true';
+  const command = getPowerCommand(isCurrentlyOn);
+  if (!command) return;
+  if (!await sendCommand(command)) return;
+  const nextState = !isCurrentlyOn;
+  button.setAttribute('aria-pressed', String(nextState));
+  button.setAttribute('aria-label', `Interruptor encender o apagar; indicador visual ${nextState ? 'encendido' : 'apagado'}. El vehículo no informa el estado físico.`);
+}
+
 function handleDirection(name) {
   if (name === lastDirection && heldDirection === name) return;
   lastDirection = name;
@@ -390,6 +420,7 @@ async function boot() {
     onNeutral: () => { $('forkJoystickStatus').textContent = 'Control centrado · no se envió DETENER.'; },
     canMove: () => apiReady && Boolean(activeCommandByName(names.forkUp)) && Boolean(activeCommandByName(names.forkDown)) && !demoRunning && !commandPending,
   });
+  $('powerButton').addEventListener('click', togglePower);
   $('stopButton').addEventListener('click', requestStop);
   window.addEventListener('blur', requestStop);
   document.addEventListener('visibilitychange', () => { if (document.hidden) requestStop(); });
