@@ -10,14 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=power-button-20261109-1" />
+    <link rel="stylesheet" href="./styles.css?v=preconfigured-connection-20261111-1" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
     <div class="container-xl app-shell">
       <header class="topbar">
         <a class="brand" href="#main" aria-label="Montacargas IoT, inicio"><span class="brand-mark"><img class="brand-forklift" src="./assets/cow-forklift-favicon.png?v=1" alt="" /></span><span>montacargas<span class="brand-dot">.</span><small>CONTROL IoT</small></span></a>
-        <button class="icon-button" id="settingsButton" type="button" aria-label="Configurar conexión" title="Configurar conexión"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"/><path d="m19.4 13.5 1.1.8-1.4 2.4-1.3-.6a7.5 7.5 0 0 1-1.6.9l-.2 1.5h-2.8l-.2-1.5a7.5 7.5 0 0 1-1.6-.9l-1.3.6-1.4-2.4 1.1-.8a7.6 7.6 0 0 1 0-1.9l-1.1-.8 1.4-2.4 1.3.6a7.5 7.5 0 0 1 1.6-.9l.2-1.5h2.8l.2 1.5a7.5 7.5 0 0 1 1.6.9l1.3-.6 1.4 2.4-1.1.8a7.6 7.6 0 0 1 0 1.9Z" transform="translate(-1 -1)"/></svg></button>
       </header>
 
       <section class="connectivity" aria-label="Estado de los servicios">
@@ -46,10 +45,26 @@
                   <div class="joystick" id="joystick" role="group" aria-label="Joystick: usa flechas del teclado o arrastra con el mouse o el dedo" tabindex="0"><div class="joy-base" data-direction="neutral"><img class="joy-base-art" src="./assets/joystick-base.png" alt="" /><div class="joy-neutral-sprite" aria-hidden="true"></div><div class="joy-direction-sprite" aria-hidden="true"></div><div class="joy-knob" id="joyKnob"><img class="joy-handle" src="./assets/joystick-handle.png" alt="" /></div></div></div>
                 </div>
                 <div class="stop-panel">
-                  <div class="power-control">
-                    <button class="power-button" id="powerButton" type="button" aria-label="Interruptor encender o apagar el vehículo" aria-pressed="false" disabled>
-                      <span class="power-lamp" aria-hidden="true"></span>
-                      <span class="power-label">ENCENDER/APAGAR</span>
+                  <div class="top-control-row">
+                    <button class="speed-semaphore" id="speedButton" type="button" aria-label="Velocidad normal (Verde). Presiona para cambiar." data-speed="1" disabled title="Cambiar velocidad">
+                      <span class="semaphore-housing">
+                        <span class="semaphore-lamp red-lamp" aria-hidden="true"></span>
+                        <span class="semaphore-lamp green-lamp" aria-hidden="true"></span>
+                      </span>
+                      <span class="semaphore-caption">VEL</span>
+                    </button>
+                    <div class="power-control">
+                      <button class="power-button" id="powerButton" type="button" aria-label="Interruptor encender o apagar el vehículo" aria-pressed="false" disabled>
+                        <span class="power-lamp" aria-hidden="true"></span>
+                        <span class="power-label">ENCENDER/APAGAR</span>
+                      </button>
+                    </div>
+                    <button class="cruise-button" id="cruiseButton" type="button" aria-label="Modo crucero desactivado." aria-pressed="false" disabled title="Activar/desactivar crucero">
+                      <div class="cruise-header">
+                        <span class="cruise-led" aria-hidden="true"></span>
+                        <span class="cruise-caption">CRUCERO</span>
+                      </div>
+                      <span class="cruise-switch-lever" aria-hidden="true"></span>
                     </button>
                   </div>
                   <div class="stop-control">
@@ -63,13 +78,13 @@
                 </div>
                 <section class="fork-control">
                   <div class="fork-joystick-wrap">
+                    <span class="fork-direction-label fork-up" aria-hidden="true">▲</span>
+                    <span class="fork-direction-label fork-down" aria-hidden="true">▼</span>
                     <div class="fork-joystick" id="forkJoystick" role="group" aria-label="Joystick vertical de horquillas. Arriba para subir, abajo para bajar." aria-disabled="true" tabindex="0">
                       <div class="joy-base fork-joy-base" data-direction="neutral">
                         <img class="joy-base-art" src="./assets/joystick-base.png" alt="" />
                         <div class="joy-neutral-sprite" aria-hidden="true"></div>
                         <div class="joy-direction-sprite" aria-hidden="true"></div>
-                        <span class="fork-direction-label fork-up" aria-hidden="true">▲</span>
-                        <span class="fork-direction-label fork-down" aria-hidden="true">▼</span>
                         <div class="joy-knob" id="forkJoyKnob"><img class="joy-handle" src="./assets/joystick-handle.png" alt="" /></div>
                       </div>
                     </div>
@@ -78,12 +93,12 @@
                 </section>
                 </div>
                 <div class="utility-command-buttons" aria-label="Luces y sonido">
-                  <button class="utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces, estado desconocido" aria-pressed="mixed" disabled>
+                  <button class="utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces; indicador visual encendido." aria-pressed="true" disabled>
                     <span class="pixel-icon bulb-pixel-icon" aria-hidden="true"></span>
                     <span>LUCES</span>
                     <span class="switch-track" aria-hidden="true"></span>
                   </button>
-                  <button class="utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido, estado desconocido" aria-pressed="mixed" disabled>
+                  <button class="utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido; indicador visual encendido." aria-pressed="true" disabled>
                     <span class="pixel-icon speaker-pixel-icon" aria-hidden="true"></span>
                     <span>SONIDO</span>
                     <span class="switch-track" aria-hidden="true"></span>
@@ -117,17 +132,6 @@
 
       <footer class="app-footer"><span>CONTROL IoT · PANEL DE OPERACIÓN</span><span>Desarrollado por <strong>Ingrid Hernández Gómez</strong> · 2026</span></footer>
     </div>
-
-    <dialog id="settingsDialog" class="settings-dialog">
-      <form id="settingsForm" method="dialog">
-        <div class="dialog-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Conexión del vehículo</h2></div><button class="close-button" value="cancel" aria-label="Cerrar">×</button></div>
-        <label for="apiUrl" class="field-label">URL base HTTPS de la API</label><input id="apiUrl" class="form-control" type="url" required />
-        <label for="wsUrl" class="field-label mt-3">URL WSS del navegador</label><input id="wsUrl" class="form-control" type="url" required />
-        <label for="vehicleId" class="field-label mt-3">Identificador del vehículo</label><input id="vehicleId" class="form-control" type="number" min="1" step="1" required />
-        <p class="form-note mt-3">No agregues tokens ni credenciales privadas a esta página pública. El origen debe estar autorizado por CORS en la API.</p>
-        <div class="dialog-actions"><button class="cancel-button" value="cancel">Cancelar</button><button class="save-button" id="saveButton" value="default">Guardar y conectar</button></div>
-      </form>
-    </dialog>
     <script type="module" src="./js/app.js"></script>
   </body>
 </html>

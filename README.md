@@ -22,7 +22,7 @@ Esta entrega publica **el frontend** en GitHub Pages. La aplicación web consume
 - Controles de luces y sonido, cuando esos comandos están habilitados en el backend.
 - Consulta de comandos y secuencias DEMO disponibles; envío de solicitudes para ejecutar una DEMO.
 - Estado de la API, la base de datos y el WebSocket, además del resultado de solicitudes y eventos recibidos.
-- Ajustes de conexión para la URL de la API, la URL del WebSocket y el identificador del vehículo.
+- Conexión preconfigurada con la API, el WebSocket y el identificador del vehículo.
 
 Los controles que aparecen habilitados dependen de los comandos activos que reporte el backend.
 
@@ -42,7 +42,7 @@ Los controles que aparecen habilitados dependen de los comandos activos que repo
 ├── js/
 │   ├── api.js    Solicitudes REST al backend
 │   ├── app.js    Inicio, controles y estado de la interfaz
-│   ├── config.js Validación y almacenamiento local de ajustes
+│   ├── config.js Configuración predefinida y validación de URLs
 │   ├── joystick.js
 │   └── websocket.js
 ├── index.html    Estructura de la página
@@ -58,19 +58,13 @@ Con Python instalado, abre PowerShell en la carpeta del proyecto y ejecuta:
 py server.py
 ```
 
-Después abre <http://127.0.0.1:5502>. Para probar las funciones conectadas, configura en el engrane una API de desarrollo accesible y su URL WSS correspondiente.
+Después abre <http://127.0.0.1:5502>. La configuración actual apunta al backend predefinido del proyecto; no uses la vista local para enviar comandos si no quieres conectarte a ese backend.
 
-## Configurar la conexión
+## Configuración de conexión y seguridad
 
-Abre el engrane de ajustes e introduce:
+La URL HTTPS de la API, la URL WSS y el identificador del vehículo están preconfigurados en `js/config.js`; no hay que ingresarlos desde la página. Para apuntar a otro entorno, cambia esos valores en el archivo y vuelve a publicar.
 
-1. La URL base HTTPS de la API.
-2. La URL WSS del navegador, incluida la ruta WebSocket del vehículo.
-3. El identificador del vehículo que existe en el backend.
-
-Los ajustes se guardan en el almacenamiento local del navegador. Los valores iniciales apuntan a loopback (`127.0.0.1`) para evitar publicar la dirección privada del servidor. No agregues direcciones privadas, API keys ni otras credenciales a este repositorio.
-
-Para conectar desde GitHub Pages, el backend debe estar disponible por HTTPS/WSS y autorizar el origen `https://ingriis.github.io`. La API REST y el handshake WebSocket deben aceptar ese origen.
+Como GitHub Pages entrega JavaScript al navegador, las direcciones del backend son visibles en el repositorio y en las solicitudes de red. No guardes API keys, contraseñas ni otros secretos en este frontend. El backend debe estar disponible por HTTPS/WSS y autorizar el origen `https://ingriis.github.io` para REST y WebSocket.
 
 ## Integración utilizada
 

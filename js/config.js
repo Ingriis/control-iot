@@ -1,19 +1,11 @@
 const DEFAULTS = {
-  apiBaseUrl: 'http://127.0.0.1:8000',
-  websocketUrl: 'ws://127.0.0.1:8000/ws/vehicles/1',
+  apiBaseUrl: 'https://vehiculo-iot-ingrid.duckdns.org',
+  websocketUrl: 'wss://vehiculo-iot-ingrid.duckdns.org/ws/vehicles/1',
   vehicleId: '1',
 };
 
 export function loadConfig() {
-  try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('rover.config') || '{}') };
-  } catch {
-    return { ...DEFAULTS };
-  }
-}
-
-export function saveConfig(config) {
-  localStorage.setItem('rover.config', JSON.stringify(config));
+  return { ...DEFAULTS };
 }
 
 export function validateConfig(config) {

@@ -1,5 +1,5 @@
 import { createApi } from './api.js';
-import { loadConfig, saveConfig, validateConfig } from './config.js';
+import { loadConfig, validateConfig } from './config.js';
 import { initJoystick, initVerticalJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 
@@ -8,7 +8,7 @@ const names = {
   forward: 'AVANZAR', backward: 'RETROCEDER', left: 'GIRAR_IZQUIERDA', right: 'GIRAR_DERECHA', stop: 'DETENER',
   forkUp: 'SUBIR_HORQUILLAS', forkDown: 'BAJAR_HORQUILLAS',
 };
-let config = validateConfig(loadConfig());
+const config = validateConfig(loadConfig());
 let api = createApi(config);
 let commands = [];
 let demos = [];
@@ -53,6 +53,10 @@ function activeCommandByName(name) {
   return commands.find((command) => command.nombre === name && Number(command.activo) === 1);
 }
 
+function isPoweredOn() {
+  return $('powerButton')?.getAttribute('aria-pressed') === 'true';
+}
+
 function getPowerCommand(isCurrentlyOn = false) {
   if (isCurrentlyOn) {
     const offCmd = activeCommandByName('APAGAR_AUTO') || activeCommandByName('APAGAR');
@@ -69,6 +73,53 @@ function getPowerCommand(isCurrentlyOn = false) {
     || activeCommandByName('APAGAR');
 }
 
+let currentSpeedState = 1; // 1: Verde (normal), 2: Verde y Rojo (medio), 3: Rojo (rápido)
+
+function updateSpeedVisual(state) {
+  const btn = $('speedButton');
+  if (!btn) return;
+  btn.dataset.speed = String(state);
+  const info = {
+    1: { name: 'Normal', lamps: 'Verde', next: 'Media (Verde y Rojo)' },
+    2: { name: 'Media', lamps: 'Verde y Rojo', next: 'Rápida (Rojo)' },
+    3: { name: 'Rápida', lamps: 'Rojo', next: 'Normal (Verde)' },
+  };
+  const current = info[state] || info[1];
+  btn.setAttribute('aria-label', `Velocidad: ${current.name} (${current.lamps}). Clic para cambiar a ${current.next}.`);
+  btn.title = `Velocidad ${current.name} (${current.lamps}) · Haz clic para cambiar a ${current.next}`;
+}
+
+function getSpeedCommand() {
+  return activeCommandByName('CAMBIAR_VELOCIDAD') || commands.find((c) => c.nombre?.includes('VELOCIDAD') && Number(c.activo) === 1);
+}
+
+function getCruiseCommand() {
+  return activeCommandByName('ACTIVAR_CRUCERO') || commands.find((c) => c.nombre?.includes('CRUCERO') && Number(c.activo) === 1);
+}
+
+async function handleSpeedCycle() {
+  if (!isPoweredOn()) return;
+  const cmd = getSpeedCommand();
+  if (!cmd) return;
+  if (!await sendCommand(cmd)) return;
+  currentSpeedState = (currentSpeedState % 3) + 1;
+  updateSpeedVisual(currentSpeedState);
+  const labels = { 1: 'NORMAL', 2: 'MEDIA', 3: 'RÁPIDA' };
+  $('driveText').textContent = `VELOCIDAD ${labels[currentSpeedState]}`;
+}
+
+async function handleCruiseToggle() {
+  if (!isPoweredOn()) return;
+  const cmd = getCruiseCommand();
+  if (!cmd) return;
+  if (!await sendCommand(cmd)) return;
+  const btn = $('cruiseButton');
+  const isCurrentlyOn = btn.getAttribute('aria-pressed') === 'true';
+  const nextState = !isCurrentlyOn;
+  btn.setAttribute('aria-pressed', String(nextState));
+  btn.setAttribute('aria-label', `Modo crucero ${nextState ? 'activado' : 'desactivado'}.`);
+}
+
 function directionsAvailable() {
   return ['AVANZAR', 'RETROCEDER', 'GIRAR_IZQUIERDA', 'GIRAR_DERECHA'].every((name) => activeCommandByName(name));
 }
@@ -76,7 +127,12 @@ function directionsAvailable() {
 function renderCommands() {
   const host = $('commandButtons');
   host.replaceChildren();
-  const special = new Set([...Object.values(names), 'LUCES', 'SONIDO', 'ENCENDER_AUTO', 'ENCENDER', 'APAGAR', 'APAGAR_AUTO', 'ENCENDER_APAGAR', 'POWER']);
+  const special = new Set([
+    ...Object.values(names),
+    'LUCES', 'SONIDO',
+    'ENCENDER_AUTO', 'ENCENDER', 'APAGAR', 'APAGAR_AUTO', 'ENCENDER_APAGAR', 'POWER',
+    'CAMBIAR_VELOCIDAD', 'ACTIVAR_CRUCERO'
+  ]);
   const available = commands.filter((item) => !special.has(item.nombre) && Number(item.activo) === 1);
   if (!available.length) {
     const note = document.createElement('p');
@@ -85,11 +141,12 @@ function renderCommands() {
     host.append(note);
     return;
   }
+  const powered = isPoweredOn();
   for (const command of available) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'command-button';
-    button.disabled = demoRunning || commandPending;
+    button.disabled = !powered || demoRunning || commandPending || !apiReady;
     const title = document.createElement('strong');
     title.textContent = String(command.nombre).replaceAll('_', ' ');
     const description = document.createElement('small');
@@ -101,24 +158,38 @@ function renderCommands() {
 }
 
 function updateControls() {
+  const powered = isPoweredOn();
   const stopReady = Boolean(activeCommandByName('DETENER'));
-  const powerCmd = getPowerCommand($('powerButton')?.getAttribute('aria-pressed') === 'true');
-  const joystickDisabled = !apiReady || !directionsAvailable() || demoRunning || commandPending;
-  const forkJoystickDisabled = !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
+  const powerCmd = getPowerCommand(powered);
+  const speedCmd = getSpeedCommand();
+  const cruiseCmd = getCruiseCommand();
+  const joystickDisabled = !powered || !apiReady || !directionsAvailable() || demoRunning || commandPending;
+  const forkJoystickDisabled = !powered || !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
   $('joystick').setAttribute('aria-disabled', String(joystickDisabled));
   $('joystick').classList.toggle('is-disabled', joystickDisabled);
   $('forkJoystick').setAttribute('aria-disabled', String(forkJoystickDisabled));
   $('forkJoystick').classList.toggle('is-disabled', forkJoystickDisabled);
-  if (!apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning) forkJoystick?.reset();
+  if (!powered || !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning) forkJoystick?.reset();
+
+  $('speedButton').disabled = !powered || !apiReady || !speedCmd || demoRunning || commandPending;
+  $('speedButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (speedCmd ? `Velocidad actual: ${currentSpeedState === 1 ? 'Normal (Verde)' : currentSpeedState === 2 ? 'Media (Verde y Rojo)' : 'Rápida (Rojo)'}` : 'Comando de velocidad no disponible');
+
   $('powerButton').disabled = !apiReady || !powerCmd || demoRunning || commandPending;
   $('powerButton').title = powerCmd ? '' : 'El catálogo no contiene un comando de encendido/apagado activo.';
-  $('stopButton').disabled = !apiReady || !stopReady;
-  $('stopButton').title = stopReady ? '' : 'El catálogo no contiene un comando DETENER activo.';
-  $('lightsButton').disabled = !apiReady || !activeCommandByName('LUCES') || demoRunning || commandPending;
-  $('soundButton').disabled = !apiReady || !activeCommandByName('SONIDO') || demoRunning || commandPending;
-  $('runDemoButton').disabled = !apiReady || !demos.length || ! $('demoSelect').value || demoRunning || commandPending;
-  $('demoSelect').disabled = !apiReady || demoRunning || commandPending || demos.length === 0;
-  for (const button of $('commandButtons').querySelectorAll('button')) button.disabled = demoRunning || commandPending || !apiReady;
+
+  $('cruiseButton').disabled = !powered || !apiReady || !cruiseCmd || demoRunning || commandPending;
+  $('cruiseButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (cruiseCmd ? 'Activar/desactivar crucero' : 'Comando crucero no disponible');
+
+  $('stopButton').disabled = !powered || !apiReady || !stopReady;
+  $('stopButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (stopReady ? '' : 'El catálogo no contiene un comando DETENER activo.');
+  $('lightsButton').disabled = !powered || !apiReady || !activeCommandByName('LUCES') || demoRunning || commandPending;
+  $('lightsButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar las luces.' : '';
+  $('soundButton').disabled = !powered || !apiReady || !activeCommandByName('SONIDO') || demoRunning || commandPending;
+  $('soundButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el sonido.' : '';
+  $('runDemoButton').disabled = !powered || !apiReady || !demos.length || ! $('demoSelect').value || demoRunning || commandPending;
+  $('runDemoButton').title = !powered ? 'Presiona ENCENDER/APAGAR para ejecutar una DEMO.' : '';
+  $('demoSelect').disabled = !powered || !apiReady || demoRunning || commandPending || demos.length === 0;
+  for (const button of $('commandButtons').querySelectorAll('button')) button.disabled = !powered || demoRunning || commandPending || !apiReady;
 }
 
 function renderDemos(selectedId = '') {
@@ -309,13 +380,23 @@ async function toggleUtility(name, buttonId) {
 
 async function togglePower() {
   const button = $('powerButton');
-  const isCurrentlyOn = button.getAttribute('aria-pressed') === 'true';
+  const isCurrentlyOn = isPoweredOn();
   const command = getPowerCommand(isCurrentlyOn);
   if (!command) return;
   if (!await sendCommand(command)) return;
   const nextState = !isCurrentlyOn;
   button.setAttribute('aria-pressed', String(nextState));
   button.setAttribute('aria-label', `Interruptor encender o apagar; indicador visual ${nextState ? 'encendido' : 'apagado'}. El vehículo no informa el estado físico.`);
+  if (!nextState) {
+    requestStop();
+    forkJoystick?.reset();
+    $('cruiseButton')?.setAttribute('aria-pressed', 'false');
+    currentSpeedState = 1;
+    updateSpeedVisual(currentSpeedState);
+    $('driveText').textContent = 'Apagado';
+    $('driveIndicator').classList.remove('active');
+  }
+  updateControls();
 }
 
 function handleDirection(name) {
@@ -407,20 +488,20 @@ async function executeDemo() {
 }
 
 async function boot() {
-  $('apiUrl').value = config.apiBaseUrl;
-  $('wsUrl').value = config.websocketUrl;
-  $('vehicleId').value = config.vehicleId;
   joystick = initJoystick($('joystick'), $('joyKnob'), {
     onDirection: handleDirection,
     onRelease: requestStop,
-    canMove: () => apiReady && directionsAvailable() && !demoRunning && !commandPending,
+    canMove: () => isPoweredOn() && apiReady && directionsAvailable() && !demoRunning && !commandPending,
   });
   forkJoystick = initVerticalJoystick($('forkJoystick'), $('forkJoyKnob'), {
     onDirection: handleForkDirection,
     onNeutral: () => { $('forkJoystickStatus').textContent = 'Control centrado · no se envió DETENER.'; },
-    canMove: () => apiReady && Boolean(activeCommandByName(names.forkUp)) && Boolean(activeCommandByName(names.forkDown)) && !demoRunning && !commandPending,
+    canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName(names.forkUp)) && Boolean(activeCommandByName(names.forkDown)) && !demoRunning && !commandPending,
   });
+  $('speedButton').addEventListener('click', handleSpeedCycle);
+  $('cruiseButton').addEventListener('click', handleCruiseToggle);
   $('powerButton').addEventListener('click', togglePower);
+  updateSpeedVisual(currentSpeedState);
   $('stopButton').addEventListener('click', requestStop);
   window.addEventListener('blur', requestStop);
   document.addEventListener('visibilitychange', () => { if (document.hidden) requestStop(); });
@@ -428,40 +509,17 @@ async function boot() {
   $('soundButton').addEventListener('click', () => toggleUtility('SONIDO', 'soundButton'));
   $('demoSelect').addEventListener('change', () => { updateDemoDescription(); updateControls(); });
   $('runDemoButton').addEventListener('click', executeDemo);
-  $('settingsButton').addEventListener('click', () => $('settingsDialog').showModal());
-  $('settingsForm').addEventListener('submit', (event) => {
-    if (event.submitter?.id !== 'saveButton') return;
-    event.preventDefault();
-    try {
-      const next = validateConfig({
-        apiBaseUrl: $('apiUrl').value.trim(),
-        websocketUrl: $('wsUrl').value.trim(),
-        vehicleId: $('vehicleId').value.trim(),
-      });
-      config = next;
-      saveConfig(config);
-      actionSequence += 1;
-      activeMovementController?.abort();
-      apiGeneration += 1;
-      commands = [];
-      demos = [];
-      apiReady = false;
-      demoRunning = false;
-      commandPending = false;
-      renderCommands();
-      renderDemos();
-      api = createApi(config);
-      $('settingsDialog').close();
-      showAlert('configAlert', '');
-      refreshCommands();
-      loadDemos();
-      connectSocket();
-      refreshDatabaseHealth();
-    } catch (error) {
-      showAlert('configAlert', error.message);
+  window.addEventListener('keydown', (event) => {
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    if (event.key === 'v' || event.key === 'V') {
+      event.preventDefault();
+      handleSpeedCycle();
+    } else if (event.key === 'c' || event.key === 'C') {
+      event.preventDefault();
+      handleCruiseToggle();
     }
   });
-connectSocket();
+  connectSocket();
 
   await Promise.all([
     refreshCommands(),
