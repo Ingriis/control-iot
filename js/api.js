@@ -40,6 +40,8 @@ export function createApi(config) {
   return {
     getCommands: () => request(`/vehicles/${vehicle}/commands`),
     getDemos: () => request(`/vehicles/${vehicle}/demos`),
+    getVehicleState: (signal) => request(`/vehicles/${vehicle}/state`, { signal }),
+    getMovementHistory: (signal) => request(`/vehicles/${vehicle}/history`, { signal }),
 
     getDatabaseHealth: () => request('/health/database'),
 

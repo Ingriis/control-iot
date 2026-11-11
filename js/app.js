@@ -2,6 +2,7 @@ import { createApi } from './api.js';
 import { loadConfig, validateConfig } from './config.js';
 import { initJoystick, initVerticalJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
+import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
 
 const $ = (id) => document.getElementById(id);
 const names = {
@@ -24,6 +25,16 @@ let holdGeneration = 0;
 let heldDirection = null;
 let joystick;
 let forkJoystick;
+let monitorVisible = false;
+let monitorStateEpoch = 0;
+let monitorFetchSequence = 0;
+let monitorController = null;
+let monitorHistoryController = null;
+let monitorHistoryTimer = null;
+let monitorHistorySequence = 0;
+let socketWasOnline = false;
+let latestWssTimestamp = 0;
+let hasWssState = false;
 
 function setIndicator(id, state, text) {
   const indicator = $(id);
@@ -135,10 +146,6 @@ function renderCommands() {
   ]);
   const available = commands.filter((item) => !special.has(item.nombre) && Number(item.activo) === 1);
   if (!available.length) {
-    const note = document.createElement('p');
-    note.className = 'muted-note';
-    note.textContent = 'El catálogo no reporta otros comandos activos.';
-    host.append(note);
     return;
   }
   const powered = isPoweredOn();
@@ -267,6 +274,95 @@ async function refreshDatabaseHealth() {
   }
 }
 
+function showView(view) {
+  const monitoring = view === 'monitor';
+  monitorVisible = monitoring;
+  $('controlView').classList.toggle('d-none', monitoring);
+  $('monitorView').classList.toggle('d-none', !monitoring);
+  $('controlTab').classList.toggle('is-active', !monitoring);
+  $('monitorTab').classList.toggle('is-active', monitoring);
+  if (monitoring) {
+    $('monitorTab').setAttribute('aria-current', 'page');
+    $('controlTab').removeAttribute('aria-current');
+    loadMonitorData();
+  } else {
+    $('controlTab').setAttribute('aria-current', 'page');
+    $('monitorTab').removeAttribute('aria-current');
+  }
+}
+
+function normalizeHistory(records) {
+  if (!Array.isArray(records)) throw new Error('La API devolvió un formato de historial no reconocido.');
+  if (records.some((item) => !item || Number(item.id_vehiculo) !== Number(config.vehicleId))) {
+    throw new Error('La respuesta contiene registros de otro vehículo o sin identificar.');
+  }
+  const byId = new Map();
+  for (const item of records) {
+    const id = Number(item.id_historial);
+    if (!Number.isInteger(id) || id < 1) throw new Error('Un registro no contiene un id_historial válido.');
+    if (!byId.has(id)) byId.set(id, item);
+  }
+  return [...byId.values()].sort((a, b) => Number(b.id_historial) - Number(a.id_historial)).slice(0, 10);
+}
+
+async function loadMonitorData() {
+  monitorController?.abort();
+  const controller = new AbortController();
+  monitorController = controller;
+  const sequence = ++monitorFetchSequence;
+  const stateEpoch = monitorStateEpoch;
+  const currentApi = api;
+  renderHistory(null, { loading: true });
+
+  const [stateResult, historyResult] = await Promise.allSettled([
+    currentApi.getVehicleState(controller.signal),
+    currentApi.getMovementHistory(controller.signal),
+  ]);
+  if (controller.signal.aborted || sequence !== monitorFetchSequence || currentApi !== api) return;
+
+  if (stateResult.status === 'fulfilled') {
+    const state = stateResult.value;
+    const isOtherVehicle = state?.id_vehiculo !== undefined && Number(state.id_vehiculo) !== Number(config.vehicleId);
+    if (isOtherVehicle) {
+      $('monitorCommand').textContent = 'Respuesta de otro vehículo';
+    } else {
+      if (!hasWssState && stateEpoch === monitorStateEpoch) renderLatestMovement(state, { source: 'REST' });
+      setMonitorVehicle(state?.vehiculo, config.vehicleId);
+    }
+  } else if (stateResult.reason?.name !== 'AbortError' && stateEpoch === monitorStateEpoch) {
+    $('monitorCommand').textContent = 'Sin datos actualizados';
+    $('monitorTimestamp').textContent = 'No se pudo consultar el estado del vehículo.';
+    setMonitorVehicle('', config.vehicleId);
+  }
+
+  if (historyResult.status === 'fulfilled') {
+    try { renderHistory(normalizeHistory(historyResult.value)); }
+    catch (error) { renderHistory(null, { error: error.message }); }
+  } else if (historyResult.reason?.name !== 'AbortError') {
+    renderHistory(null, { error: historyResult.reason?.message || 'Error de conexión.' });
+  }
+}
+
+function scheduleMonitorHistorySync() {
+  if (!monitorVisible) return;
+  window.clearTimeout(monitorHistoryTimer);
+  monitorHistoryTimer = window.setTimeout(async () => {
+    monitorHistoryController?.abort();
+    const controller = new AbortController();
+    monitorHistoryController = controller;
+    const sequence = ++monitorHistorySequence;
+    const currentApi = api;
+    try {
+      const records = await currentApi.getMovementHistory(controller.signal);
+      if (controller.signal.aborted || sequence !== monitorHistorySequence || currentApi !== api) return;
+      renderHistory(normalizeHistory(records));
+    } catch (error) {
+      if (controller.signal.aborted || sequence !== monitorHistorySequence || error.name === 'AbortError') return;
+      renderHistory(null, { error: error.message || 'Error de conexión.' });
+    }
+  }, 250);
+}
+
 async function loadDemos() {
   const generation = apiGeneration;
   const currentApi = api;
@@ -297,13 +393,35 @@ function parseSocketMessage(raw) {
   }
   if (message.id_vehiculo !== undefined && Number(message.id_vehiculo) !== Number(config.vehicleId)) return;
   if (message.type === 'initial_state') {
+    const state = message.state;
+    if (state && (state.id_vehiculo === undefined || Number(state.id_vehiculo) === Number(config.vehicleId))) {
+      monitorStateEpoch += 1;
+      hasWssState = true;
+      renderLatestMovement(state, { source: 'WSS' });
+      setMonitorVehicle(state.vehiculo, config.vehicleId);
+    }
     $('eventStatus').textContent = 'Estado inicial recibido';
     $('eventDetail').textContent = 'La conexión WSS del navegador recibió el estado inicial del servidor.';
     return;
   }
   if (message.type === 'movement') {
+    if (message.id_vehiculo === undefined || Number(message.id_vehiculo) !== Number(config.vehicleId)) return;
+    const eventTimestamp = Date.parse(message.timestamp || '');
+    if (Number.isFinite(eventTimestamp) && eventTimestamp < latestWssTimestamp) return;
+    if (Number.isFinite(eventTimestamp)) latestWssTimestamp = eventTimestamp;
+    monitorStateEpoch += 1;
+    hasWssState = true;
+    renderLatestMovement(message, { source: 'WSS', origin: message.origin });
+    if (message.origin !== 'DEMO') scheduleMonitorHistorySync();
     const command = commands.find((item) => Number(item.codigo) === Number(message.codigo));
     const label = command?.nombre || `código ${message.codigo ?? 'desconocido'}`;
+    if (demoRunning && message.origin === 'DEMO') {
+      const host = $('demoMovementList');
+      host.querySelector('.demo-progress-empty')?.remove();
+      const item = document.createElement('li');
+      item.textContent = label;
+      host.append(item);
+    }
     $('eventStatus').textContent = `Evento recibido · ${label}`;
     const parts = [`vehículo ${message.id_vehiculo ?? config.vehicleId}`];
     if (message.codigo !== undefined) parts.push(`código ${message.codigo}`);
@@ -320,6 +438,15 @@ function connectSocket() {
   socket = new VehicleSocket(config.websocketUrl, (state) => {
     const labels = { connecting: 'Conectando…', reconnecting: 'Reconectando…', online: 'En línea · navegador conectado', offline: 'Desconectado' };
     setIndicator('wsIndicator', state === 'online' ? 'online' : state === 'offline' ? 'offline' : state, labels[state] || 'Conectando…');
+    if (state === 'online') {
+      if (socketWasOnline && monitorVisible) loadMonitorData();
+      socketWasOnline = true;
+    } else if (state === 'offline') {
+      socketWasOnline = false;
+    }
+    if (state !== 'online' && hasWssState) {
+      $('monitorNote').textContent = 'Mostrando el último valor conocido; el WebSocket del navegador está reconectando o desconectado.';
+    }
   }, parseSocketMessage);
   socket.start();
 }
@@ -465,6 +592,7 @@ async function executeDemo() {
   const demo = demos.find((item) => String(item.id_demo) === demoId);
   if (!demo || demoRunning || commandPending) return;
   demoRunning = true;
+  $('demoMovementList').replaceChildren();
   const demoSequence = actionSequence;
   setAction(`Solicitada · DEMO ${demo.nombre}`, 'La API ejecuta la secuencia y controla el orden y los tiempos.');
   $('eventStatus').textContent = 'Esperando eventos de DEMO';
@@ -488,6 +616,9 @@ async function executeDemo() {
 }
 
 async function boot() {
+  $('controlTab').addEventListener('click', () => showView('control'));
+  $('monitorTab').addEventListener('click', () => showView('monitor'));
+  $('monitorRefresh').addEventListener('click', loadMonitorData);
   joystick = initJoystick($('joystick'), $('joyKnob'), {
     onDirection: handleDirection,
     onRelease: requestStop,

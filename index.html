@@ -10,13 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=preconfigured-connection-20261111-1" />
+    <link rel="stylesheet" href="./styles.css?v=responsive-20261111-5" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
     <div class="container-xl app-shell">
       <header class="topbar">
-        <a class="brand" href="#main" aria-label="Montacargas IoT, inicio"><span class="brand-mark"><img class="brand-forklift" src="./assets/cow-forklift-favicon.png?v=1" alt="" /></span><span>montacargas<span class="brand-dot">.</span><small>CONTROL IoT</small></span></a>
+        <a class="brand" href="#main" aria-label="Montacargas IoT, inicio"><span class="brand-mark"><img class="brand-forklift" src="./assets/cow-forklift-favicon.png?v=1" alt="" /></span><span>montacargas<span class="brand-dot">.</span><small>CONTROL · MONITOREO</small></span></a>
         <nav class="view-nav" aria-label="Vistas de la aplicación">
           <button class="view-nav-button is-active" id="controlTab" type="button" aria-controls="controlView" aria-current="page">CONTROL</button>
           <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">MONITOREO</button>
@@ -40,7 +40,7 @@
         <div class="alert alert-danger d-none" id="errorAlert" role="alert" aria-live="assertive"></div>
 
         <section class="dashboard row g-3" id="controlView" aria-label="Controles del vehículo">
-          <article class="col-md-8">
+          <article class="col-12">
             <div class="card control-card h-100">
               <div class="direction-console">
                 <div class="primary-controls" aria-label="Controles principales">
@@ -116,13 +116,13 @@
                   <button class="action-button" id="runDemoButton" type="button" aria-label="Ejecutar DEMO seleccionada" title="Ejecutar DEMO" disabled></button>
                 </section>
               </div>
-              <div class="command-area mt-4">
-                <div class="section-label">OTROS COMANDOS ACTIVOS</div>
-                <div class="command-grid" id="commandButtons"><p class="muted-note command-loading">Cargando comandos del vehículo…<img src="./assets/forklift-pixel.webp" alt="" /></p></div>
-              </div>
+              <div class="visually-hidden" aria-hidden="true" id="commandButtons"></div>
+              <section class="demo-progress" aria-label="Movimientos de la DEMO en ejecución" aria-live="polite">
+                <h2 class="demo-progress-heading">SECUENCIA EN EJECUCIÓN</h2>
+                <ol id="demoMovementList"><li class="demo-progress-empty">Selecciona y ejecuta una DEMO para ver sus movimientos.</li></ol>
+              </section>
             </div>
           </article>
-
           <aside class="col-md-4">
             <div class="card side-card h-100">
               <div class="divider"></div>
