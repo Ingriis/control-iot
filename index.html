@@ -17,6 +17,10 @@
     <div class="container-xl app-shell">
       <header class="topbar">
         <a class="brand" href="#main" aria-label="Montacargas IoT, inicio"><span class="brand-mark"><img class="brand-forklift" src="./assets/cow-forklift-favicon.png?v=1" alt="" /></span><span>montacargas<span class="brand-dot">.</span><small>CONTROL IoT</small></span></a>
+        <nav class="view-nav" aria-label="Vistas de la aplicación">
+          <button class="view-nav-button is-active" id="controlTab" type="button" aria-controls="controlView" aria-current="page">CONTROL</button>
+          <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">MONITOREO</button>
+        </nav>
       </header>
 
       <section class="connectivity" aria-label="Estado de los servicios">
@@ -35,14 +39,14 @@
         <div class="alert alert-warning d-none" id="configAlert" role="alert"></div>
         <div class="alert alert-danger d-none" id="errorAlert" role="alert" aria-live="assertive"></div>
 
-        <section class="dashboard row g-3" aria-label="Controles del vehículo">
+        <section class="dashboard row g-3" id="controlView" aria-label="Controles del vehículo">
           <article class="col-md-8">
             <div class="card control-card h-100">
               <div class="direction-console">
                 <div class="primary-controls" aria-label="Controles principales">
                 <div class="joystick-wrap">
                   <span class="direction-label north" aria-hidden="true">▲</span><span class="direction-label east" aria-hidden="true">▶</span><span class="direction-label south" aria-hidden="true">▼</span><span class="direction-label west" aria-hidden="true">◀</span>
-                  <div class="joystick" id="joystick" role="group" aria-label="Joystick: usa flechas del teclado o arrastra con el mouse o el dedo" tabindex="0"><div class="joy-base" data-direction="neutral"><img class="joy-base-art" src="./assets/joystick-base.png" alt="" /><div class="joy-neutral-sprite" aria-hidden="true"></div><div class="joy-direction-sprite" aria-hidden="true"></div><div class="joy-knob" id="joyKnob"><img class="joy-handle" src="./assets/joystick-handle.png" alt="" /></div></div></div>
+                  <div class="joystick" id="joystick" role="group" aria-label="Joystick: usa flechas del teclado o arrastra con el mouse o el dedo" tabindex="0"><div class="joy-base" data-direction="neutral"><img class="joy-base-art" src="./assets/joystick-base.webp" alt="" /><div class="joy-neutral-sprite" aria-hidden="true"></div><div class="joy-direction-sprite" aria-hidden="true"></div><div class="joy-knob" id="joyKnob"><img class="joy-handle" src="./assets/joystick-handle.webp" alt="" /></div></div></div>
                 </div>
                 <div class="stop-panel">
                   <div class="top-control-row">
@@ -70,7 +74,7 @@
                   <div class="stop-control">
                     <span class="stop-caption">PARO DE EMERGENCIA</span>
                     <div class="stop-bezel">
-                      <img class="stop-panel-art" src="./assets/stop-button-pixel.png" alt="" />
+                      <img class="stop-panel-art" src="./assets/stop-button-pixel.webp" alt="" />
                       <button class="stop-button" id="stopButton" type="button" aria-label="Solicitar detener el vehículo">DETENER</button>
                     </div>
                   </div>
@@ -82,10 +86,10 @@
                     <span class="fork-direction-label fork-down" aria-hidden="true">▼</span>
                     <div class="fork-joystick" id="forkJoystick" role="group" aria-label="Joystick vertical de horquillas. Arriba para subir, abajo para bajar." aria-disabled="true" tabindex="0">
                       <div class="joy-base fork-joy-base" data-direction="neutral">
-                        <img class="joy-base-art" src="./assets/joystick-base.png" alt="" />
+                        <img class="joy-base-art" src="./assets/joystick-base.webp" alt="" />
                         <div class="joy-neutral-sprite" aria-hidden="true"></div>
                         <div class="joy-direction-sprite" aria-hidden="true"></div>
-                        <div class="joy-knob" id="forkJoyKnob"><img class="joy-handle" src="./assets/joystick-handle.png" alt="" /></div>
+                        <div class="joy-knob" id="forkJoyKnob"><img class="joy-handle" src="./assets/joystick-handle.webp" alt="" /></div>
                       </div>
                     </div>
                   </div>
@@ -114,7 +118,7 @@
               </div>
               <div class="command-area mt-4">
                 <div class="section-label">OTROS COMANDOS ACTIVOS</div>
-                <div class="command-grid" id="commandButtons"><p class="muted-note command-loading">Cargando comandos del vehículo…<img src="./assets/forklift-pixel.png" alt="" /></p></div>
+                <div class="command-grid" id="commandButtons"><p class="muted-note command-loading">Cargando comandos del vehículo…<img src="./assets/forklift-pixel.webp" alt="" /></p></div>
               </div>
             </div>
           </article>
@@ -127,6 +131,41 @@
               <div class="action-info event-info"><span class="metric-label">EVENTO WEBSOCKET</span><strong id="eventStatus">Esperando evento</strong><small id="eventDetail">El estado del socket corresponde a esta página web.</small></div>
             </div>
           </aside>
+        </section>
+
+        <section class="monitor-view d-none" id="monitorView" aria-labelledby="monitorHeading">
+          <div class="monitor-heading-row">
+            <div>
+              <p class="eyebrow">TELEMETRÍA DEL VEHÍCULO</p>
+              <h1 id="monitorHeading">MONITOREO</h1>
+              <p class="monitor-vehicle" id="monitorVehicle">Vehículo 1</p>
+            </div>
+            <button class="monitor-refresh" id="monitorRefresh" type="button">Actualizar datos</button>
+          </div>
+          <article class="monitor-latest" aria-labelledby="latestHeading" aria-live="polite">
+            <div class="monitor-card-label"><span class="monitor-pulse" aria-hidden="true"></span><span id="latestHeading">Último movimiento reportado</span></div>
+            <strong class="monitor-command" id="monitorCommand">Cargando…</strong>
+            <div class="monitor-meta">
+              <span id="monitorTimestamp">Esperando datos del vehículo</span>
+              <span id="monitorOrigin"></span>
+            </div>
+            <p class="monitor-note" id="monitorNote">El estado reportado por el servidor no confirma ejecución física.</p>
+          </article>
+
+          <section class="monitor-history" aria-labelledby="historyHeading">
+            <div class="monitor-history-heading">
+              <div><p class="eyebrow">REGISTROS CONFIRMADOS POR API</p><h2 id="historyHeading">Últimos 10 movimientos</h2></div>
+              <span class="history-count" id="historyCount">Cargando…</span>
+            </div>
+            <div class="history-message" id="historyMessage" role="status" aria-live="polite">Cargando historial…</div>
+            <div class="history-table-wrap" id="historyTableWrap" hidden>
+              <table class="history-table">
+                <caption class="visually-hidden">Hasta diez movimientos individuales persistidos del vehículo, del más reciente al más antiguo</caption>
+                <thead><tr><th scope="col">#</th><th scope="col">Movimiento</th><th scope="col">Fecha</th><th scope="col">Hora</th></tr></thead>
+                <tbody id="historyRows"></tbody>
+              </table>
+            </div>
+          </section>
         </section>
       </main>
 
