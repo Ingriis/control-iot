@@ -16,6 +16,8 @@ let demos = [];
 let socket = null;
 let apiReady = false;
 let demoRunning = false;
+let demoEventsVisible = false;
+let demoEventsTimer = null;
 let commandPending = false;
 let actionSequence = 0;
 let activeMovementController = null;
@@ -411,16 +413,20 @@ function parseSocketMessage(raw) {
     if (Number.isFinite(eventTimestamp)) latestWssTimestamp = eventTimestamp;
     monitorStateEpoch += 1;
     hasWssState = true;
+    const eventOrigin = String(message.origin || '').trim().toUpperCase();
+    const isDemoEvent = eventOrigin === 'DEMO';
     renderLatestMovement(message, { source: 'WSS', origin: message.origin });
-    if (message.origin !== 'DEMO') scheduleMonitorHistorySync();
+    if (!isDemoEvent) scheduleMonitorHistorySync();
     const command = commands.find((item) => Number(item.codigo) === Number(message.codigo));
     const label = command?.nombre || `código ${message.codigo ?? 'desconocido'}`;
-    if (demoRunning && message.origin === 'DEMO') {
+    if (demoEventsVisible && isDemoEvent) {
       const host = $('demoMovementList');
       host.querySelector('.demo-progress-empty')?.remove();
       const item = document.createElement('li');
       item.textContent = label;
       host.append(item);
+      window.clearTimeout(demoEventsTimer);
+      demoEventsTimer = window.setTimeout(() => { demoEventsVisible = false; }, 15000);
     }
     $('eventStatus').textContent = `Evento recibido · ${label}`;
     const parts = [`vehículo ${message.id_vehiculo ?? config.vehicleId}`];
@@ -592,6 +598,8 @@ async function executeDemo() {
   const demo = demos.find((item) => String(item.id_demo) === demoId);
   if (!demo || demoRunning || commandPending) return;
   demoRunning = true;
+  demoEventsVisible = true;
+  window.clearTimeout(demoEventsTimer);
   $('demoMovementList').replaceChildren();
   const demoSequence = actionSequence;
   setAction(`Solicitada · DEMO ${demo.nombre}`, 'La API ejecuta la secuencia y controla el orden y los tiempos.');
@@ -605,6 +613,8 @@ async function executeDemo() {
       setAction(`Respuesta DEMO · ${result?.status || 'recibida'}`, `${Number.isInteger(sent) ? `${sent} movimientos transmitidos. ` : ''}${result?.detail || 'El backend respondió.'}`);
     }
   } catch (error) {
+    demoEventsVisible = false;
+    window.clearTimeout(demoEventsTimer);
     if (demoSequence === actionSequence) {
       setAction('Error al ejecutar DEMO', error.message);
       showAlert('errorAlert', error.message);
