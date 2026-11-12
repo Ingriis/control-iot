@@ -15,13 +15,10 @@
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
     <div class="container-xl app-shell">
-      <header class="topbar">
-        <a class="brand" href="#main" aria-label="Montacargas IoT, inicio"><span class="brand-mark"><img class="brand-forklift" src="./assets/cow-forklift-favicon.png?v=1" alt="" /></span><span>montacargas<span class="brand-dot">.</span><small>CONTROL · MONITOREO</small></span></a>
-        <nav class="view-nav" aria-label="Vistas de la aplicación">
+      <nav class="view-nav view-switcher floating-view-switcher" aria-label="Cambiar entre control y monitoreo">
           <button class="view-nav-button is-active" id="controlTab" type="button" aria-controls="controlView" aria-current="page">CONTROL</button>
           <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">MONITOREO</button>
-        </nav>
-      </header>
+      </nav>
 
       <main id="main">
         <div class="alert alert-warning d-none" id="configAlert" role="alert"></div>
