@@ -901,7 +901,8 @@ body {
 
 .view-nav { display: flex; gap: 7px; }
 .view-switcher { width: fit-content; gap: 4px; padding: 5px; border: 1px solid #2b697c; border-radius: 999px; background: #0b1425; box-shadow: inset 0 0 12px #050a1388, 0 0 16px #22e3ed16; }
-.floating-view-switcher { position: fixed; z-index: 20; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); bottom: auto; padding: 3px; gap: 2px; border-color: #22e3ed88; background: #08111feF; box-shadow: 0 4px 18px #0009, 0 0 12px #22e3ed33; }
+.floating-view-switcher { position: fixed; z-index: 20; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); bottom: auto; padding: 3px; gap: 2px; border-color: #22e3ed88; background: #08111feF; box-shadow: 0 4px 18px #0009, 0 0 12px #22e3ed33; touch-action: none; cursor: grab; user-select: none; }
+.floating-view-switcher:active { cursor: grabbing; }
 .view-nav-button, .monitor-refresh {
   min-height: 42px;
   padding: 8px 16px;
@@ -1470,7 +1471,7 @@ main#main { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column
   .app-shell { padding-top: 2px; padding-bottom: 2px; }
   .connectivity { margin-top: 2px; }
   #controlView.dashboard { margin-top: 2px; }
-  .control-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(185px, 28%); grid-template-rows: minmax(0, 1fr); align-items: stretch; gap: 6px; padding: 2px !important; }
+  .control-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 22%); grid-template-rows: minmax(0, 1fr); align-items: stretch; gap: 5px; padding: 3px !important; }
   .direction-console { gap: 2px; padding: 2px; }
   .control-card > .direction-console { grid-column: 1; grid-row: 1; align-self: center; }
   .demo-side-panel { display: flex; min-width: 0; min-height: 0; grid-column: 2; grid-row: 1; flex-direction: column; justify-content: center; gap: 5px; overflow: hidden; }
@@ -1479,18 +1480,19 @@ main#main { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column
   .demo-control-panel .demo-select { grid-column: 1; min-width: 0; }
   .demo-control-panel .action-button { grid-column: 2; }
   .demo-progress { max-height: 42%; overflow: hidden; }
-  .primary-controls { gap: 2px; }
+  .primary-controls { gap: 4px; }
   .primary-controls > .joystick-wrap,
-  .primary-controls > .fork-control { height: clamp(42px, 10vh, 62px); }
-  .joy-base, .fork-joy-base { width: min(56px, calc(100% - 10px)); height: min(56px, calc(100% - 10px)); }
-  .primary-controls > .stop-panel { flex-basis: 102px; gap: 1px; }
-  .top-control-row { gap: 2px; }
-  .speed-semaphore, .cruise-button { min-height: 24px; }
-  .power-button { min-height: 24px; padding: 1px 2px; font-size: 7px; }
-  .stop-caption { font-size: 6px; }
-  .stop-bezel { width: 56px; }
-  .stop-button { min-height: 22px; padding: 1px 2px; font-size: 7px; }
-  .drive-status { min-height: 12px; font-size: 7px; }
+  .primary-controls > .fork-control { height: clamp(54px, 13vh, 78px); }
+  .joy-base, .fork-joy-base { width: min(68px, calc(100% - 10px)); height: min(68px, calc(100% - 10px)); }
+  .primary-controls > .stop-panel { flex: 0 1 145px; width: auto; max-width: none; gap: 2px; }
+  .top-control-row { display: grid; grid-template-columns: 30px minmax(72px, 1fr) 42px; gap: 3px; }
+  .top-control-row .power-control { min-width: 72px; width: auto; }
+  .speed-semaphore, .cruise-button { min-width: 0; min-height: 28px; }
+  .power-button { display: flex; min-width: 72px; min-height: 28px; padding: 2px 3px; font-size: 7px; white-space: normal; }
+  .stop-caption { font-size: 7px; }
+  .stop-bezel { width: 62px; }
+  .stop-button { min-height: 25px; padding: 2px 3px; font-size: 8px; }
+  .drive-status { min-height: 14px; font-size: 8px; }
   .utility-command-buttons { gap: 3px; }
   .utility-command { min-height: 24px; gap: 2px; padding: 1px 3px; font-size: 7px; }
   .pixel-icon { width: 20px; height: 20px; }

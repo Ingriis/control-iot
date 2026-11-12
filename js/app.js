@@ -593,6 +593,63 @@ function requestStop() {
   sendCommand(command, { priorityStop: true });
 }
 
+function enableFloatingSwitcherDrag() {
+  const bubble = document.querySelector('.floating-view-switcher');
+  if (!bubble) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem('controlIoT.switcherPosition') || 'null');
+    if (Number.isFinite(saved?.x) && Number.isFinite(saved?.y)) {
+      bubble.style.left = `${Math.max(0, Math.min(innerWidth - bubble.offsetWidth, saved.x))}px`;
+      bubble.style.top = `${Math.max(0, Math.min(innerHeight - bubble.offsetHeight, saved.y))}px`;
+      bubble.style.right = 'auto';
+      bubble.style.bottom = 'auto';
+    }
+  } catch { /* Posición guardada no disponible. */ }
+
+  let drag = null;
+  let suppressClick = false;
+  bubble.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    const rect = bubble.getBoundingClientRect();
+    drag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, left: rect.left, top: rect.top, moved: false };
+  });
+  window.addEventListener('pointermove', (event) => {
+    if (!drag || drag.id !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
+    if (!drag.moved) return;
+    const x = Math.max(0, Math.min(innerWidth - bubble.offsetWidth, drag.left + dx));
+    const y = Math.max(0, Math.min(innerHeight - bubble.offsetHeight, drag.top + dy));
+    bubble.style.left = `${x}px`;
+    bubble.style.top = `${y}px`;
+    bubble.style.right = 'auto';
+    bubble.style.bottom = 'auto';
+  });
+  window.addEventListener('pointerup', (event) => {
+    if (!drag) return;
+    if (drag.id !== event.pointerId) return;
+    suppressClick = drag.moved;
+    if (drag.moved) {
+      const rect = bubble.getBoundingClientRect();
+      try { localStorage.setItem('controlIoT.switcherPosition', JSON.stringify({ x: rect.left, y: rect.top })); } catch { /* Preferencias no disponibles. */ }
+    }
+    drag = null;
+  });
+  bubble.addEventListener('click', (event) => {
+    if (!suppressClick) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClick = false;
+  }, true);
+  window.addEventListener('resize', () => {
+    if (!bubble.style.left) return;
+    const rect = bubble.getBoundingClientRect();
+    bubble.style.left = `${Math.max(0, Math.min(innerWidth - bubble.offsetWidth, rect.left))}px`;
+    bubble.style.top = `${Math.max(0, Math.min(innerHeight - bubble.offsetHeight, rect.top))}px`;
+  });
+}
+
 async function executeDemo() {
   const demoId = $('demoSelect').value;
   const demo = demos.find((item) => String(item.id_demo) === demoId);
@@ -626,6 +683,7 @@ async function executeDemo() {
 }
 
 async function boot() {
+  enableFloatingSwitcherDrag();
   $('controlTab').addEventListener('click', () => showView('control'));
   $('monitorTab').addEventListener('click', () => showView('monitor'));
   $('monitorRefresh').addEventListener('click', loadMonitorData);
