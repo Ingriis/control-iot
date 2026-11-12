@@ -1464,3 +1464,67 @@ main#main { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column
 @media (min-width: 560px) and (max-width: 767.98px) {
   .app-footer { align-items: center; flex-direction: row; justify-content: space-between; gap: 8px; padding-top: 3px; padding-bottom: 6px; font-size: 14px; line-height: 1.1; }
 }
+
+/* Compact phone landscape layout so utility controls and the DEMO remain visible. */
+@media (max-width: 1200px) and (orientation: landscape) {
+  .app-shell { padding-top: 2px; padding-bottom: 2px; }
+  .connectivity { margin-top: 2px; }
+  #controlView.dashboard { margin-top: 2px; }
+  .control-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(185px, 28%); grid-template-rows: minmax(0, 1fr); align-items: stretch; gap: 6px; padding: 2px !important; }
+  .direction-console { gap: 2px; padding: 2px; }
+  .control-card > .direction-console { grid-column: 1; grid-row: 1; align-self: center; }
+  .demo-side-panel { display: flex; min-width: 0; min-height: 0; grid-column: 2; grid-row: 1; flex-direction: column; justify-content: center; gap: 5px; overflow: hidden; }
+  .demo-control-panel { display: grid; grid-template-columns: minmax(0, 1fr) 40px; align-items: center; width: 100%; }
+  .demo-console-title { grid-column: 1 / -1; }
+  .demo-control-panel .demo-select { grid-column: 1; min-width: 0; }
+  .demo-control-panel .action-button { grid-column: 2; }
+  .demo-progress { max-height: 42%; overflow: hidden; }
+  .primary-controls { gap: 2px; }
+  .primary-controls > .joystick-wrap,
+  .primary-controls > .fork-control { height: clamp(42px, 10vh, 62px); }
+  .joy-base, .fork-joy-base { width: min(56px, calc(100% - 10px)); height: min(56px, calc(100% - 10px)); }
+  .primary-controls > .stop-panel { flex-basis: 102px; gap: 1px; }
+  .top-control-row { gap: 2px; }
+  .speed-semaphore, .cruise-button { min-height: 24px; }
+  .power-button { min-height: 24px; padding: 1px 2px; font-size: 7px; }
+  .stop-caption { font-size: 6px; }
+  .stop-bezel { width: 56px; }
+  .stop-button { min-height: 22px; padding: 1px 2px; font-size: 7px; }
+  .drive-status { min-height: 12px; font-size: 7px; }
+  .utility-command-buttons { gap: 3px; }
+  .utility-command { min-height: 24px; gap: 2px; padding: 1px 3px; font-size: 7px; }
+  .pixel-icon { width: 20px; height: 20px; }
+  .switch-track { width: 28px; height: 14px; }
+  .demo-control-panel { gap: 2px; padding: 2px; }
+  .demo-console-title { font-size: 7px; }
+  .demo-control-panel .demo-select, .demo-control-panel .action-button { min-height: 22px; padding-top: 1px; padding-bottom: 1px; font-size: 8px; }
+  .demo-progress { margin-top: 2px; padding: 2px 4px; }
+  .demo-progress-heading { margin-bottom: 1px; font-size: 7px; }
+  .demo-progress ol { gap: 2px; font-size: 7px; }
+  .demo-progress li { padding: 1px 3px; }
+  .app-footer { padding-top: 2px; font-size: 7px; }
+  .monitor-view { margin-top: 2px; }
+  .monitor-view > .connectivity { margin-top: 1px; gap: 3px; }
+  .monitor-view .connectivity-item { min-height: 26px; padding: 2px 5px; gap: 4px; }
+  .monitor-view .connectivity-item b, .monitor-view .connectivity-item small { font-size: 7px; line-height: 1; }
+  .monitor-view .state-symbol { display: none; }
+  .monitor-heading-row { min-height: 24px; gap: 4px; }
+  .monitor-heading-row .eyebrow { display: none; }
+  .monitor-heading-row h1 { font-size: 13px; }
+  .monitor-vehicle { margin: 0; font-size: 8px; }
+  .monitor-refresh { min-height: 22px; padding: 2px 6px; font-size: 7px; }
+  .monitor-latest { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px 8px; margin-top: 2px; padding: 3px 7px; }
+  .monitor-card-label { grid-column: 1; font-size: 7px; }
+  .monitor-command { grid-column: 2; margin: 0; font-size: 12px; }
+  .monitor-meta { grid-column: 1 / -1; gap: 2px 8px; margin: 0; font-size: 7px; }
+  .monitor-note { display: none; }
+  .monitor-history { margin-top: 3px; padding: 3px 5px; }
+  .monitor-history-heading { margin-bottom: 2px; }
+  .monitor-history-heading .eyebrow { display: none; }
+  .monitor-history-heading h2 { font-size: 9px; }
+  .history-count { font-size: 7px; }
+  .history-message { padding: 2px 4px; font-size: 7px; }
+  .history-table { font-size: 7px; line-height: 1; }
+  .history-table th, .history-table td { padding: 1px 3px; }
+  .history-table thead th { padding-top: 2px; padding-bottom: 2px; font-size: 6px; }
+}

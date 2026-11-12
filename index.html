@@ -93,6 +93,9 @@
                     <span class="switch-track" aria-hidden="true"></span>
                   </button>
                 </div>
+              </div>
+              <div class="visually-hidden" aria-hidden="true" id="commandButtons"></div>
+              <div class="demo-side-panel">
                 <section class="demo-control-panel" aria-label="Control de DEMO">
                   <h2 class="demo-console-title">DEMO</h2>
                   <label for="demoSelect" class="visually-hidden">Seleccionar una secuencia DEMO</label>
@@ -100,12 +103,11 @@
                   <p class="visually-hidden" id="demoDescription" aria-live="polite">Las secuencias se consultan desde la API.</p>
                   <button class="action-button" id="runDemoButton" type="button" aria-label="Ejecutar DEMO seleccionada" title="Ejecutar DEMO" disabled></button>
                 </section>
+                <section class="demo-progress" aria-label="Movimientos de la DEMO en ejecución" aria-live="polite">
+                  <h2 class="demo-progress-heading">SECUENCIA EN EJECUCIÓN</h2>
+                  <ol id="demoMovementList"><li class="demo-progress-empty">Selecciona y ejecuta una DEMO para ver sus movimientos.</li></ol>
+                </section>
               </div>
-              <div class="visually-hidden" aria-hidden="true" id="commandButtons"></div>
-              <section class="demo-progress" aria-label="Movimientos de la DEMO en ejecución" aria-live="polite">
-                <h2 class="demo-progress-heading">SECUENCIA EN EJECUCIÓN</h2>
-                <ol id="demoMovementList"><li class="demo-progress-empty">Selecciona y ejecuta una DEMO para ver sus movimientos.</li></ol>
-              </section>
             </div>
           </article>
           <aside class="col-md-4">
