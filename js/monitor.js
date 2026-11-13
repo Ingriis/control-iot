@@ -85,13 +85,41 @@ export function renderHistory(records, { loading = false, error = '' } = {}) {
   records.slice(0, shown).forEach((record, index) => {
     const row = document.createElement('tr');
     const parts = dateParts(record.fecha_hora);
-    const cells = [String(index + 1), record.comando || '—', parts.date, parts.time];
-    for (const [cellIndex, value] of cells.entries()) {
-      const cell = document.createElement(cellIndex === 0 ? 'th' : 'td');
-      if (cellIndex === 0) cell.scope = 'row';
-      cell.textContent = String(value);
-      row.append(cell);
-    }
+    const rawCmd = String(record.comando || '—');
+    const cleanCmd = rawCmd.replaceAll('_', ' ');
+
+    let cmdType = 'other';
+    const upper = rawCmd.toUpperCase();
+    if (upper.includes('AVANZ')) cmdType = 'forward';
+    else if (upper.includes('RETRO')) cmdType = 'backward';
+    else if (upper.includes('GIRA')) cmdType = 'turn';
+    else if (upper.includes('DETEN') || upper.includes('STOP') || upper.includes('PARO')) cmdType = 'stop';
+    else if (upper.includes('HORQ')) cmdType = 'fork';
+    else if (upper.includes('ENCEN') || upper.includes('APAG') || upper.includes('POWER')) cmdType = 'power';
+    else if (upper.includes('VELOC')) cmdType = 'speed';
+    else if (upper.includes('CRUC')) cmdType = 'cruise';
+
+    const th = document.createElement('th');
+    th.scope = 'row';
+    th.textContent = String(index + 1);
+    row.append(th);
+
+    const tdCmd = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'history-badge';
+    badge.dataset.cmd = cmdType;
+    badge.textContent = cleanCmd;
+    tdCmd.append(badge);
+    row.append(tdCmd);
+
+    const tdDate = document.createElement('td');
+    tdDate.textContent = parts.date;
+    row.append(tdDate);
+
+    const tdTime = document.createElement('td');
+    tdTime.textContent = parts.time;
+    row.append(tdTime);
+
     host.append(row);
   });
 }

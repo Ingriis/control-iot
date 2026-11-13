@@ -3,6 +3,17 @@ import { loadConfig, validateConfig } from './config.js';
 import { initJoystick, initVerticalJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
+import {
+  triggerHaptic,
+  playBip,
+  playPowerSound,
+  playSpeedSound,
+  playCruiseSound,
+  playStopSound,
+  playForkSound,
+  startReverseBeep,
+  stopReverseBeep,
+} from './feedback.js';
 
 const $ = (id) => document.getElementById(id);
 const names = {
@@ -37,6 +48,33 @@ let monitorHistorySequence = 0;
 let socketWasOnline = false;
 let latestWssTimestamp = 0;
 let hasWssState = false;
+let wakeLockSentinel = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    if (!wakeLockSentinel) {
+      wakeLockSentinel = await navigator.wakeLock.request('screen');
+      wakeLockSentinel.addEventListener('release', () => {
+        wakeLockSentinel = null;
+      });
+    }
+  } catch {
+    wakeLockSentinel = null;
+  }
+}
+
+async function releaseWakeLock() {
+  if (wakeLockSentinel) {
+    try {
+      await wakeLockSentinel.release();
+    } catch {
+      // Ignorado si ya fue liberado por el sistema operativo
+    } finally {
+      wakeLockSentinel = null;
+    }
+  }
+}
 
 function setIndicator(id, state, text) {
   const indicator = $(id);
@@ -53,13 +91,21 @@ function setIndicator(id, state, text) {
 
 function showAlert(id, message) {
   const element = $(id);
-  element.textContent = message;
-  element.classList.toggle('d-none', !message);
+  if (element) element.textContent = message || '';
 }
 
 function setAction(status, detail) {
-  $('actionStatus').textContent = status;
-  $('actionDetail').textContent = detail;
+  const s = $('actionStatus');
+  const d = $('actionDetail');
+  if (s) s.textContent = status;
+  if (d) d.textContent = detail;
+}
+
+function setEventStatus(status, detail) {
+  const s = $('eventStatus');
+  const d = $('eventDetail');
+  if (s) s.textContent = status;
+  if (d && detail !== undefined) d.textContent = detail;
 }
 
 function activeCommandByName(name) {
@@ -112,17 +158,21 @@ function getCruiseCommand() {
 
 async function handleSpeedCycle() {
   if (!isPoweredOn()) return;
+  triggerHaptic('tap');
   const cmd = getSpeedCommand();
   if (!cmd) return;
   if (!await sendCommand(cmd)) return;
   currentSpeedState = (currentSpeedState % 3) + 1;
   updateSpeedVisual(currentSpeedState);
+  triggerHaptic('speed');
+  playSpeedSound(currentSpeedState);
   const labels = { 1: 'NORMAL', 2: 'MEDIA', 3: 'RÁPIDA' };
   $('driveText').textContent = `VELOCIDAD ${labels[currentSpeedState]}`;
 }
 
 async function handleCruiseToggle() {
   if (!isPoweredOn()) return;
+  triggerHaptic('tap');
   const cmd = getCruiseCommand();
   if (!cmd) return;
   if (!await sendCommand(cmd)) return;
@@ -131,6 +181,8 @@ async function handleCruiseToggle() {
   const nextState = !isCurrentlyOn;
   btn.setAttribute('aria-pressed', String(nextState));
   btn.setAttribute('aria-label', `Modo crucero ${nextState ? 'activado' : 'desactivado'}.`);
+  triggerHaptic('click');
+  playCruiseSound(nextState);
 }
 
 function directionsAvailable() {
@@ -199,6 +251,37 @@ function updateControls() {
   $('runDemoButton').title = !powered ? 'Presiona ENCENDER/APAGAR para ejecutar una DEMO.' : '';
   $('demoSelect').disabled = !powered || !apiReady || demoRunning || commandPending || demos.length === 0;
   for (const button of $('commandButtons').querySelectorAll('button')) button.disabled = !powered || demoRunning || commandPending || !apiReady;
+  updateDemoDisplay();
+}
+
+function updateDemoDisplay() {
+  const select = $('demoSelect');
+  const display = $('demoDisplayBox');
+  const prevBtn = $('demoPrevBtn');
+  const nextBtn = $('demoNextBtn');
+  if (!display || !select) return;
+  const activeOption = select.options[select.selectedIndex];
+  display.textContent = activeOption?.text ? activeOption.text.replaceAll('_', ' ') : 'No hay DEMO';
+  const powered = isPoweredOn();
+  const canCycle = powered && apiReady && !demoRunning && !commandPending && select.options.length > 1;
+  if (prevBtn) prevBtn.disabled = !canCycle;
+  if (nextBtn) nextBtn.disabled = !canCycle;
+}
+
+function cycleDemo(direction = 1) {
+  const select = $('demoSelect');
+  if (!select || select.options.length <= 1) return;
+  const powered = isPoweredOn();
+  if (!powered || !apiReady || demoRunning || commandPending) return;
+  triggerHaptic('tap');
+  playBip(480, 0.035);
+  let nextIdx = select.selectedIndex + direction;
+  if (nextIdx >= select.options.length) nextIdx = 1;
+  if (nextIdx < 1) nextIdx = select.options.length - 1;
+  select.selectedIndex = nextIdx;
+  select.dispatchEvent(new Event('change'));
+  updateDemoDescription();
+  updateControls();
 }
 
 function renderDemos(selectedId = '') {
@@ -220,6 +303,7 @@ function renderDemos(selectedId = '') {
   select.disabled = !apiReady || demoRunning || select.options.length <= 1;
   updateDemoDescription();
   updateControls();
+  updateDemoDisplay();
 }
 
 function updateDemoDescription() {
@@ -277,6 +361,8 @@ async function refreshDatabaseHealth() {
 }
 
 function showView(view) {
+  triggerHaptic('tap');
+  playBip(580, 0.035);
   const monitoring = view === 'monitor';
   monitorVisible = monitoring;
   $('controlView').classList.toggle('d-none', monitoring);
@@ -387,10 +473,9 @@ async function loadDemos() {
 function parseSocketMessage(raw) {
   let message;
   try { message = JSON.parse(raw); }
-  catch { $('eventStatus').textContent = 'Mensaje recibido'; $('eventDetail').textContent = 'El servidor envió un mensaje no JSON.'; return; }
+  catch { setEventStatus('Mensaje recibido', 'El servidor envió un mensaje no JSON.'); return; }
   if (!message || typeof message !== 'object' || Array.isArray(message)) {
-    $('eventStatus').textContent = 'Mensaje recibido';
-    $('eventDetail').textContent = 'El mensaje del servidor no tiene el formato de evento esperado.';
+    setEventStatus('Mensaje recibido', 'El mensaje del servidor no tiene el formato de evento esperado.');
     return;
   }
   if (message.id_vehiculo !== undefined && Number(message.id_vehiculo) !== Number(config.vehicleId)) return;
@@ -402,8 +487,7 @@ function parseSocketMessage(raw) {
       renderLatestMovement(state, { source: 'WSS' });
       setMonitorVehicle(state.vehiculo, config.vehicleId);
     }
-    $('eventStatus').textContent = 'Estado inicial recibido';
-    $('eventDetail').textContent = 'La conexión WSS del navegador recibió el estado inicial del servidor.';
+    setEventStatus('Estado inicial recibido', 'La conexión WSS del navegador recibió el estado inicial del servidor.');
     return;
   }
   if (message.type === 'movement') {
@@ -419,24 +503,22 @@ function parseSocketMessage(raw) {
     if (!isDemoEvent) scheduleMonitorHistorySync();
     const command = commands.find((item) => Number(item.codigo) === Number(message.codigo));
     const label = command?.nombre || `código ${message.codigo ?? 'desconocido'}`;
-    if (demoEventsVisible && isDemoEvent) {
+    if (demoEventsVisible) {
       const host = $('demoMovementList');
       host.querySelector('.demo-progress-empty')?.remove();
       const item = document.createElement('li');
       item.textContent = label;
       host.append(item);
       window.clearTimeout(demoEventsTimer);
-      demoEventsTimer = window.setTimeout(() => { demoEventsVisible = false; }, 15000);
+      demoEventsTimer = window.setTimeout(() => { demoEventsVisible = false; }, 30000);
     }
-    $('eventStatus').textContent = `Evento recibido · ${label}`;
     const parts = [`vehículo ${message.id_vehiculo ?? config.vehicleId}`];
     if (message.codigo !== undefined) parts.push(`código ${message.codigo}`);
     if (message.timestamp) parts.push(`marca ${message.timestamp}`);
-    $('eventDetail').textContent = `${parts.join(' · ')}. Evento del backend; no confirma ejecución física.`;
+    setEventStatus(`Evento recibido · ${label}`, `${parts.join(' · ')}. Evento del backend; no confirma ejecución física.`);
     return;
   }
-  $('eventStatus').textContent = String(message.type || 'Mensaje recibido');
-  $('eventDetail').textContent = 'Evento recibido por el navegador desde el servidor WSS.';
+  setEventStatus(String(message.type || 'Mensaje recibido'), 'Evento recibido por el navegador desde el servidor WSS.');
 }
 
 function connectSocket() {
@@ -478,7 +560,8 @@ async function sendCommand(command, { priorityStop = false } = {}) {
   commandPending = true;
   setAction(`Solicitado · ${command.nombre}`, `Enviando command_id ${command.id_comando} a la API.`);
   updateControls();
-  $('driveText').textContent = command.nombre.replaceAll('_', ' ');
+  const isEmergency = document.querySelector('.stop-bezel')?.classList.contains('is-latched');
+  $('driveText').textContent = isEmergency ? '¡PARO DE EMERGENCIA!' : command.nombre.replaceAll('_', ' ');
   $('driveIndicator').classList.toggle('active', command.nombre !== 'DETENER');
   try {
     await api.registerMovement(command.id_comando, controller.signal);
@@ -488,7 +571,7 @@ async function sendCommand(command, { priorityStop = false } = {}) {
     if (priorityStop && demoRunning) showAlert('configAlert', 'DETENER fue enviado durante la DEMO; revisa el estado del vehículo.');
     return true;
   } catch (error) {
-    if (sequence !== actionSequence) return false;
+    if (error.name === 'AbortError' || sequence !== actionSequence) return false;
     setAction(`Error · ${command.nombre}`, error.message);
     showAlert('errorAlert', error.message);
     return false;
@@ -502,6 +585,7 @@ async function sendCommand(command, { priorityStop = false } = {}) {
 }
 
 async function toggleUtility(name, buttonId) {
+  triggerHaptic('tap');
   const command = activeCommandByName(name);
   if (!command) return;
   if (!await sendCommand(command)) return;
@@ -509,9 +593,11 @@ async function toggleUtility(name, buttonId) {
   const isOn = button.getAttribute('aria-pressed') !== 'true';
   button.setAttribute('aria-pressed', String(isOn));
   button.setAttribute('aria-label', `Interruptor de ${name === 'LUCES' ? 'luces' : 'sonido'}; indicador visual ${isOn ? 'encendido' : 'apagado'}. El vehículo no informa el estado físico.`);
+  playBip(isOn ? 620 : 420, 0.04);
 }
 
 async function togglePower() {
+  triggerHaptic('tap');
   const button = $('powerButton');
   const isCurrentlyOn = isPoweredOn();
   const command = getPowerCommand(isCurrentlyOn);
@@ -520,14 +606,21 @@ async function togglePower() {
   const nextState = !isCurrentlyOn;
   button.setAttribute('aria-pressed', String(nextState));
   button.setAttribute('aria-label', `Interruptor encender o apagar; indicador visual ${nextState ? 'encendido' : 'apagado'}. El vehículo no informa el estado físico.`);
+  triggerHaptic('click');
+  playPowerSound(nextState);
   if (!nextState) {
+    releaseWakeLock();
     requestStop();
     forkJoystick?.reset();
     $('cruiseButton')?.setAttribute('aria-pressed', 'false');
     currentSpeedState = 1;
     updateSpeedVisual(currentSpeedState);
     $('driveText').textContent = 'Apagado';
-    $('driveIndicator').classList.remove('active');
+    $('driveIndicator').classList.remove('active', 'is-emergency');
+  } else {
+    requestWakeLock();
+    document.querySelector('.stop-bezel')?.classList.remove('is-latched');
+    $('driveIndicator')?.classList.remove('is-emergency');
   }
   updateControls();
 }
@@ -537,6 +630,15 @@ function handleDirection(name) {
   lastDirection = name;
   heldDirection = name;
   const generation = ++holdGeneration;
+  if (name !== 'neutral') {
+    triggerHaptic('direction');
+    document.querySelector('.stop-bezel')?.classList.remove('is-latched');
+    $('driveIndicator')?.classList.remove('is-emergency');
+    if (name === 'backward') startReverseBeep();
+    else stopReverseBeep();
+  } else {
+    stopReverseBeep();
+  }
   // A direction change cancels the old pulse; the next request waits for it to settle.
   activeMovementController?.abort();
   const command = activeCommandByName(names[name]);
@@ -564,6 +666,12 @@ async function renewWhileHeld(generation, direction) {
 }
 
 function handleForkDirection(direction) {
+  if (direction === 'up' || direction === 'down') {
+    triggerHaptic('direction');
+    playForkSound(direction === 'up');
+    document.querySelector('.stop-bezel')?.classList.remove('is-latched');
+    $('driveIndicator')?.classList.remove('is-emergency');
+  }
   const commandName = direction === 'up' ? names.forkUp : names.forkDown;
   const command = activeCommandByName(commandName);
   if (!command) {
@@ -579,8 +687,17 @@ function handleForkDirection(direction) {
   });
 }
 
-function requestStop() {
-  if (lastDirection === 'neutral' && !heldDirection && !demoRunning && !commandPending) return;
+function requestStop(isEmergencyButton = false) {
+  stopReverseBeep();
+  if (isEmergencyButton) {
+    triggerHaptic('stop');
+    playStopSound();
+    const bezel = document.querySelector('.stop-bezel');
+    if (bezel) bezel.classList.add('is-latched');
+    $('driveText').textContent = '¡PARO DE EMERGENCIA!';
+    $('driveIndicator').className = 'status-indicator is-emergency';
+  }
+  if (lastDirection === 'neutral' && !heldDirection && !demoRunning && !commandPending && !isEmergencyButton) return;
   holdGeneration += 1;
   heldDirection = null;
   lastDirection = 'neutral';
@@ -651,6 +768,8 @@ function enableFloatingSwitcherDrag() {
 }
 
 async function executeDemo() {
+  triggerHaptic('tap');
+  playBip(720, 0.05);
   const demoId = $('demoSelect').value;
   const demo = demos.find((item) => String(item.id_demo) === demoId);
   if (!demo || demoRunning || commandPending) return;
@@ -660,8 +779,7 @@ async function executeDemo() {
   $('demoMovementList').replaceChildren();
   const demoSequence = actionSequence;
   setAction(`Solicitada · DEMO ${demo.nombre}`, 'La API ejecuta la secuencia y controla el orden y los tiempos.');
-  $('eventStatus').textContent = 'Esperando eventos de DEMO';
-  $('eventDetail').textContent = 'La sesión WSS del navegador escucha los eventos publicados por el backend.';
+  setEventStatus('Esperando eventos de DEMO', 'La sesión WSS del navegador escucha los eventos publicados por el backend.');
   updateControls();
   try {
     const result = await api.runDemo(demo.id_demo);
@@ -701,16 +819,48 @@ async function boot() {
   $('cruiseButton').addEventListener('click', handleCruiseToggle);
   $('powerButton').addEventListener('click', togglePower);
   updateSpeedVisual(currentSpeedState);
-  $('stopButton').addEventListener('click', requestStop);
-  window.addEventListener('blur', requestStop);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) requestStop(); });
+  $('stopButton').addEventListener('click', () => {
+    const bezel = document.querySelector('.stop-bezel');
+    if (bezel?.classList.contains('is-latched')) {
+      bezel.classList.remove('is-latched');
+      $('driveIndicator')?.classList.remove('is-emergency');
+      $('driveText').textContent = 'Listo (Detenido)';
+      triggerHaptic('click');
+      playBip(520, 0.04);
+      return;
+    }
+    requestStop(true);
+  });
+  window.addEventListener('blur', () => requestStop(false));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      requestStop(false);
+      releaseWakeLock();
+    } else if (isPoweredOn()) {
+      requestWakeLock();
+    }
+  });
+  window.addEventListener('pagehide', () => {
+    requestStop(false);
+    releaseWakeLock();
+  });
+  window.addEventListener('freeze', () => {
+    requestStop(false);
+    releaseWakeLock();
+  });
   $('lightsButton').addEventListener('click', () => toggleUtility('LUCES', 'lightsButton'));
   $('soundButton').addEventListener('click', () => toggleUtility('SONIDO', 'soundButton'));
   $('demoSelect').addEventListener('change', () => { updateDemoDescription(); updateControls(); });
+  $('demoPrevBtn')?.addEventListener('click', () => cycleDemo(-1));
+  $('demoNextBtn')?.addEventListener('click', () => cycleDemo(1));
+  $('demoDisplayBox')?.addEventListener('click', () => cycleDemo(1));
   $('runDemoButton').addEventListener('click', executeDemo);
   window.addEventListener('keydown', (event) => {
     if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
-    if (event.key === 'v' || event.key === 'V') {
+    if (event.key === ' ' || event.key === 'Escape' || event.key === 's' || event.key === 'S') {
+      event.preventDefault();
+      requestStop(true);
+    } else if (event.key === 'v' || event.key === 'V') {
       event.preventDefault();
       handleSpeedCycle();
     } else if (event.key === 'c' || event.key === 'C') {

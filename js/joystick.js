@@ -7,7 +7,7 @@ export function initJoystick(element, knob, { onDirection, onRelease, canMove })
   let pointerId = null;
   let current = null;
   const base = knob.closest('.joy-base');
-  const maxOffset = 38;
+
   const center = () => {
     knob.style.transform = 'translate(-50%, -50%)';
     knob.style.setProperty('--joy-tilt', '0deg');
@@ -23,14 +23,20 @@ export function initJoystick(element, knob, { onDirection, onRelease, canMove })
 
   const update = (event) => {
     const rect = element.getBoundingClientRect();
+    const maxOffset = Math.max(20, Math.min(44, Math.round(rect.width * 0.38)));
+    const deadzone = Math.max(8, Math.round(maxOffset * 0.30));
+
     let x = event.clientX - (rect.left + rect.width / 2);
     let y = event.clientY - (rect.top + rect.height / 2);
     const distance = Math.hypot(x, y);
-    if (distance > maxOffset) { x *= maxOffset / distance; y *= maxOffset / distance; }
+    if (distance > maxOffset) {
+      x *= maxOffset / distance;
+      y *= maxOffset / distance;
+    }
     knob.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-    const tilt = Math.hypot(x, y) < 12 ? 0 : Math.round((-x / maxOffset) * 22);
+    const tilt = distance < deadzone ? 0 : Math.round((-x / maxOffset) * 22);
     knob.style.setProperty('--joy-tilt', `${tilt}deg`);
-    const name = Math.hypot(x, y) < 12 ? null : Math.abs(x) > Math.abs(y)
+    const name = distance < deadzone ? null : Math.abs(x) > Math.abs(y)
       ? (x > 0 ? 'right' : 'left')
       : (y > 0 ? 'backward' : 'forward');
     if (base) base.dataset.direction = name || 'neutral';
@@ -47,7 +53,7 @@ export function initJoystick(element, knob, { onDirection, onRelease, canMove })
     if (!canMove()) return;
     event.preventDefault();
     pointerId = event.pointerId;
-    element.setPointerCapture(event.pointerId);
+    try { element.setPointerCapture(event.pointerId); } catch {}
     update(event);
   });
   element.addEventListener('pointermove', (event) => { if (event.pointerId === pointerId) update(event); });
@@ -79,7 +85,7 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
   let pointerId = null;
   let current = null;
   const base = knob.closest('.fork-joy-base');
-  const maxOffset = 38;
+
   const center = () => {
     knob.style.transform = 'translate(-50%, -50%)';
     if (base) base.dataset.direction = 'neutral';
@@ -92,7 +98,7 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
     center();
     if (wasMoving) onNeutral?.();
   };
-  const move = (direction) => {
+  const move = (direction, maxOffset) => {
     current = direction;
     if (base) base.dataset.direction = direction;
     knob.style.transform = `translate(-50%, calc(-50% + ${direction === 'up' ? -maxOffset : maxOffset}px))`;
@@ -100,12 +106,19 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
   };
   const update = (event) => {
     const rect = element.getBoundingClientRect();
+    const maxOffset = Math.max(20, Math.min(44, Math.round(rect.height * 0.38)));
+    const deadzone = Math.max(8, Math.round(maxOffset * 0.30));
+
     const y = Math.max(-maxOffset, Math.min(maxOffset, event.clientY - (rect.top + rect.height / 2)));
-    const direction = Math.abs(y) < 12 ? null : y < 0 ? 'up' : 'down';
-    if (direction && direction !== current && canMove()) move(direction);
-    else if (!direction && current) {
+    knob.style.transform = `translate(-50%, calc(-50% + ${y}px))`;
+
+    const direction = Math.abs(y) < deadzone ? null : y < 0 ? 'up' : 'down';
+    if (base) base.dataset.direction = direction || 'neutral';
+    if (direction && direction !== current && canMove()) {
+      current = direction;
+      onDirection(direction);
+    } else if (!direction && current) {
       current = null;
-      center();
       onNeutral?.();
     }
   };
@@ -114,7 +127,7 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
     if (!canMove()) return;
     event.preventDefault();
     pointerId = event.pointerId;
-    element.setPointerCapture(event.pointerId);
+    try { element.setPointerCapture(event.pointerId); } catch {}
     update(event);
   });
   element.addEventListener('pointermove', (event) => { if (event.pointerId === pointerId) update(event); });
@@ -125,7 +138,9 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
     const direction = event.key === 'ArrowUp' ? 'up' : event.key === 'ArrowDown' ? 'down' : null;
     if (!direction || event.repeat || !canMove()) return;
     event.preventDefault();
-    if (direction !== current) move(direction);
+    const rect = element.getBoundingClientRect();
+    const maxOffset = Math.max(20, Math.min(44, Math.round(rect.height * 0.38)));
+    if (direction !== current) move(direction, maxOffset);
   });
   element.addEventListener('keyup', (event) => {
     if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && current) {

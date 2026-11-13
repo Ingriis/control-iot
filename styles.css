@@ -216,9 +216,7 @@ body {
 }
 .dashboard { margin-top: 14px; }
 
-.alert { border-radius: 7px; font-size: 11px; overflow-wrap: anywhere; }
-.alert-warning { border-color: #99702a; background: #332a1c; color: #ffe19b; }
-.alert-danger { border-color: #a9434a; background: #351d29; color: #ffb6ba; }
+.alert { display: none !important; }
 
 .card {
   position: relative;
@@ -331,7 +329,12 @@ body {
   transform: translateX(-50%) rotate(var(--joy-tilt, 0deg));
   transform-origin: 50% 34px;
   transition: transform 90ms ease-out;
+  will-change: transform;
   filter: drop-shadow(0 3px 5px #0009) drop-shadow(0 0 8px #ff454d44);
+}
+.joystick:active .joy-handle,
+.fork-joystick:active .joy-handle {
+  transition: none;
 }
 .direction-label {
   position: absolute;
@@ -610,6 +613,17 @@ body {
   border: 1px solid #78262a;
   box-shadow: inset 0 0 3px #000;
   image-rendering: pixelated;
+}
+.power-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+.pwr-line {
+  display: inline;
+}
+.pwr-sep {
+  display: inline;
 }
 .power-button:hover:not(:disabled) {
   filter: brightness(1.25);
@@ -946,587 +960,1162 @@ body {
 .history-table tbody tr:last-child th, .history-table tbody tr:last-child td { border-bottom: 0; }
 .history-table tbody tr:hover { background: #14243a; }
 .history-table th:first-child, .history-table td:first-child { text-align: center; }
-@media (max-width: 767.98px) {
-  html, body { height: 100%; overflow: hidden; }
-  .app-shell { height: 100dvh; overflow: hidden; }
-  main#main { min-height: 0; flex: 1 1 auto; overflow: hidden; }
-  .view-switcher { width: fit-content; }
-  .floating-view-switcher { top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); bottom: auto; }
-  .view-switcher .view-nav-button { flex: 0 1 auto; min-width: 76px; min-height: 28px; padding: 4px 9px; font-size: 9px; }
-  .monitor-heading-row { align-items: flex-start; }
-  .monitor-refresh { min-height: 40px; padding: 7px 10px; font-size: 11px; }
-  .monitor-history { padding: 12px; }
-  .history-table { min-width: 460px; }
+
+
+/* ==========================================================================
+   SISTEMA DE RESPONSIVIDAD TOTAL (CERO SCROLL)
+   Adapta tamaño, escala y forma en teléfonos, laptops, PCs y ventanas reducidas
+   ========================================================================== */
+
+/* 1. Marco global 100dvh con cero scroll y optimizaciones móviles nativas */
+html, body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Keep each view inside the visible window; dense lists adapt to short screens. */
-html, body { width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
-body { min-height: 0; }
+body {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .app-shell {
   display: flex;
-  width: min(100%, 1240px);
-  height: 100vh;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1240px;
+  height: 100%;
   height: 100dvh;
   min-height: 0;
+  max-height: 100dvh;
+  margin: 0 auto;
+  padding-top: max(clamp(4px, 1vh, 12px), env(safe-area-inset-top));
+  padding-bottom: max(clamp(4px, 1vh, 10px), env(safe-area-inset-bottom));
+  padding-left: max(clamp(5px, 1.2vw, 18px), env(safe-area-inset-left));
+  padding-right: max(clamp(5px, 1.2vw, 18px), env(safe-area-inset-right));
+  overflow: hidden !important;
+  box-sizing: border-box;
+}
+
+/* Reglas táctiles mobile-first: prevención de retrasos y toques fantasma */
+button,
+.command-button,
+.action-button,
+.view-nav-button,
+.speed-semaphore,
+.cruise-button,
+.power-button,
+.stop-button,
+.demo-arrow-btn,
+.monitor-refresh {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.joystick,
+.fork-joystick,
+.joy-base,
+.fork-joy-base,
+.joy-knob,
+.fork-joy-knob {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Permitir selección de texto exclusivamente en telemetría técnica para diagnóstico */
+.history-table,
+.history-table td,
+.history-table th,
+.monitor-command,
+.monitor-meta,
+.connectivity-item small {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+main#main {
+  display: flex;
   flex-direction: column;
-  margin-top: 0;
-  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden !important;
+}
+
+#controlView,
+#monitorView {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden !important;
+}
+
+#controlView.dashboard {
+  margin: 0 !important;
+  row-gap: 0 !important;
+}
+
+#controlView > article {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  padding: 0 !important;
+  max-width: 100%;
+}
+
+#controlView > aside {
+  display: none !important;
+}
+
+/* 2. Tarjeta de controles principal */
+.control-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  padding: clamp(5px, 1.2vh, 12px) clamp(6px, 1.4vw, 16px);
+  gap: clamp(3px, 0.8vh, 8px);
+  overflow: hidden !important;
+  justify-content: space-between;
+}
+
+.direction-console {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  padding: clamp(4px, 1vh, 10px);
+  gap: clamp(4px, 0.8vh, 8px);
+  justify-content: center;
+}
+
+.primary-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  gap: clamp(4px, 1vw, 12px);
+}
+
+/* 3. Joysticks simétricos en tamaño y proporción */
+.primary-controls > .joystick-wrap {
+  flex: 0 1 clamp(68px, min(21vh, 25vw), 175px);
+  width: clamp(68px, min(21vh, 25vw), 175px);
+  height: clamp(68px, min(21vh, 25vw), 175px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  position: relative;
+  margin: 0 auto;
+  display: block;
+}
+
+.primary-controls > .fork-control {
+  flex: 0 1 clamp(68px, min(21vh, 25vw), 175px);
+  width: clamp(68px, min(21vh, 25vw), 175px);
+  height: clamp(68px, min(21vh, 25vw), 175px);
+  min-height: 0 !important;
+  max-height: clamp(68px, min(21vh, 25vw), 175px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  position: relative;
+  margin: 0 auto;
+  display: block;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.fork-joystick-wrap {
+  position: relative;
+  inset: 0 !important;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+}
+
+.joystick,
+.fork-joystick {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  cursor: grab;
+  outline: none;
+}
+
+.joy-base,
+.fork-joy-base {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(138px, calc(100% - 24px));
+  height: min(138px, calc(100% - 24px));
+  max-width: calc(100% - 24px);
+  max-height: calc(100% - 24px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 9px #b9ff3555);
+}
+
+/* Flechas direccionales: ajuste responsivo a los 4 lados */
+.direction-label,
+.fork-direction-label {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(12px, 2.2vw, 18px);
+  height: clamp(12px, 2.2vw, 18px);
+  color: var(--lime);
+  font-size: clamp(9px, 1.8vw, 15px);
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 0 6px #b9ff35cc, 0 0 12px #b9ff3566;
+}
+
+.north { top: 2px; left: 50%; transform: translateX(-50%); }
+.south { bottom: 2px; left: 50%; transform: translateX(-50%); }
+.east  { right: 2px; top: 50%; transform: translateY(-50%); }
+.west  { left: 2px; top: 50%; transform: translateY(-50%); }
+.fork-up   { top: 2px; left: 50%; transform: translateX(-50%); }
+.fork-down { bottom: 2px; left: 50%; transform: translateX(-50%); }
+
+/* 4. Panel central: Paro, Semáforo, Encendido y Crucero */
+.primary-controls > .stop-panel {
+  flex: 0 1 clamp(95px, min(25vh, 32vw), 210px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(3px, 0.7vh, 6px);
+}
+
+.top-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: clamp(2px, 0.6vw, 6px);
+}
+
+.speed-semaphore,
+.cruise-button {
+  min-width: clamp(32px, 4vw, 44px);
+  min-height: clamp(32px, 4.4vh, 42px);
+  padding: 2px clamp(3px, 0.5vw, 5px);
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.speed-semaphore::after,
+.cruise-button::after,
+.demo-arrow-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.top-control-row .power-control {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+}
+
+.power-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: clamp(32px, 4.4vh, 42px);
+  padding: 2px clamp(3px, 0.6vw, 8px);
+  font-size: clamp(8.5px, 1.1vw, 11px);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+/* 3D Mechanical relief for top arcade controls */
+.power-button,
+.speed-semaphore,
+.cruise-button {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 0 #000, 0 3px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+}
+
+.power-button:active:not(:disabled),
+.speed-semaphore:active:not(:disabled),
+.cruise-button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), 0 0 0 #000;
+  filter: brightness(0.9);
+}
+
+.cruise-button[aria-pressed="true"] .cruise-switch-lever {
+  border-color: #00d2ff;
+  box-shadow: 0 0 6px #22e3ed, inset 0 0 4px rgba(0, 210, 255, 0.3);
+}
+
+.stop-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: clamp(2px, 0.4vh, 4px);
+}
+
+.stop-caption {
+  font-size: clamp(7px, 0.95vw, 9px);
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+.stop-bezel {
+  container-type: inline-size;
+  position: relative;
+  width: clamp(62px, 12.5vh, 110px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.stop-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 78%;
+  height: 78%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-weight: 900;
+  font-size: clamp(8px, 13cqw, 16px);
+  letter-spacing: clamp(-0.4px, 0.2cqw, 0.3px);
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+  overflow: hidden;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+/* Estado de enclavamiento físico para el botón de Paro de Emergencia */
+.stop-bezel.is-latched {
+  filter: drop-shadow(0 0 10px #ff454d);
+}
+
+.stop-bezel.is-latched .stop-button {
+  transform: translate(-50%, -50%) scale(0.91);
+  filter: brightness(0.9) drop-shadow(0 0 8px #ff454d);
+  color: #ffc2c5;
+}
+
+.stop-bezel.is-latched::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px dashed #ff454d;
+  border-radius: 4px;
+  animation: stop-hazard-blink 0.5s steps(2, start) infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes stop-hazard-blink {
+  50% { opacity: 0.15; }
+}
+
+.status-indicator.is-emergency {
+  background: var(--red) !important;
+  box-shadow: 0 0 8px #ff454d, 0 0 14px #ff454d !important;
+  animation: stop-hazard-blink 0.4s steps(2, start) infinite;
+}
+
+/* Microindicador nítido de marcha bajo el semáforo */
+.speed-semaphore[data-speed="1"] .semaphore-caption::after {
+  content: ' 1';
+  color: var(--lime);
+}
+.speed-semaphore[data-speed="2"] .semaphore-caption::after {
+  content: ' 2';
+  color: var(--amber);
+}
+.speed-semaphore[data-speed="3"] .semaphore-caption::after {
+  content: ' 3';
+  color: var(--red);
+}
+
+/* Tipografía de alta legibilidad para telemetría y tablas técnicas */
+.history-table,
+.monitor-meta,
+.connectivity-item small {
+  font-family: 'JetBrains Mono', 'SF Pro Mono', 'Segoe UI Mono', Consolas, monospace !important;
+}
+
+.drive-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: clamp(14px, 2.2vh, 18px);
+  font-size: clamp(8px, 1vw, 10.5px);
+}
+
+/* 5. Botones de Luces y Sonido */
+.utility-command-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(6px, 1.4vw, 12px);
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.utility-command {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 1vw, 8px);
+  min-height: clamp(26px, 4.2vh, 40px);
+  padding: 2px clamp(6px, 1vw, 12px);
+  font-size: clamp(8px, 1.1vw, 10.5px);
+}
+
+.pixel-icon {
+  width: clamp(20px, 3.2vh, 30px);
+  height: clamp(20px, 3.2vh, 30px);
+}
+
+.switch-track {
+  width: clamp(24px, 3.8vh, 32px);
+  height: clamp(12px, 1.9vh, 16px);
+}
+
+/* 6. Panel DEMO y lista de progreso */
+.demo-side-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  gap: clamp(3px, 0.5vh, 6px);
+  width: 100%;
   overflow: hidden;
 }
-.topbar, .connectivity, .app-footer { flex: 0 0 auto; }
-.connectivity { margin-top: 10px; }
-main#main { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; overflow: hidden; }
-#controlView, #monitorView { height: 100%; min-height: 0; flex: 1 1 auto; overflow: hidden; }
-#controlView.dashboard { height: 100%; }
-#controlView.dashboard > article { width: 100%; }
-#controlView > article, #controlView > aside { min-height: 0; }
-.control-card, .side-card { min-height: 0; overflow: hidden; }
-.control-card { display: flex; height: 100%; flex-direction: column; }
-.direction-console { min-height: 0; }
-.direction-console { flex: 0 1 auto; }
-.command-area { min-height: 0; flex: 1 1 auto; overflow: hidden; }
-.command-grid { max-height: 100%; overflow: hidden; }
-.demo-progress { min-height: 0; margin-top: 12px; padding: 10px 12px; border: 2px solid #2b697c; border-radius: 8px; background: #0b1425; }
-.demo-progress-heading { margin: 0 0 6px; color: var(--cyan); font-size: 11px; letter-spacing: 1px; }
-.demo-progress ol { display: flex; flex-wrap: wrap; gap: 8px; overflow-x: hidden; margin: 0; padding: 0; color: var(--text); font-size: 12px; list-style: none; }
-.demo-progress li { flex: 0 1 auto; min-width: 0; max-width: 100%; padding: 5px 9px; border: 1px solid #29485c; border-radius: 5px; background: #101b2e; overflow-wrap: anywhere; }
-.demo-progress .demo-progress-empty { color: var(--muted); list-style: none; }
-.monitor-view { display: flex; flex-direction: column; }
-.monitor-heading-row, .monitor-latest { flex: 0 0 auto; }
-.monitor-history { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; overflow: hidden; }
-.history-table-wrap { min-height: 0; flex: 1 1 auto; overflow: hidden; }
-.app-footer { padding-top: 10px; }
 
-@media (max-width: 767.98px) {
-  .app-shell { padding: 8px 12px 6px; border-width: 2px; border-radius: 0; }
-  .topbar { min-height: 44px; flex-direction: row; align-items: center; gap: 7px; padding: 1px 0 6px; }
-  .brand { gap: 6px; font-size: 13px; letter-spacing: -.3px; }
-  .brand-mark { width: 38px; height: 34px; }
-  .brand small { font-size: 8px; }
-  .view-nav { width: auto; flex: 0 0 auto; gap: 4px; }
-  .view-nav-button { min-height: 36px; padding: 5px 8px; font-size: 9px; }
-  .connectivity { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 6px; }
-  .connectivity-item { min-width: 0; min-height: 48px; gap: 4px; padding: 5px; }
-  .connectivity-item .state-symbol { display: none; }
-  .connectivity-item b { display: block; font-size: 8px; line-height: 1.15; }
-  .connectivity-item small { font-size: 8px; line-height: 1.15; }
-  .service-led { width: 7px; height: 7px; flex: 0 0 7px; }
-  .dashboard { min-height: 0; margin-top: 6px; overflow: hidden; }
-  .dashboard > article { min-height: 0; height: 100%; }
-  .dashboard > aside { display: none; }
-  .control-card { display: flex; height: 100%; flex-direction: column; padding: 8px; }
-  .direction-console { flex: 0 0 auto; gap: 4px; padding: 4px; }
-  .primary-controls { gap: 2px; }
-  .primary-controls > .joystick-wrap, .primary-controls > .fork-control { height: clamp(72px, 15vh, 112px); }
-  .joy-base, .fork-joy-base { width: min(76px, calc(100% - 15px)); height: min(76px, calc(100% - 15px)); }
-  .direction-label, .fork-direction-label { font-size: 10px; }
-  .primary-controls > .stop-panel { flex-basis: clamp(104px, 35%, 150px); gap: 3px; }
-  .stop-control { gap: 3px; }
-  .stop-caption { font-size: 7px; }
-  .stop-bezel { width: min(100%, 84px); }
-  .stop-button { min-height: 34px; font-size: 10px; }
-  .drive-status { min-height: 18px; font-size: 9px; }
-  .utility-command-buttons { gap: 5px; }
-  .utility-command { min-height: 42px; font-size: 8px; }
-  .pixel-icon { width: 30px; height: 30px; }
-  .switch-track { width: 34px; height: 17px; }
-  .demo-control-panel { gap: 5px; padding: 6px; }
-  .demo-console-title { margin: 0; font-size: 11px; }
-  .demo-control-panel .demo-select { min-height: 36px; padding-top: 4px; padding-bottom: 4px; font-size: 10px; }
-  .demo-control-panel .action-button { min-height: 38px; }
-  .command-area { margin-top: 5px !important; }
-  .command-area .section-label { margin-bottom: 4px; font-size: 8px; }
-  .command-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-  .command-button { min-height: 36px; padding: 4px; }
-  .command-button strong { font-size: 8px; }
-  .command-button small { display: none; }
-  .side-card { display: none; }
-  .app-footer { gap: 3px; padding-top: 5px; font-size: 7px; line-height: 1.2; }
-  .monitor-view { margin-top: 7px; }
-  .monitor-heading-row { align-items: center; gap: 6px; }
-  .monitor-heading-row .eyebrow { margin-bottom: 2px; font-size: 8px; }
-  .monitor-heading-row h1 { font-size: 17px; }
-  .monitor-vehicle { margin-top: 1px; font-size: 10px; }
-  .monitor-refresh { min-height: 34px; padding: 4px 7px; font-size: 9px; }
-  .monitor-latest { margin-top: 7px; padding: 9px 11px; }
-  .monitor-card-label { font-size: 9px; }
-  .monitor-command { margin-top: 4px; font-size: 20px; }
-  .monitor-meta { gap: 2px 8px; margin-top: 3px; font-size: 9px; }
-  .monitor-note { margin-top: 4px; font-size: 8px; }
-  .monitor-history { margin-top: 7px; padding: 8px; }
-  .monitor-history-heading { gap: 4px; margin-bottom: 5px; }
-  .monitor-history-heading .eyebrow { margin-bottom: 1px; font-size: 8px; }
-  .monitor-history-heading h2 { font-size: 13px; }
-  .history-count { font-size: 8px; }
-  .history-message { padding: 7px; font-size: 10px; }
-  .history-table { min-width: 0; font-size: 9px; }
-  .history-table th, .history-table td { padding: 5px 6px; }
-  .history-table thead th { font-size: 8px; }
+.demo-control-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(42px, 6.5vw, 64px);
+  align-items: center;
+  gap: clamp(4px, 1vw, 8px);
+  padding: clamp(2px, 0.4vh, 4px);
+  width: 100%;
 }
 
-@media (max-height: 700px) {
-  .app-shell { padding-top: 6px; padding-bottom: 4px; }
-  .app-footer { padding-top: 4px; }
-  .monitor-latest { padding-top: 8px; padding-bottom: 8px; }
-  .monitor-note { margin-top: 3px; }
-  .monitor-history { margin-top: 6px; padding-top: 7px; padding-bottom: 7px; }
-}
-@media (min-width: 768px) and (max-height: 800px) {
-  .control-card { padding: 9px; }
-  .direction-console { gap: 5px; padding: 5px; }
-  .primary-controls { gap: 5px; }
-  .primary-controls > .joystick-wrap, .primary-controls > .fork-control { height: min(16vh, 120px); }
-  .joy-base, .fork-joy-base { width: min(92px, calc(100% - 20px)); height: min(92px, calc(100% - 20px)); }
-  .stop-panel { gap: 5px; }
-  .stop-bezel { width: min(100%, 104px); }
-  .utility-command { min-height: 44px; }
-  .pixel-icon { width: 34px; height: 34px; }
-  .demo-control-panel { gap: 5px; padding: 6px; }
-  .demo-console-title { margin: 0; }
-  .demo-control-panel .demo-select, .demo-control-panel .action-button { min-height: 42px; }
-  .command-area { margin-top: 5px !important; }
-  .command-area .section-label { margin-bottom: 4px; }
-  .command-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
-  .command-button { min-height: 38px; padding: 5px; }
-  .command-button small { display: none; }
-  .command-grid > :nth-child(n + 7) { display: none; }
-  .monitor-latest { margin-top: 8px; padding: 10px 15px; }
-  .monitor-command { margin-top: 6px; font-size: 25px; }
-  .monitor-meta { margin-top: 4px; font-size: 11px; }
-  .monitor-note { margin-top: 5px; font-size: 9px; }
-  .monitor-history { margin-top: 8px; padding: 9px; }
-  .monitor-history-heading { margin-bottom: 5px; }
-  .history-table th, .history-table td { padding-top: 5px; padding-bottom: 5px; }
-}
-@media (max-height: 560px) {
-  .connectivity-item { min-height: 40px; }
-  .monitor-latest { padding-top: 6px; padding-bottom: 6px; }
-  .monitor-note { display: none; }
-}
-@media (orientation: landscape) and (max-width: 900px) {
-  .connectivity { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .primary-controls > .joystick-wrap, .primary-controls > .fork-control { height: min(23vh, 125px); }
+.demo-console-title {
+  margin: 0 0 2px;
+  font-size: clamp(9px, 1.1vw, 12px);
 }
 
-.stop-button:focus-visible, .command-button:focus-visible, .action-button:focus-visible, .utility-command:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: 3px;
-}
-.joystick.is-disabled { cursor: not-allowed; opacity: .58; }
-
-@media (min-width: 768px) and (max-width: 991.98px) {
-  .control-card, .side-card { padding: 14px; }
-  .direction-console { max-width: none; grid-template-columns: minmax(150px, 1fr) minmax(100px, .7fr) minmax(150px, 1fr); gap: 7px; padding: 8px; }
-  .joystick-wrap, .fork-control { width: 100%; height: 180px; }
-  .joy-base, .fork-joy-base { width: min(130px, calc(100% - 36px)); height: min(130px, calc(100% - 36px)); top: 50%; left: 50%; transform: translate(-50%, -50%); }
-  .stop-panel { width: 100%; max-width: 130px; gap: 10px; }
-  .fork-control { grid-column: 3; grid-row: 1; }
-  .demo-control-panel { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) 130px; align-items: center; gap: 8px; }
-  .demo-console-title { grid-column: 1 / -1; }
-  .demo-control-panel .demo-select { grid-column: 1; }
-  .demo-control-panel .action-button { grid-column: 2; min-height: 52px; }
-  .stop-bezel { width: min(100%, 112px); }
+.demo-control-panel .action-button {
+  min-height: clamp(26px, 4vh, 38px);
+  font-size: clamp(8px, 1vw, 10.5px);
 }
 
-@media (min-width: 992px) and (max-width: 1199.98px) {
-  .direction-console { grid-template-columns: minmax(170px, 1fr) minmax(120px, .7fr) minmax(170px, 1fr); gap: 10px; padding: 10px; }
-  .stop-panel { width: 100%; max-width: 150px; gap: 12px; }
-  .fork-control { grid-column: 3; grid-row: 1; }
-  .joy-base, .fork-joy-base { width: min(135px, calc(100% - 38px)); height: min(135px, calc(100% - 38px)); top: 50%; left: 50%; transform: translate(-50%, -50%); }
-  .demo-control-panel { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) 150px; align-items: center; gap: 8px; }
-  .demo-console-title { grid-column: 1 / -1; }
-  .demo-control-panel .demo-select { grid-column: 1; }
-  .demo-control-panel .action-button { grid-column: 2; min-height: 54px; }
-  .stop-bezel { width: min(100%, 120px); }
+.demo-carousel {
+  display: grid;
+  grid-template-columns: clamp(22px, 3.8vw, 30px) 1fr clamp(22px, 3.8vw, 30px);
+  align-items: center;
+  min-height: clamp(26px, 4vh, 38px);
+  gap: 2px;
+  background: #070e1a;
+  border: 1px solid #287184;
+  border-radius: 4px;
+  padding: 1px 2px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
 }
 
-@media (max-width: 767.98px) {
-  .app-shell { margin-top: 10px; margin-bottom: 10px; padding: 16px 17px 14px; border-radius: 13px; }
-  .connectivity { grid-template-columns: 1fr; gap: 7px; margin-top: 12px; }
-  .connectivity-item { min-height: 50px; padding: 8px 11px; }
-  .connectivity-item b { font-size: 10px; }
-  .control-card, .side-card { padding: 18px; }
-  .side-card { min-height: unset; }
-  .dashboard { row-gap: 12px; }
-  .direction-console { max-width: none; grid-template-columns: minmax(0, 1fr) minmax(70px, .75fr) minmax(0, 1fr); gap: 7px; padding: 8px; }
-  .joystick-wrap, .fork-control { width: 100%; height: clamp(140px, 20vw, 170px); }
-  .joy-base, .fork-joy-base { width: min(115px, calc(100% - 34px)); height: min(115px, calc(100% - 34px)); top: 50%; left: 50%; transform: translate(-50%, -50%); }
-  .stop-panel { width: 100%; max-width: 120px; }
-  .stop-caption { font-size: 8px; letter-spacing: .25px; }
-  .stop-bezel { width: min(100%, 100px); }
-  .fork-control { grid-column: 3; grid-row: 1; min-height: unset; }
-  .demo-control-panel { grid-column: 1 / -1; grid-row: 2; grid-template-columns: minmax(0, 1fr) minmax(92px, 36%); gap: 9px; }
-  .utility-command-buttons { grid-column: 1 / -1; grid-row: 3; }
-  .demo-console-title { grid-column: 1 / -1; }
-  .demo-control-panel .demo-select { grid-column: 1; }
-  .demo-control-panel .action-button { grid-column: 2; min-height: 52px; background-position: center 6%; background-size: 90% 130%; }
-  .stop-caption { text-align: center; }
-  .power-control { order: 1; width: 100%; }
-  .stop-control { order: 2; width: 100%; }
-  .stop-bezel { width: min(100%, 128px); }
-  .drive-status { order: 3; }
-  .app-footer { flex-direction: column; line-height: 1.6; padding-top: 16px; }
-  .command-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.demo-arrow-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: clamp(22px, 3.2vh, 30px);
+  padding: 0;
+  border: 1px solid #336170;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #172a3f, #0d1a29);
+  color: var(--cyan);
+  font-size: clamp(9px, 1.2vw, 12px);
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.08s ease;
+  user-select: none;
 }
 
-@media (max-width: 390px) {
-  .app-shell { padding-right: 12px; padding-left: 12px; }
-  .command-grid { grid-template-columns: 1fr; }
-  .control-card, .side-card { padding: 16px; }
-  .connectivity-item b { font-size: 10px; }
-  .drive-status { gap: 6px; }
-  .stop-button { padding: 0; }
-  .direction-console { padding: 7px; }
-  .utility-command-buttons { gap: 6px; }
-  .utility-command { min-height: 52px; gap: 1px; padding-right: 3px; padding-left: 3px; font-size: 9px; }
-  .pixel-icon { width: 40px; height: 40px; }
-  .switch-track { width: 38px; height: 19px; }
-  .stop-panel { padding: 5px 0; }
-  .command-loading { min-height: 82px; padding-right: 128px; }
-  .command-loading img { right: -10px; width: 112px; height: 80px; bottom: -16px; }
+.demo-arrow-btn:active:not(:disabled) {
+  transform: scale(0.92);
+  filter: brightness(1.2);
 }
 
-@media (max-width: 359.98px) {
-  .demo-control-panel { grid-template-columns: minmax(0, 1fr); }
-  .demo-control-panel .demo-select, .demo-control-panel .action-button { grid-column: 1; }
-  .demo-control-panel .action-button { min-height: 54px; background-position: center 6%; background-size: 90% 130%; }
+.demo-arrow-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: #1a2838;
 }
 
-@media (orientation: landscape) and (max-height: 520px) and (max-width: 900px) {
-  .connectivity { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .connectivity-item { min-height: 48px; }
-  .dashboard { align-items: start; }
+.demo-cartridge-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2px 4px;
+  font-family: var(--sans);
+  font-size: clamp(7.5px, 0.95vw, 10px);
+  font-weight: 700;
+  color: #f4f8ff;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  user-select: none;
 }
 
-/* Keep the three physical controls in their own row; secondary panels follow below. */
-.direction-console { display: grid; width: 100%; max-width: none; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-.primary-controls { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; }
-.primary-controls > .joystick-wrap { flex: 1 1 0; min-width: 0; width: min(220px, 100%); height: 220px; grid-column: auto; grid-row: auto; }
-.primary-controls > .stop-panel { flex: 0 1 240px; min-width: 0; width: 100%; max-width: 250px; }
-.primary-controls > .fork-control { flex: 1 1 0; min-width: 0; width: min(220px, 100%); min-height: 0; height: 220px; grid-column: auto; grid-row: auto; }
-.fork-control { position: relative; display: flex; align-items: center; justify-content: center; grid-template-rows: 1fr; border: 0; background: transparent; box-shadow: none; }
-.fork-joystick-wrap { position: relative; width: 100%; height: 100%; }
-.fork-joy-base { top: 50%; left: 50%; width: min(145px, calc(100% - 40px)); height: min(145px, calc(100% - 40px)); transform: translate(-50%, -50%); }
-.app-footer { align-items: center; flex-wrap: wrap; }
-.app-footer > span { min-width: 0; overflow-wrap: anywhere; }
-.utility-command-buttons { grid-column: 1; grid-row: 2; }
-.demo-control-panel { grid-column: 1; grid-row: 3; width: 100%; }
+.demo-progress {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: clamp(38px, 10vh, 85px);
+  padding: clamp(2px, 0.5vh, 5px) clamp(6px, 1vw, 10px);
+  border: 1px solid #2b697c;
+  border-radius: 6px;
+  background: #0b1425;
+  overflow: hidden;
+}
 
-@media (min-width: 768px) and (max-width: 991.98px) {
-  .primary-controls { gap: 8px; }
+.demo-progress-heading {
+  margin: 0 0 2px;
+  color: var(--cyan);
+  font-size: clamp(7.5px, 0.95vw, 9.5px);
+  letter-spacing: 0.6px;
+}
+
+.demo-progress ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(2px, 0.5vw, 5px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.demo-progress li {
+  padding: 1px clamp(4px, 0.6vw, 6px);
+  font-size: clamp(7px, 0.9vw, 9.5px);
+  border: 1px solid #29485c;
+  border-radius: 4px;
+  background: #101b2e;
+}
+
+/* 7. Switcher flotante y pie de página */
+.floating-view-switcher {
+  position: fixed;
+  z-index: 50;
+  top: max(6px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid #22e3ed88;
+  border-radius: 999px;
+  background: #08111fef;
+  box-shadow: 0 4px 18px #0009, 0 0 12px #22e3ed33;
+}
+
+.view-switcher .view-nav-button {
+  min-width: clamp(58px, 6.5vw, 78px);
+  min-height: clamp(22px, 3.2vh, 26px);
+  padding: 2px 6px;
+  font-size: clamp(7.5px, 0.95vw, 9.5px);
+  border: 0;
+  border-radius: 999px;
+}
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  width: 100%;
+  padding-top: clamp(2px, 0.5vh, 5px);
+  padding-bottom: clamp(1px, 0.2vh, 3px);
+  font-size: clamp(7px, 0.9vw, 10px);
+  letter-spacing: 0.2px;
+  line-height: 1.15;
+}
+
+/* 8. Vista de Monitoreo responsiva sin scroll */
+.monitor-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  gap: clamp(3px, 0.7vh, 7px);
+  overflow: hidden !important;
+}
+
+.monitor-view .connectivity {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(3px, 0.8vw, 7px);
+  margin-top: 2px;
+  flex: 0 0 auto;
+}
+
+.connectivity-item {
+  min-height: clamp(32px, 5vh, 48px);
+  padding: 3px clamp(4px, 0.7vw, 8px);
+  gap: clamp(3px, 0.7vw, 7px);
+}
+
+.connectivity-item b {
+  font-size: clamp(7px, 0.9vw, 9.5px);
+}
+.connectivity-item small {
+  font-size: clamp(6.5px, 0.8vw, 8.5px);
+}
+
+.service-led {
+  width: clamp(7px, 1.1vw, 10px);
+  height: clamp(7px, 1.1vw, 10px);
+  flex: 0 0 auto;
+}
+
+.monitor-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.monitor-heading-row h1 {
+  font-size: clamp(12px, 1.8vw, 16px);
+  margin: 0;
+}
+
+.monitor-refresh {
+  min-height: clamp(24px, 3.6vh, 32px);
+  padding: 2px clamp(5px, 0.9vw, 10px);
+  font-size: clamp(7.5px, 0.9vw, 9.5px);
+}
+
+.monitor-latest {
+  flex: 0 0 auto;
+  padding: clamp(4px, 0.8vh, 8px) clamp(6px, 1vw, 12px);
+  border: 1px solid #287184;
+  border-radius: 6px;
+  background: #0d1729;
+}
+
+.monitor-command {
+  font-size: clamp(13px, 2vw, 20px);
+}
+
+.monitor-history {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #287184;
+  border-radius: 6px;
+  padding: clamp(3px, 0.6vh, 6px) clamp(5px, 0.8vw, 8px);
+  background: #0d1729;
+}
+
+.monitor-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  margin-bottom: 2px;
+}
+
+.monitor-history-heading h2 {
+  font-size: clamp(9px, 1.2vw, 12px);
+  margin: 0;
+}
+
+.history-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  font-size: clamp(7.5px, 0.9vw, 10px);
+}
+
+.history-table th,
+.history-table td {
+  padding: clamp(2px, 0.4vh, 5px) clamp(3px, 0.6vw, 6px);
+}
+
+/* Badges arcade de colores para comandos en la tabla de historial */
+.history-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: clamp(7px, 0.85vw, 9.5px);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: 1px solid currentColor;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.history-badge[data-cmd="forward"] {
+  color: #b9ff35;
+  background: rgba(185, 255, 53, 0.12);
+  border-color: #6aa52b;
+}
+
+.history-badge[data-cmd="backward"] {
+  color: #ff9d3b;
+  background: rgba(255, 157, 59, 0.12);
+  border-color: #b5671d;
+}
+
+.history-badge[data-cmd="turn"] {
+  color: #ffe169;
+  background: rgba(255, 225, 105, 0.12);
+  border-color: #bfa128;
+}
+
+.history-badge[data-cmd="stop"] {
+  color: #ff525a;
+  background: rgba(255, 82, 90, 0.15);
+  border-color: #d12c35;
+}
+
+.history-badge[data-cmd="fork"] {
+  color: #22e3ed;
+  background: rgba(34, 227, 237, 0.12);
+  border-color: #2b7d8c;
+}
+
+.history-badge[data-cmd="power"] {
+  color: #e08aff;
+  background: rgba(224, 138, 255, 0.12);
+  border-color: #9c45b8;
+}
+
+.history-badge[data-cmd="speed"] {
+  color: #5ce1e6;
+  background: rgba(92, 225, 230, 0.12);
+  border-color: #288f94;
+}
+
+.history-badge[data-cmd="cruise"] {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+  border-color: #2563eb;
+}
+
+.history-badge[data-cmd="other"] {
+  color: #cbd5e1;
+  background: rgba(203, 213, 225, 0.1);
+  border-color: #64748b;
+}
+
+/* 9. Dispositivos móviles en orientación vertical estrecha (Portrait compacto < 480px) */
+@media (max-width: 480px) {
+  .app-shell {
+    padding-top: max(3px, env(safe-area-inset-top));
+    padding-bottom: max(3px, env(safe-area-inset-bottom));
+    padding-left: max(4px, env(safe-area-inset-left));
+    padding-right: max(4px, env(safe-area-inset-right));
+  }
+  .control-card {
+    padding: 6px 4px;
+    gap: 6px;
+  }
+  .direction-console {
+    padding: 3px 2px;
+    gap: 6px;
+  }
+  .primary-controls {
+    gap: 4px;
+  }
   .primary-controls > .joystick-wrap,
-  .primary-controls > .fork-control { width: min(180px, 100%); height: 180px; }
-  .joy-base, .fork-joy-base { width: min(130px, calc(100% - 36px)); height: min(130px, calc(100% - 36px)); top: 50%; left: 50%; transform: translate(-50%, -50%); }
-  .primary-controls > .stop-panel { flex-basis: 200px; max-width: 210px; }
-  .speed-semaphore { min-width: 32px; min-height: 36px; padding: 2px; }
-  .cruise-button { min-width: 40px; min-height: 36px; padding: 2px; }
-  .power-button { min-height: 36px; padding: 3px 4px; font-size: 8.5px; gap: 4px; }
+  .primary-controls > .fork-control {
+    width: clamp(76px, 23vw, 94px);
+    height: clamp(76px, 23vw, 94px);
+    min-height: 0 !important;
+    max-height: clamp(76px, 23vw, 94px);
+    flex: 0 0 clamp(76px, 23vw, 94px);
+    aspect-ratio: 1;
+  }
+  .joy-base, .fork-joy-base {
+    width: calc(100% - 10px);
+    height: calc(100% - 10px);
+    max-width: calc(100% - 10px);
+    max-height: calc(100% - 10px);
+  }
+  .primary-controls > .stop-panel {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 200px;
+    gap: 6px;
+  }
+  .top-control-row {
+    gap: 4px;
+    min-height: clamp(44px, 5.8vh, 50px);
+  }
+  .power-button {
+    font-size: clamp(8px, 2.2vw, 10px);
+    min-height: clamp(44px, 5.8vh, 50px);
+    padding: 3px 4px;
+    letter-spacing: 0.2px;
+    font-weight: 800;
+  }
+  .power-button .power-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.05;
+  }
+  .power-button .power-label .pwr-sep {
+    display: none;
+  }
+  .power-button .power-label .pwr-line {
+    display: block;
+    white-space: nowrap;
+    font-size: 8.5px;
+  }
+  .power-lamp {
+    width: 8px;
+    height: 8px;
+  }
+  .speed-semaphore,
+  .cruise-button {
+    min-width: clamp(38px, 9.5vw, 48px);
+    min-height: clamp(44px, 5.8vh, 50px);
+    padding: 3px 4px;
+  }
+  .speed-semaphore .semaphore-caption,
+  .cruise-button .cruise-caption {
+    font-size: 8.5px;
+  }
+  .stop-bezel {
+    width: clamp(86px, 23vw, 104px);
+  }
+  .stop-caption {
+    font-size: clamp(8.5px, 2.2vw, 10.5px);
+    font-weight: 700;
+  }
+  .utility-command-buttons {
+    gap: 8px;
+  }
+  .utility-command {
+    min-height: clamp(48px, 6.4vh, 56px);
+    font-size: clamp(12px, 3.2vw, 13.5px);
+    font-weight: 800;
+    padding: 4px 10px;
+  }
+  .utility-command .pixel-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .utility-command .switch-track {
+    width: 36px;
+    height: 18px;
+  }
+  .demo-control-panel {
+    grid-template-columns: minmax(0, 1fr) clamp(68px, 19vw, 84px);
+    gap: 6px;
+  }
+  .demo-carousel {
+    min-height: clamp(46px, 6vh, 54px);
+    gap: 4px;
+    grid-template-columns: clamp(42px, 11.5vw, 52px) 1fr clamp(42px, 11.5vw, 52px);
+  }
+  .demo-arrow-btn {
+    min-height: clamp(44px, 5.8vh, 50px);
+    min-width: clamp(42px, 11.5vw, 52px);
+    font-size: 20px;
+  }
+  .demo-cartridge-screen {
+    font-size: clamp(11.5px, 3vw, 13.5px);
+    padding: 4px 8px;
+    font-weight: 700;
+  }
+  .demo-control-panel .action-button {
+    min-height: clamp(46px, 6vh, 54px);
+    font-size: 13px;
+  }
 }
 
-@media (max-width: 767.98px) {
-  .direction-console { gap: 8px; padding: 8px; }
-  .app-footer { align-items: flex-start; }
-  .primary-controls { gap: 4px; }
-  .primary-controls > .joystick-wrap,
-  .primary-controls > .fork-control { width: 100%; height: clamp(140px, 20vw, 170px); }
-  .joy-base, .fork-joy-base { width: min(115px, calc(100% - 34px)); height: min(115px, calc(100% - 34px)); top: 50%; left: 50%; transform: translate(-50%, -50%); }
-  .primary-controls > .stop-panel { flex: 0 1 clamp(140px, 36%, 190px); width: 100%; max-width: 190px; gap: 4px; }
-  .speed-semaphore { min-width: 26px; min-height: 32px; padding: 1px 2px; gap: 1px; }
-  .semaphore-lamp { width: 7px; height: 7px; }
-  .semaphore-caption { font-size: 7px; }
-  .cruise-button { min-width: 34px; min-height: 32px; padding: 1px 2px; gap: 1px; }
-  .cruise-caption { font-size: 7px; }
-  .cruise-switch-lever { width: 18px; height: 9px; }
-  .cruise-switch-lever::after { width: 7px; height: 6px; }
-  .cruise-button[aria-pressed="true"] .cruise-switch-lever::after { transform: translateX(8px); }
-  .power-button { min-height: 32px; padding: 2px 3px; font-size: 7.5px; gap: 3px; }
-  .power-lamp { width: 6px; height: 6px; }
-  .stop-caption { font-size: 8px; letter-spacing: .2px; }
-  .stop-bezel { width: min(100%, 100px); }
-}
-
-/* Show all ten history entries in the short local viewport without page scrolling. */
-@media (max-width: 767.98px) {
-  .connectivity { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 5px; }
-  .connectivity-item { min-height: 42px; padding: 4px 5px; gap: 4px; }
-  .connectivity-item .state-symbol { display: none; }
-  .connectivity-item b, .connectivity-item small { font-size: 7px; line-height: 1.1; }
-  .monitor-view { margin-top: 3px; }
-  .monitor-heading-row .eyebrow, .monitor-history-heading .eyebrow { display: none; }
-  .monitor-heading-row h1 { font-size: 15px; }
-  .monitor-vehicle { font-size: 9px; }
-  .monitor-refresh { min-height: 30px; font-size: 8px; }
-  .monitor-latest { margin-top: 4px; padding: 5px 9px; }
-  .monitor-card-label { font-size: 8px; }
-  .monitor-command { margin-top: 2px; font-size: 16px; }
-  .monitor-meta { margin-top: 2px; font-size: 8px; }
-  .monitor-note { display: none; }
-  .monitor-history { min-height: 0; margin-top: 4px; padding: 6px; }
-  .monitor-history-heading { margin-bottom: 3px; }
-  .monitor-history-heading h2 { font-size: 11px; }
-  .history-count { font-size: 7px; }
-  .history-table-wrap { min-height: 0; overflow: hidden; }
-  .history-table { width: 100%; min-width: 0; font-size: 8px; line-height: 1.05; }
-  .history-table th, .history-table td { padding: 2px 4px; }
-  .history-table thead th { padding-top: 3px; padding-bottom: 3px; font-size: 7px; }
-  .history-table tbody tr { display: table-row !important; }
-}
-@media (max-height: 700px) {
-  .app-footer { padding-top: 3px; font-size: 6px; }
-  .monitor-history { padding-top: 4px; padding-bottom: 4px; }
-  .history-table { font-size: 9px; line-height: 1.1; }
-  .history-table th, .history-table td { padding-top: 3px; padding-bottom: 3px; }
-}
-@media (max-height: 560px) {
-  .monitor-heading-row h1 { font-size: 12px; }
-  .monitor-latest { padding-top: 3px; padding-bottom: 3px; }
-  .monitor-history-heading h2 { font-size: 9px; }
-  .history-table { font-size: 7px; }
-  .history-table th, .history-table td { padding-top: 0; padding-bottom: 0; }
-}
-.app-footer { font-size: 12px; letter-spacing: .3px; }
-@media (max-width: 767.98px) {
-  .app-footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 3px; padding-top: 5px; font-size: 14px; line-height: 1.15; letter-spacing: .2px; }
-}
-@media (max-width: 420px) {
-  .app-footer { font-size: 12px; }
-}
-
-/* Final responsive layout overrides for CONTROL and MONITOREO. */
-#controlView > aside { display: none !important; }
-
-@media (min-width: 768px) and (max-width: 991.98px) {
-  .app-shell { padding: 12px 14px 10px; }
-  .topbar { gap: 10px; }
-  .view-nav-button { min-height: 38px; padding: 6px 10px; }
-  .connectivity { gap: 7px; }
-  .connectivity-item { min-width: 0; padding: 7px; }
-  .connectivity-item b { font-size: 9px; }
-  .connectivity-item small { font-size: 9px; }
-  #controlView > article { min-width: 0; }
-  .control-card { padding: 10px; }
-  .primary-controls { gap: 4px; }
-  .primary-controls > .joystick-wrap, .primary-controls > .fork-control { width: min(145px, 100%); height: min(18vh, 150px); }
-  .primary-controls > .stop-panel { flex-basis: 160px; max-width: 170px; }
-  .joy-base, .fork-joy-base { width: min(112px, calc(100% - 24px)); height: min(112px, calc(100% - 24px)); }
-  .command-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
-  .command-button { min-width: 0; }
-  .command-button small { display: none; }
-  .side-card { padding: 12px; }
-  .action-info { padding: 8px; }
-  .monitor-latest { padding: 14px 18px; }
-  .monitor-history { padding: 12px; }
-  .history-table th, .history-table td { padding: 7px 9px; }
-}
-
-@media (max-width: 767.98px) {
-  .app-shell { padding: 7px 10px 5px; }
-  .topbar { min-height: 40px; flex-direction: row; align-items: center; justify-content: space-between; gap: 5px; }
-  .brand { min-width: 0; flex: 1 1 auto; gap: 5px; font-size: 12px; }
-  .brand-mark { width: 34px; height: 32px; flex: 0 0 34px; }
-  .brand small { font-size: 7px; }
-  .view-nav { flex: 0 0 auto; gap: 3px; }
-  .view-nav-button { min-height: 32px; padding: 4px 7px; font-size: 8px; }
-  .connectivity { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 5px; }
-  .connectivity-item { min-width: 0; min-height: 38px; padding: 3px 4px; gap: 3px; }
-  .connectivity-item .state-symbol { display: none; }
-  .connectivity-item b, .connectivity-item small { font-size: 7px; line-height: 1.05; overflow-wrap: anywhere; }
-  main#main { gap: 3px; }
-  #controlView.dashboard { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-  #controlView > article { width: 100%; min-height: 0; flex: 1 1 auto; height: auto; }
-  #controlView > aside { display: block; width: 100%; min-height: 0; flex: 0 0 auto; }
-  .control-card { height: 100%; padding: 6px; }
-  .direction-console { gap: 4px; padding: 3px; }
-  .primary-controls { gap: 1px; }
-  .primary-controls > .joystick-wrap, .primary-controls > .fork-control { width: min(31vw, 145px); height: clamp(88px, 17vh, 130px); }
-  .primary-controls > .stop-panel { flex: 1 1 120px; width: auto; max-width: 160px; gap: 3px; }
-  .joy-base, .fork-joy-base { width: min(90px, calc(100% - 18px)); height: min(90px, calc(100% - 18px)); }
-  .stop-caption { font-size: 7px; }
-  .stop-bezel { width: min(100%, 88px); }
-  .stop-button { min-height: 35px; font-size: 10px; }
-  .top-control-row { gap: 3px; }
-  .power-button { min-height: 32px; padding: 2px 4px; font-size: 8px; }
-  .power-button .power-label { min-width: 0; overflow-wrap: anywhere; line-height: 1.05; }
-  .utility-command-buttons { gap: 4px; }
-  .utility-command { min-height: 36px; gap: 3px; padding: 3px 4px; font-size: 8px; }
-  .pixel-icon { width: 27px; height: 27px; }
-  .switch-track { width: 32px; height: 16px; }
-  .demo-control-panel { gap: 4px; padding: 5px; }
-  .demo-console-title { margin: 0; font-size: 10px; }
-  .demo-control-panel .demo-select, .demo-control-panel .action-button { min-height: 34px; }
-  .command-area { margin-top: 4px !important; }
-  .command-area .section-label { margin-bottom: 3px; font-size: 8px; }
-  .command-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
-  .command-loading { min-height: 24px; padding: 4px; }
-  .command-loading img { display: none; }
-  .command-button { min-height: 30px; min-width: 0; padding: 3px; }
-  .command-button strong { font-size: 8px; overflow-wrap: anywhere; }
-  .command-button small { display: none; }
-  .side-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; }
-  .side-card .divider, .side-card > .eyebrow, .side-card .action-info small { display: none; }
-  .action-info, .event-info { display: flex; min-width: 0; align-items: center; gap: 5px; margin: 0; padding: 4px 6px; }
-  .action-info .metric-label { font-size: 7px; }
-  .action-info strong { min-width: 0; margin: 0; font-size: 8px; overflow-wrap: anywhere; }
-  .monitor-view { margin-top: 3px; }
-  .monitor-heading-row { align-items: center; gap: 5px; }
-  .monitor-heading-row .eyebrow, .monitor-history-heading .eyebrow { display: none; }
-  .monitor-heading-row h1 { font-size: clamp(15px, 3vw, 20px); }
-  .monitor-vehicle { margin-top: 1px; font-size: 9px; }
-  .monitor-refresh { min-height: 32px; padding: 4px 7px; font-size: 8px; }
-  .monitor-latest { margin-top: 4px; padding: 6px 9px; }
-  .monitor-card-label { font-size: 8px; }
-  .monitor-command { margin-top: 2px; font-size: clamp(15px, 3.5vw, 20px); }
-  .monitor-meta { gap: 2px 8px; margin-top: 2px; font-size: 8px; }
-  .monitor-note { display: none; }
-  .monitor-history { min-height: 0; margin-top: 4px; padding: 5px; }
-  .monitor-history-heading { gap: 4px; margin-bottom: 3px; }
-  .monitor-history-heading h2 { font-size: 11px; }
-  .history-count { font-size: 7px; }
-  .history-table-wrap { min-height: 0; overflow: hidden; }
-  .history-table { width: 100%; min-width: 0; font-size: 9px; line-height: 1.1; table-layout: fixed; }
-  .history-table th, .history-table td { padding: 3px 4px; overflow-wrap: anywhere; }
-  .history-table thead th { padding-top: 4px; padding-bottom: 4px; font-size: 8px; }
-  .history-table tbody tr { display: table-row !important; }
-  .app-footer { align-items: flex-start; flex-direction: column; gap: 2px; padding-top: 4px; font-size: 13px; line-height: 1.1; }
-}
-
-@media (max-width: 420px) {
-  .app-shell { padding-right: 7px; padding-left: 7px; }
-  .app-shell { padding-top: 4px; padding-bottom: 3px; }
-  .topbar { min-height: 34px; padding-bottom: 3px; }
-  .brand { font-size: 10px; }
-  .brand small { font-size: 6px; }
-  .brand-mark { width: 30px; height: 28px; flex-basis: 30px; }
-  .view-nav-button { padding-right: 5px; padding-left: 5px; font-size: 7px; }
-  .connectivity { margin-top: 3px; gap: 3px; }
-  .connectivity-item { min-height: 34px; padding: 2px 3px; }
-  .connectivity-item b, .connectivity-item small { font-size: 6px; }
-  .control-card { padding: 4px; }
-  .primary-controls > .joystick-wrap, .primary-controls > .fork-control { width: min(29vw, 110px); height: clamp(72px, 13vh, 90px); }
-  .primary-controls > .stop-panel { flex-basis: 105px; gap: 2px; }
-  .joy-base, .fork-joy-base { width: min(72px, calc(100% - 12px)); height: min(72px, calc(100% - 12px)); }
-  .top-control-row { gap: 2px; }
-  .stop-bezel { width: min(100%, 75px); }
-  .stop-button { min-height: 32px; font-size: 9px; }
-  .utility-command { min-height: 34px; }
-  .pixel-icon { width: 24px; height: 24px; }
-  .demo-control-panel { gap: 3px; padding: 3px; }
-  .demo-console-title { font-size: 9px; }
-  .demo-control-panel .demo-select, .demo-control-panel .action-button { min-height: 30px; }
-  .command-area { margin-top: 2px !important; }
-  .command-area .section-label { margin-bottom: 2px; font-size: 7px; }
-  .command-grid > p { grid-column: 1 / -1; }
-  .command-grid .command-loading { min-height: 18px; font-size: 8px; }
-  .side-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .side-card { gap: 3px; padding: 3px; }
-  .action-info, .event-info { flex-direction: column; align-items: flex-start; gap: 1px; padding: 3px; }
-  .action-info .metric-label { font-size: 6px; }
-  .action-info strong { font-size: 7px; }
-  .history-table { font-size: 8px; }
-  .history-table th, .history-table td { padding: 2px 3px; }
-  .app-footer { gap: 1px; font-size: 10px; line-height: 1; }
-}
-
-@media (max-width: 900px) and (orientation: landscape) {
-  html, body { height: 100%; overflow: hidden; }
-  .app-shell { height: 100dvh; min-height: 0; overflow: hidden; }
-  main#main { min-height: 0; flex: 1 1 auto; overflow: hidden; }
-  #controlView.dashboard { height: 100%; min-height: 0; overflow: hidden; }
-  #controlView > article { height: 100%; min-height: 0; }
-  .control-card { height: 100% !important; min-height: 0; overflow: hidden; }
-  .app-shell { padding-top: 4px; padding-bottom: 3px; }
-  .topbar { min-height: 34px; padding-bottom: 3px; }
-  .brand-mark { height: 28px; }
-  .connectivity { margin-top: 3px; }
-  .connectivity-item { min-height: 32px; }
-  #controlView.dashboard { gap: 3px; margin-top: 3px; }
-  .control-card { padding: 3px; }
-  .direction-console { gap: 3px; padding: 3px; }
-  .primary-controls > .joystick-wrap, .primary-controls > .fork-control { height: min(15vh, 68px); }
-  .joy-base, .fork-joy-base { width: min(62px, calc(100% - 12px)); height: min(62px, calc(100% - 12px)); }
-  .primary-controls > .stop-panel { flex-basis: 118px; gap: 2px; }
-  .stop-bezel { width: min(100%, 68px); }
-  .stop-button { min-height: 27px; font-size: 8px; }
-  .utility-command { min-height: 30px; }
-  .demo-control-panel { gap: 2px; padding: 2px; }
-  .demo-console-title { font-size: 8px; }
-  .demo-control-panel .demo-select, .demo-control-panel .action-button { min-height: 25px; }
-  .demo-progress { margin-top: 3px; padding: 3px 5px; }
-  .demo-progress-heading { margin-bottom: 2px; font-size: 8px; }
-  .demo-progress ol { gap: 3px; font-size: 8px; }
-  .demo-progress li { padding: 2px 4px; }
-  .side-card { padding: 2px 4px; }
-  .monitor-latest { margin-top: 3px; padding-top: 4px; padding-bottom: 4px; }
-  .monitor-note { display: none; }
-  .monitor-history { margin-top: 3px; padding: 3px 5px; }
-  .history-table th, .history-table td { padding-top: 1px; padding-bottom: 1px; }
-  .app-footer { align-items: center; flex-direction: row; justify-content: space-between; font-size: 10px; }
-}
-@media (min-width: 560px) and (max-width: 767.98px) {
-  .app-footer { align-items: center; flex-direction: row; justify-content: space-between; gap: 8px; padding-top: 3px; padding-bottom: 6px; font-size: 14px; line-height: 1.1; }
-}
-
-/* Compact phone landscape layout so utility controls and the DEMO remain visible. */
-@media (max-width: 1200px) and (orientation: landscape) {
-  .app-shell { padding-top: 2px; padding-bottom: 2px; }
-  .connectivity { margin-top: 2px; }
-  #controlView.dashboard { margin-top: 2px; }
-  .control-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 22%); grid-template-rows: minmax(0, 1fr); align-items: stretch; gap: 5px; padding: 3px !important; }
-  .direction-console { gap: 2px; padding: 2px; }
-  .control-card > .direction-console { grid-column: 1; grid-row: 1; align-self: center; }
-  .demo-side-panel { display: flex; min-width: 0; min-height: 0; grid-column: 2; grid-row: 1; flex-direction: column; justify-content: center; gap: 5px; overflow: hidden; }
-  .demo-control-panel { display: grid; grid-template-columns: minmax(0, 1fr) 40px; align-items: center; width: 100%; }
-  .demo-console-title { grid-column: 1 / -1; }
-  .demo-control-panel .demo-select { grid-column: 1; min-width: 0; }
-  .demo-control-panel .action-button { grid-column: 2; }
-  .demo-progress { max-height: 42%; overflow: hidden; }
-  .primary-controls { gap: 4px; }
-  .primary-controls > .joystick-wrap,
-  .primary-controls > .fork-control { height: clamp(54px, 13vh, 78px); }
-  .joy-base, .fork-joy-base { width: min(68px, calc(100% - 10px)); height: min(68px, calc(100% - 10px)); }
-  .primary-controls > .stop-panel { flex: 0 1 145px; width: auto; max-width: none; gap: 2px; }
-  .top-control-row { display: grid; grid-template-columns: 30px minmax(72px, 1fr) 42px; gap: 3px; }
-  .top-control-row .power-control { min-width: 72px; width: auto; }
-  .speed-semaphore, .cruise-button { min-width: 0; min-height: 28px; }
-  .power-button { display: flex; min-width: 72px; min-height: 28px; padding: 2px 3px; font-size: 7px; white-space: normal; }
-  .stop-caption { font-size: 7px; }
-  .stop-bezel { width: 62px; }
-  .stop-button { min-height: 25px; padding: 2px 3px; font-size: 8px; }
-  .drive-status { min-height: 14px; font-size: 8px; }
-  .utility-command-buttons { gap: 3px; }
-  .utility-command { min-height: 24px; gap: 2px; padding: 1px 3px; font-size: 7px; }
-  .pixel-icon { width: 20px; height: 20px; }
-  .switch-track { width: 28px; height: 14px; }
-  .demo-control-panel { gap: 2px; padding: 2px; }
-  .demo-console-title { font-size: 7px; }
-  .demo-control-panel .demo-select, .demo-control-panel .action-button { min-height: 22px; padding-top: 1px; padding-bottom: 1px; font-size: 8px; }
-  .demo-progress { margin-top: 2px; padding: 2px 4px; }
-  .demo-progress-heading { margin-bottom: 1px; font-size: 7px; }
-  .demo-progress ol { gap: 2px; font-size: 7px; }
-  .demo-progress li { padding: 1px 3px; }
-  .app-footer { padding-top: 2px; font-size: 7px; }
-  .monitor-view { margin-top: 2px; }
-  .monitor-view > .connectivity { margin-top: 1px; gap: 3px; }
-  .monitor-view .connectivity-item { min-height: 26px; padding: 2px 5px; gap: 4px; }
-  .monitor-view .connectivity-item b, .monitor-view .connectivity-item small { font-size: 7px; line-height: 1; }
-  .monitor-view .state-symbol { display: none; }
-  .monitor-heading-row { min-height: 24px; gap: 4px; }
-  .monitor-heading-row .eyebrow { display: none; }
-  .monitor-heading-row h1 { font-size: 13px; }
-  .monitor-vehicle { margin: 0; font-size: 8px; }
-  .monitor-refresh { min-height: 22px; padding: 2px 6px; font-size: 7px; }
-  .monitor-latest { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px 8px; margin-top: 2px; padding: 3px 7px; }
-  .monitor-card-label { grid-column: 1; font-size: 7px; }
-  .monitor-command { grid-column: 2; margin: 0; font-size: 12px; }
-  .monitor-meta { grid-column: 1 / -1; gap: 2px 8px; margin: 0; font-size: 7px; }
-  .monitor-note { display: none; }
-  .monitor-history { margin-top: 3px; padding: 3px 5px; }
-  .monitor-history-heading { margin-bottom: 2px; }
-  .monitor-history-heading .eyebrow { display: none; }
-  .monitor-history-heading h2 { font-size: 9px; }
-  .history-count { font-size: 7px; }
-  .history-message { padding: 2px 4px; font-size: 7px; }
-  .history-table { font-size: 7px; line-height: 1; }
-  .history-table th, .history-table td { padding: 1px 3px; }
-  .history-table thead th { padding-top: 2px; padding-bottom: 2px; font-size: 6px; }
+/* 10. Dispositivos móviles en orientación horizontal (Cabina Arcade Gamepad ergonómica) */
+@media (orientation: landscape) and (max-height: 520px) {
+  .app-shell {
+    padding-top: max(2px, env(safe-area-inset-top));
+    padding-bottom: max(2px, env(safe-area-inset-bottom));
+    padding-left: max(6px, env(safe-area-inset-left));
+    padding-right: max(6px, env(safe-area-inset-right));
+  }
+  .control-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(3px, 1vh, 6px);
+    padding: 2px clamp(6px, 1.4vw, 12px);
+    justify-content: center !important;
+  }
+  .control-card > .direction-console {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1px 2px;
+    gap: clamp(3px, 1vh, 6px);
+    justify-content: center;
+  }
+  .primary-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    gap: clamp(8px, 2vw, 20px);
+    flex: 0 1 auto;
+  }
+  /* Pulgar izquierdo: joystick de dirección con bisel cibernético cian agrandado */
+  .primary-controls > .joystick-wrap {
+    width: clamp(100px, 36vh, 142px);
+    height: clamp(100px, 36vh, 142px);
+    min-height: 0 !important;
+    max-height: clamp(100px, 36vh, 142px);
+    aspect-ratio: 1;
+    flex: 0 0 clamp(100px, 36vh, 142px);
+    margin: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(34, 227, 237, 0.14) 0%, rgba(13, 23, 37, 0.8) 68%, transparent 100%);
+    border: 1px solid rgba(34, 227, 237, 0.4);
+    box-shadow: inset 0 0 20px rgba(34, 227, 237, 0.18), 0 0 16px rgba(0, 0, 0, 0.65);
+  }
+  /* Pulgar derecho: joystick vertical de horquillas con bisel cibernético lima agrandado */
+  .primary-controls > .fork-control {
+    width: clamp(100px, 36vh, 142px);
+    height: clamp(100px, 36vh, 142px);
+    min-height: 0 !important;
+    max-height: clamp(100px, 36vh, 142px);
+    aspect-ratio: 1;
+    flex: 0 0 clamp(100px, 36vh, 142px);
+    margin: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(185, 255, 53, 0.14) 0%, rgba(13, 23, 37, 0.8) 68%, transparent 100%);
+    border: 1px solid rgba(185, 255, 53, 0.4);
+    box-shadow: inset 0 0 20px rgba(185, 255, 53, 0.18), 0 0 16px rgba(0, 0, 0, 0.65);
+  }
+  /* Centro entre pulgares: panel ampliado con botones táctiles grandes que aprovechan todo el espacio */
+  .primary-controls > .stop-panel {
+    flex: 1 1 330px;
+    max-width: 350px;
+    margin: 0 auto;
+    gap: 4px;
+  }
+  .top-control-row {
+    gap: 6px;
+    min-height: clamp(42px, 9.6vh, 48px);
+  }
+  .power-button {
+    font-size: clamp(9.5px, 1.25vw, 12px);
+    min-height: clamp(42px, 9.6vh, 48px);
+    padding: 3px 8px;
+    letter-spacing: 0.3px;
+    font-weight: 800;
+  }
+  .power-lamp {
+    width: 8px;
+    height: 8px;
+  }
+  .speed-semaphore,
+  .cruise-button {
+    min-width: clamp(42px, 5.5vw, 52px);
+    min-height: clamp(42px, 9.6vh, 48px);
+    padding: 3px 4px;
+  }
+  .speed-semaphore .semaphore-caption,
+  .cruise-button .cruise-caption {
+    font-size: 8.5px;
+  }
+  .stop-bezel {
+    width: clamp(86px, 23vh, 100px);
+  }
+  .stop-caption {
+    font-size: clamp(8.5px, 1.1vw, 10.5px);
+    font-weight: 700;
+  }
+  .drive-status {
+    min-height: clamp(15px, 2.8vh, 20px);
+    font-size: clamp(9px, 1.15vw, 11px);
+  }
+  .utility-command-buttons {
+    max-width: 350px;
+    margin: 0 auto;
+    gap: 8px;
+  }
+  .utility-command {
+    min-height: clamp(40px, 9.2vh, 48px);
+    padding: 3px 10px;
+    font-size: clamp(11px, 1.4vw, 13.5px);
+    font-weight: 800;
+  }
+  .utility-command .pixel-icon {
+    width: clamp(24px, 5.2vh, 30px);
+    height: clamp(24px, 5.2vh, 30px);
+  }
+  .utility-command .switch-track {
+    width: clamp(28px, 5.5vh, 36px);
+    height: clamp(14px, 2.8vh, 18px);
+  }
+  /* DEMO: Módulo central compacto, con botones amplios y fáciles de pulsar */
+  .demo-side-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    gap: 4px;
+    grid-column: unset;
+    grid-row: unset;
+  }
+  .demo-console-title {
+    display: none;
+  }
+  .demo-control-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) clamp(56px, 7.8vw, 72px);
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    gap: 6px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .demo-carousel {
+    min-height: clamp(38px, 8.8vh, 46px);
+    gap: 4px;
+    grid-template-columns: clamp(38px, 5.2vw, 48px) 1fr clamp(38px, 5.2vw, 48px);
+  }
+  .demo-arrow-btn {
+    min-height: clamp(36px, 8.2vh, 44px);
+    font-size: clamp(16px, 2vw, 19px);
+    font-weight: 800;
+  }
+  .demo-cartridge-screen {
+    font-size: clamp(10.5px, 1.35vw, 12.5px);
+    padding: 3px 8px;
+    font-weight: 700;
+  }
+  .demo-control-panel .action-button {
+    min-height: clamp(38px, 8.8vh, 46px);
+    font-size: clamp(11px, 1.3vw, 12.5px);
+    font-weight: 800;
+  }
+  .demo-progress {
+    display: flex !important;
+    width: 100%;
+    max-height: clamp(24px, 4.5vh, 28px);
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(11, 20, 37, 0.85);
+    border: 1px solid rgba(40, 113, 132, 0.6);
+    justify-content: center;
+    align-items: center;
+  }
+  .demo-progress-heading {
+    display: none;
+  }
+  .demo-progress ol {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 4px;
+    white-space: nowrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  .demo-progress li {
+    padding: 1px 5px;
+    font-size: clamp(7.5px, 0.9vw, 9px);
+    white-space: nowrap;
+    line-height: 1.15;
+  }
+  .demo-progress-empty {
+    font-size: clamp(7.5px, 0.9vw, 9px);
+    color: var(--muted);
+    text-align: center;
+  }
+  .joy-base, .fork-joy-base {
+    width: min(120px, calc(100% - 12px));
+    height: min(120px, calc(100% - 12px));
+    max-width: calc(100% - 12px);
+    max-height: calc(100% - 12px);
+  }
 }
