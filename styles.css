@@ -2291,7 +2291,7 @@ main#main {
   }
 
   /* Optimización Módulo Administración (Zero-Scroll & Vista Horizontal) */
-  .admin-view {
+  .admin-view:not(.d-none) {
     min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
@@ -2330,7 +2330,7 @@ main#main {
   }
 
   /* Distribución de recuadros en modo horizontal para Invitados: 2 columnas balanceadas */
-  #subtab-guestDemo {
+  #subtab-guestDemo:not(.d-none) {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) !important;
     gap: clamp(6px, 1.2vw, 12px) !important;
@@ -2558,4 +2558,13 @@ main#main {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Regla de máxima prioridad para ocultamiento: garantiza que ninguna vista ni subtab con d-none se muestre por error */
+.d-none,
+.admin-view.d-none,
+.monitor-view.d-none,
+.control-view.d-none,
+.admin-subtab-pane.d-none {
+  display: none !important;
 }
