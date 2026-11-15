@@ -3,6 +3,7 @@ import { loadConfig, validateConfig } from './config.js';
 import { initJoystick, initVerticalJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
+import { AdminModule } from './admin.js';
 import {
   triggerHaptic,
   playBip,
@@ -363,18 +364,33 @@ async function refreshDatabaseHealth() {
 function showView(view) {
   triggerHaptic('tap');
   playBip(580, 0.035);
-  const monitoring = view === 'monitor';
-  monitorVisible = monitoring;
-  $('controlView').classList.toggle('d-none', monitoring);
-  $('monitorView').classList.toggle('d-none', !monitoring);
-  $('controlTab').classList.toggle('is-active', !monitoring);
-  $('monitorTab').classList.toggle('is-active', monitoring);
-  if (monitoring) {
+  const isControl = view === 'control';
+  const isMonitor = view === 'monitor';
+  const isAdmin = view === 'admin';
+
+  monitorVisible = isMonitor;
+  $('controlView').classList.toggle('d-none', !isControl);
+  $('monitorView').classList.toggle('d-none', !isMonitor);
+  const adminViewEl = $('adminView');
+  if (adminViewEl) adminViewEl.classList.toggle('d-none', !isAdmin);
+
+  $('controlTab').classList.toggle('is-active', isControl);
+  $('monitorTab').classList.toggle('is-active', isMonitor);
+  const adminTabEl = $('adminTab');
+  if (adminTabEl) adminTabEl.classList.toggle('is-active', isAdmin);
+
+  if (isControl) {
+    $('controlTab').setAttribute('aria-current', 'page');
+    $('monitorTab').removeAttribute('aria-current');
+    if (adminTabEl) adminTabEl.removeAttribute('aria-current');
+  } else if (isMonitor) {
     $('monitorTab').setAttribute('aria-current', 'page');
     $('controlTab').removeAttribute('aria-current');
+    if (adminTabEl) adminTabEl.removeAttribute('aria-current');
     loadMonitorData();
-  } else {
-    $('controlTab').setAttribute('aria-current', 'page');
+  } else if (isAdmin) {
+    if (adminTabEl) adminTabEl.setAttribute('aria-current', 'page');
+    $('controlTab').removeAttribute('aria-current');
     $('monitorTab').removeAttribute('aria-current');
   }
 }
@@ -804,6 +820,7 @@ async function boot() {
   enableFloatingSwitcherDrag();
   $('controlTab').addEventListener('click', () => showView('control'));
   $('monitorTab').addEventListener('click', () => showView('monitor'));
+  $('adminTab')?.addEventListener('click', () => showView('admin'));
   $('monitorRefresh').addEventListener('click', loadMonitorData);
   joystick = initJoystick($('joystick'), $('joyKnob'), {
     onDirection: handleDirection,
@@ -869,6 +886,37 @@ async function boot() {
     }
   });
   connectSocket();
+
+  const adminModule = new AdminModule(api, {
+    onVehicleChange: (newVehicleId) => {
+      config.vehicleId = String(newVehicleId);
+      api.setVehicleId(newVehicleId);
+      setMonitorVehicle(`Vehículo ${newVehicleId}`);
+      if (socket) {
+        socket.stop();
+        const baseWs = config.websocketUrl.replace(/\/ws\/vehicles\/\d+.*$/, '');
+        socket.url = `${baseWs}/ws/vehicles/${newVehicleId}`;
+        socket.start();
+      }
+      refreshCommands({ quiet: false });
+      loadDemos();
+      if (monitorVisible) loadMonitorData();
+    },
+    onRoleChange: (role) => {
+      // Ajuste visual según rol
+    },
+  });
+  window.adminModule = adminModule;
+  adminModule.init();
+
+  try {
+    const me = await api.getMe();
+    if (me && me.id_usuario) {
+      adminModule.setCurrentUser(me);
+    }
+  } catch (e) {
+    adminModule.setCurrentUser(null);
+  }
 
   await Promise.all([
     refreshCommands(),

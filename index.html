@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#080c19" />
-    <title>Control IoT · Montacargas</title>
+    <title>Plataforma IoT · Control, Monitoreo y Administración</title>
     <link rel="icon" type="image/png" sizes="64x64" href="./assets/cow-forklift-favicon.png?v=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,25 +13,93 @@
     <link rel="preload" as="image" href="./assets/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=responsive-20261111-23" />
+    <link rel="stylesheet" href="./styles.css?v=responsive-20261114-43" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
     <div class="container-xl app-shell">
-      <nav class="view-nav view-switcher floating-view-switcher" aria-label="Cambiar entre control y monitoreo">
-          <button class="view-nav-button is-active" id="controlTab" type="button" aria-controls="controlView" aria-current="page">CONTROL</button>
-          <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">MONITOREO</button>
+      
+      <!-- Barra Superior de Autenticación y Conectividad Global -->
+      <header class="top-auth-bar d-flex flex-wrap justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="brand-tag">IoT 4.3</span>
+          <span id="currentRoleBadge" class="badge bg-secondary text-uppercase">INVITADO</span>
+          <span id="currentUserGreeting" class="small text-muted">Sesión pública</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-cyan" id="authActionBtn" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+            Iniciar Sesión
+          </button>
+          <button class="btn btn-sm btn-outline-danger d-none" id="logoutBtn" type="button">
+            Cerrar Sesión
+          </button>
+        </div>
+      </header>
+
+      <!-- Banner de Sesión de Invitado con Contador -->
+      <aside id="guestSessionBanner" class="alert alert-warning d-flex justify-content-between align-items-center py-2 px-3 mb-3 d-none" role="region" aria-label="Sesión de prueba en curso">
+        <div>
+          <strong>PRUEBA TEMPORAL DE EXHIBICIÓN EN CURSO</strong>
+          <span class="ms-2">Tiempo restante: <strong id="guestSessionTimer" class="text-danger fs-5">03:00</strong></span>
+        </div>
+        <button class="btn btn-sm btn-danger" id="releaseGuestSessionBtn" type="button">Detener y Finalizar</button>
+      </aside>
+
+      <!-- Indicadores de Conectividad Independientes (WSS, API AWS, Amazon RDS) -->
+      <section class="connectivity mb-3" aria-label="Estado de los servicios de telecomunicación">
+        <div class="connectivity-item" id="wsIndicator" data-state="connecting" role="status" aria-live="polite">
+          <span class="state-symbol" aria-hidden="true">
+            <svg class="connection-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><rect x="16" y="16" width="5" height="5"/><path d="M8 5.5h4v6h4M5.5 8v4h6v4M18.5 8v4h-2M8 18.5h4v-3"/></svg>
+          </span>
+          <span class="service-led" aria-hidden="true"></span>
+          <span><b>WebSocket WSS · navegador</b><small id="wsStatus">Conectando…</small></span>
+        </div>
+        <div class="connectivity-item" id="apiIndicator" data-state="checking" role="status" aria-live="polite">
+          <span class="state-symbol" aria-hidden="true">
+            <svg class="connection-icon" viewBox="0 0 24 24" fill="none"><path d="M6 17h12a3 3 0 0 0 .4-6A6.5 6.5 0 0 0 6 9.5 3.8 3.8 0 0 0 6 17Z"/><path d="M8 20h8M10 17v3m4-3v3"/></svg>
+          </span>
+          <span class="service-led" aria-hidden="true"></span>
+          <span><b>Servidor AWS · API</b><small id="apiStatus">Comprobando catálogo…</small></span>
+        </div>
+        <div class="connectivity-item" id="dbIndicator" data-state="unknown" role="status" aria-live="polite">
+          <span class="state-symbol" aria-hidden="true">
+            <svg class="connection-icon" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+          </span>
+          <span class="service-led" aria-hidden="true"></span>
+          <span><b>Amazon RDS</b><small id="dbStatus">Verificando conexión…</small></span>
+        </div>
+      </section>
+
+      <!-- Navegación Principal de 3 Módulos -->
+      <nav class="view-nav view-switcher floating-view-switcher mb-3" aria-label="Navegación de módulos">
+        <button class="view-nav-button is-active" id="controlTab" type="button" aria-controls="controlView" aria-current="page">CONTROL</button>
+        <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">MONITOREO</button>
+        <button class="view-nav-button" id="adminTab" type="button" aria-controls="adminView">ADMINISTRACIÓN</button>
       </nav>
 
       <main id="main">
+        <!-- ===================================================================
+             MÓDULO 1: CONTROL (4.1)
+             =================================================================== -->
         <section class="dashboard row g-3" id="controlView" aria-label="Controles del vehículo">
           <article class="col-12">
             <div class="card control-card h-100">
               <div class="direction-console">
                 <div class="primary-controls" aria-label="Controles principales">
-                <div class="joystick-wrap">
-                  <span class="direction-label north" aria-hidden="true">▲</span><span class="direction-label east" aria-hidden="true">▶</span><span class="direction-label south" aria-hidden="true">▼</span><span class="direction-label west" aria-hidden="true">◀</span>
-                  <div class="joystick" id="joystick" role="group" aria-label="Joystick: usa flechas del teclado o arrastra con el mouse o el dedo" tabindex="0"><div class="joy-base" data-direction="neutral"><img class="joy-base-art" src="./assets/joystick-base.webp" alt="" /><div class="joy-neutral-sprite" aria-hidden="true"></div><div class="joy-direction-sprite" aria-hidden="true"></div><div class="joy-knob" id="joyKnob"><img class="joy-handle" src="./assets/joystick-handle.webp" alt="" /></div></div></div>
+                  <div class="joystick-wrap">
+                    <span class="direction-label north" aria-hidden="true">▲</span>
+                    <span class="direction-label east" aria-hidden="true">▶</span>
+                    <span class="direction-label south" aria-hidden="true">▼</span>
+                    <span class="direction-label west" aria-hidden="true">◀</span>
+                    <div class="joystick" id="joystick" role="group" aria-label="Joystick: usa flechas del teclado o arrastra con el mouse o el dedo" tabindex="0">
+                      <div class="joy-base" data-direction="neutral">
+                        <img class="joy-base-art" src="./assets/joystick-base.webp" alt="" />
+                        <div class="joy-neutral-sprite" aria-hidden="true"></div>
+                        <div class="joy-direction-sprite" aria-hidden="true"></div>
+                        <div class="joy-knob" id="joyKnob"><img class="joy-handle" src="./assets/joystick-handle.webp" alt="" /></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div class="stop-panel">
                   <div class="top-control-row">
@@ -80,25 +148,23 @@
                   </div>
                   <span class="visually-hidden" aria-live="polite" id="forkJoystickStatus"></span>
                 </section>
-                </div>
-                <div class="utility-command-buttons" aria-label="Luces y sonido">
-                  <button class="utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces; indicador visual encendido." aria-pressed="true" disabled>
-                    <span class="pixel-icon bulb-pixel-icon" aria-hidden="true"></span>
-                    <span>LUCES</span>
-                    <span class="switch-track" aria-hidden="true"></span>
-                  </button>
-                  <button class="utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido; indicador visual encendido." aria-pressed="true" disabled>
-                    <span class="pixel-icon speaker-pixel-icon" aria-hidden="true"></span>
-                    <span>SONIDO</span>
-                    <span class="switch-track" aria-hidden="true"></span>
-                  </button>
-                </div>
+              </div>
+              <div class="utility-command-buttons" aria-label="Luces y sonido">
+                <button class="utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces" aria-pressed="true" disabled>
+                  <span class="pixel-icon bulb-pixel-icon" aria-hidden="true"></span>
+                  <span>LUCES</span>
+                  <span class="switch-track" aria-hidden="true"></span>
+                </button>
+                <button class="utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido" aria-pressed="true" disabled>
+                  <span class="pixel-icon speaker-pixel-icon" aria-hidden="true"></span>
+                  <span>SONIDO</span>
+                  <span class="switch-track" aria-hidden="true"></span>
+                </button>
               </div>
               <div class="visually-hidden" aria-hidden="true" id="commandButtons"></div>
               <div class="demo-side-panel">
                 <section class="demo-control-panel" aria-label="Control de DEMO">
                   <h2 class="demo-console-title">DEMO</h2>
-                  <label for="demoSelect" class="visually-hidden">Seleccionar una secuencia DEMO</label>
                   <select class="visually-hidden" id="demoSelect" aria-label="Seleccionar secuencia DEMO" tabindex="-1"><option value="">Cargando…</option></select>
                   <div class="demo-carousel" id="demoCarousel" role="group" aria-label="Selector de secuencia DEMO">
                     <button type="button" class="demo-arrow-btn" id="demoPrevBtn" aria-label="DEMO anterior" title="DEMO anterior" disabled>◀</button>
@@ -123,18 +189,10 @@
           </div>
         </section>
 
+        <!-- ===================================================================
+             MÓDULO 2: MONITOREO (4.2)
+             =================================================================== -->
         <section class="monitor-view d-none" id="monitorView" aria-labelledby="monitorHeading">
-          <section class="connectivity" aria-label="Estado de los servicios">
-            <div class="connectivity-item" id="wsIndicator" data-state="connecting" role="status" aria-live="polite">
-              <span class="state-symbol" aria-hidden="true"><svg class="connection-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><rect x="16" y="16" width="5" height="5"/><path d="M8 5.5h4v6h4M5.5 8v4h6v4M18.5 8v4h-2M8 18.5h4v-3"/></svg></span><span class="service-led" aria-hidden="true"></span><span><b>WebSocket WSS · navegador</b><small id="wsStatus">Conectando…</small></span>
-            </div>
-            <div class="connectivity-item" id="apiIndicator" data-state="checking" role="status" aria-live="polite">
-              <span class="state-symbol" aria-hidden="true"><svg class="connection-icon" viewBox="0 0 24 24" fill="none"><path d="M6 17h12a3 3 0 0 0 .4-6A6.5 6.5 0 0 0 6 9.5 3.8 3.8 0 0 0 6 17Z"/><path d="M8 20h8M10 17v3m4-3v3"/></svg></span><span class="service-led" aria-hidden="true"></span><span><b>Servidor AWS · API</b><small id="apiStatus">Comprobando catálogo…</small></span>
-            </div>
-            <div class="connectivity-item" id="dbIndicator" data-state="unknown" role="status" aria-live="polite">
-              <span class="state-symbol" aria-hidden="true"><svg class="connection-icon" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span><span class="service-led" aria-hidden="true"></span><span><b>Amazon RDS</b><small id="dbStatus">Verificando conexión…</small></span>
-            </div>
-          </section>
           <div class="monitor-heading-row">
             <div>
               <p class="eyebrow">TELEMETRÍA DEL VEHÍCULO</p>
@@ -168,10 +226,420 @@
             </div>
           </section>
         </section>
+
+        <!-- ===================================================================
+             MÓDULO 3: ADMINISTRACIÓN (4.3)
+             =================================================================== -->
+        <section class="admin-view d-none" id="adminView" aria-labelledby="adminMainHeading">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div>
+              <p class="eyebrow text-cyan mb-0">GESTIÓN MULTIUSUARIO & COMERCIAL</p>
+              <h1 id="adminMainHeading" class="h3 mb-0">ADMINISTRACIÓN IoT</h1>
+            </div>
+            <div class="btn-group admin-subnav" role="tablist">
+              <!-- Subtabs de Administrador -->
+              <button class="btn btn-outline-cyan active role-admin-only" data-admin-subtab="dashboard">Dashboard</button>
+              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="models">Modelos</button>
+              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="units">Inventario</button>
+              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="clients">Clientes</button>
+              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="audit">Auditoría</button>
+              
+              <!-- Subtabs de Usuario Comprador -->
+              <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="myVehicles">Mis Vehículos</button>
+              <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="demoEditor">Editor de Demos</button>
+
+              <!-- Subtabs de Invitado -->
+              <button class="btn btn-outline-warning role-guest-only" data-admin-subtab="guestDemo">Prueba de Exhibición</button>
+            </div>
+          </div>
+
+          <!-- SUBTAB: Dashboard (KPIs reales) -->
+          <div class="admin-subtab-pane" id="subtab-dashboard">
+            <div class="row g-3 mb-4">
+              <div class="col-6 col-md-4 col-lg-2">
+                <div class="card bg-dark border-secondary p-3 text-center h-100">
+                  <small class="text-muted">Modelos</small>
+                  <span class="fs-3 fw-bold text-cyan" id="kpiModels">0</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-4 col-lg-2">
+                <div class="card bg-dark border-secondary p-3 text-center h-100">
+                  <small class="text-muted">Unidades Totales</small>
+                  <span class="fs-3 fw-bold text-white" id="kpiUnitsTotal">0</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-4 col-lg-2">
+                <div class="card bg-dark border-secondary p-3 text-center h-100">
+                  <small class="text-muted">Vendidas</small>
+                  <span class="fs-3 fw-bold text-primary" id="kpiUnitsSold">0</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-4 col-lg-2">
+                <div class="card bg-dark border-secondary p-3 text-center h-100">
+                  <small class="text-muted">Exhibición</small>
+                  <span class="fs-3 fw-bold text-warning" id="kpiUnitsExhib">0</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-4 col-lg-2">
+                <div class="card bg-dark border-secondary p-3 text-center h-100">
+                  <small class="text-muted">Disponibles</small>
+                  <span class="fs-3 fw-bold text-success" id="kpiUnitsAvail">0</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-4 col-lg-2">
+                <div class="card bg-dark border-secondary p-3 text-center h-100">
+                  <small class="text-muted">Clientes</small>
+                  <span class="fs-3 fw-bold text-info" id="kpiClients">0</span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-dark border-secondary p-3">
+              <h5 class="text-cyan mb-2">Panel de Control de la Empresa Comercializadora</h5>
+              <p class="small text-muted">
+                Desde esta consola el Administrador gestiona el inventario de modelos y unidades físicas, da de alta nuevos clientes y asigna vehículos mediante las APIs de AWS conectadas a Amazon RDS. Los cambios quedan registrados en la bitácora de auditoría.
+              </p>
+            </div>
+          </div>
+
+          <!-- SUBTAB: Modelos Comerciales -->
+          <div class="admin-subtab-pane d-none" id="subtab-models">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="h5 mb-0">Catálogo de Modelos Comerciales</h4>
+              <button class="btn btn-sm btn-cyan" data-bs-toggle="modal" data-bs-target="#newModelModal">+ Nuevo Modelo</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-dark table-hover table-striped align-middle">
+                <thead><tr><th>ID</th><th>Nombre</th><th>Código</th><th>Categoría</th><th>Descripción</th><th>Estado</th></tr></thead>
+                <tbody id="modelsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SUBTAB: Unidades Físicas e Inventario -->
+          <div class="admin-subtab-pane d-none" id="subtab-units">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="h5 mb-0">Inventario de Unidades Físicas</h4>
+              <button class="btn btn-sm btn-cyan" data-bs-toggle="modal" data-bs-target="#newUnitModal">+ Nueva Unidad Física</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-dark table-hover table-striped align-middle">
+                <thead><tr><th>ID</th><th>Nombre / Modelo</th><th>Serie</th><th>Estado Comercial</th><th>Propietario</th><th>Soporte</th><th>Acciones</th></tr></thead>
+                <tbody id="unitsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SUBTAB: Clientes Compradores -->
+          <div class="admin-subtab-pane d-none" id="subtab-clients">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="h5 mb-0">Clientes Compradores Registrados</h4>
+              <button class="btn btn-sm btn-cyan" data-bs-toggle="modal" data-bs-target="#newClientModal">+ Nuevo Cliente</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-dark table-hover table-striped align-middle">
+                <thead><tr><th>ID</th><th>Nombre Completo</th><th>Usuario</th><th>Email</th><th>Unidades</th></tr></thead>
+                <tbody id="clientsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SUBTAB: Auditoría -->
+          <div class="admin-subtab-pane d-none" id="subtab-audit">
+            <h4 class="h5 mb-3">Bitácora de Auditoría del Sistema</h4>
+            <div class="table-responsive">
+              <table class="table table-dark table-sm table-hover table-striped align-middle">
+                <thead><tr><th>Fecha y Hora</th><th>Actor (Rol)</th><th>Acción</th><th>Recurso</th><th>Resultado</th><th>Detalles</th></tr></thead>
+                <tbody id="auditTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SUBTAB: Mis Vehículos (Comprador) -->
+          <div class="admin-subtab-pane d-none" id="subtab-myVehicles">
+            <div class="card bg-dark border-secondary p-3 mb-3">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <h4 class="h5 mb-0 text-cyan">Mis Vehículos Comprados</h4>
+                  <small class="text-muted">Selecciona la unidad que deseas controlar o monitorear en la plataforma.</small>
+                </div>
+                <div style="min-width: 220px;">
+                  <select class="form-select form-select-sm" id="myVehiclesSelect"></select>
+                </div>
+              </div>
+            </div>
+            <div class="row g-3" id="myVehiclesList"></div>
+          </div>
+
+          <!-- SUBTAB: Editor de DEMOS (Comprador) -->
+          <div class="admin-subtab-pane d-none" id="subtab-demoEditor">
+            <div class="card bg-dark border-secondary p-3">
+              <h4 class="h5 text-cyan mb-2">Editor Visual de Demostraciones Privadas</h4>
+              <p class="small text-muted mb-3">
+                Diseña secuencias ordenadas de movimientos. La secuencia se guardará de forma persistente en Amazon RDS vinculada a tu unidad y podrás ejecutarla desde la vista CONTROL sin interferir con la prioridad de parada de emergencia.
+              </p>
+              <form id="saveDemoForm">
+                <div class="row g-2 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label small" for="demoCustomName">Nombre de la DEMO</label>
+                    <input type="text" class="form-control form-control-sm" id="demoCustomName" placeholder="Ej. Recorrido Almacén A" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small" for="demoCustomDesc">Descripción</label>
+                    <input type="text" class="form-control form-control-sm" id="demoCustomDesc" placeholder="Breve explicación de la secuencia">
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <label class="form-label small fw-bold mb-0">Pasos de la Secuencia:</label>
+                  <button type="button" class="btn btn-sm btn-outline-cyan" id="addDemoStepBtn">+ Agregar Paso</button>
+                </div>
+                <div id="demoStepsContainer" class="mb-3"></div>
+
+                <button type="submit" class="btn btn-sm btn-cyan">Guardar DEMO en Amazon RDS</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- SUBTAB: Invitados y Exhibición -->
+          <div class="admin-subtab-pane d-none" id="subtab-guestDemo">
+            <div class="card bg-dark border-warning p-3 mb-3">
+              <h4 class="h5 text-warning mb-1">Prueba Comercial de Vehículos IoT</h4>
+              <p class="small text-muted mb-0">
+                Como cliente potencial puedes explorar nuestro catálogo y solicitar una prueba de conducción limitada a 3 minutos sobre una de nuestras unidades de exhibición. Dos personas no pueden controlar la misma unidad simultáneamente.
+              </p>
+            </div>
+            <div class="row g-3" id="guestCatalogCards"></div>
+          </div>
+        </section>
       </main>
 
-      <footer class="app-footer"><span>CONTROL IoT · PANEL DE OPERACIÓN</span><span>Desarrollado por <strong>Ingrid Hernández Gómez</strong> · 2026</span></footer>
+      <footer class="app-footer">
+        <span>CONTROL IoT · PLATAFORMA INTEGRADA</span>
+        <span>Desarrollado por <strong>Ingrid Hernández Gómez</strong> · 2026</span>
+      </footer>
     </div>
-    <script type="module" src="./js/app.js?v=20261111-6"></script>
+
+    <!-- MODAL: Iniciar Sesión (con pruebas rápidas) -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title text-cyan" id="loginModalTitle">Acceso a la Plataforma IoT</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <form id="loginForm">
+            <div class="modal-body">
+              <div id="loginAlert" class="alert alert-danger d-none small"></div>
+              <div class="mb-3">
+                <label for="loginUsername" class="form-label small">Usuario</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="loginUsername" required autocomplete="username">
+              </div>
+              <div class="mb-3">
+                <label for="loginPassword" class="form-label small">Contraseña</label>
+                <input type="password" class="form-control bg-dark border-secondary text-white" id="loginPassword" required autocomplete="current-password">
+              </div>
+              <div class="border-top border-secondary pt-2 mt-3">
+                <small class="text-muted d-block mb-2">Accesos rápidos para evaluación:</small>
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-xs btn-outline-danger" id="quickLoginAdmin">Admin Demo</button>
+                  <button type="button" class="btn btn-xs btn-outline-primary" id="quickLoginUser">Comprador Demo</button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer border-secondary">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-cyan btn-sm">Entrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Asignar Propietario / Estado a Unidad -->
+    <div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title text-cyan">Asignación Comercial de Unidad</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="assignUnitId">
+            <p>Unidad: <strong id="assignUnitName" class="text-cyan"></strong></p>
+            <div class="mb-3">
+              <label for="assignClientSelect" class="form-label small">Propietario / Comprador:</label>
+              <select class="form-select bg-dark border-secondary text-white" id="assignClientSelect"></select>
+            </div>
+            <div class="mb-3">
+              <label for="assignStatus" class="form-label small">Estado Comercial:</label>
+              <select class="form-select bg-dark border-secondary text-white" id="assignStatus">
+                <option value="disponible">disponible</option>
+                <option value="vendido">vendido</option>
+                <option value="exhibicion">exhibición</option>
+                <option value="inactivo">inactivo</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-cyan btn-sm" onclick="window.adminModule.handleSaveAssignment()">Guardar Asignación</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Solicitud de Reserva para Invitado -->
+    <div class="modal fade" id="guestBookingModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-warning text-white">
+          <div class="modal-header border-warning">
+            <h5 class="modal-title text-warning">Prueba Comercial de Exhibición</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="guestBookVehicleId">
+            <p>Vehículo: <strong id="guestBookVehicleName" class="text-cyan"></strong></p>
+            <p class="small text-muted">
+              Se te asignará una reserva exclusiva durante 3 minutos. Podrás mover el vehículo y detenerlo. Al finalizar el tiempo la reserva se libera automáticamente.
+            </p>
+            <div class="mb-3">
+              <label for="guestAliasInput" class="form-label small">Tu nombre o alias:</label>
+              <input type="text" class="form-control bg-dark border-secondary text-white" id="guestAliasInput" value="Cliente Potencial" required>
+            </div>
+          </div>
+          <div class="modal-footer border-warning">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-warning btn-sm" id="requestGuestSessionBtn">Comenzar Prueba</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Crear Modelo -->
+    <div class="modal fade" id="newModelModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title text-cyan">Nuevo Modelo Comercial</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="newModelForm">
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label small">Nombre del Modelo</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="modelName" placeholder="Ej. Batman Tumbler IoT" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Código Único de Modelo</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="modelCode" placeholder="MOD_TUMBLER_01" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Categoría</label>
+                <select class="form-select bg-dark border-secondary text-white" id="modelCategory">
+                  <option value="Montacargas">Montacargas</option>
+                  <option value="Deportivo">Deportivo / Todoterreno</option>
+                  <option value="Industrial">Industrial</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Descripción</label>
+                <textarea class="form-control bg-dark border-secondary text-white" id="modelDesc" rows="2" required></textarea>
+              </div>
+            </div>
+            <div class="modal-footer border-secondary">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-cyan btn-sm">Guardar Modelo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Crear Unidad Física -->
+    <div class="modal fade" id="newUnitModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title text-cyan">Dar de Alta Unidad Física</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="newUnitForm">
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label small">Nombre Identificador</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="unitName" placeholder="Ej. Carretilla Bodega 2" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Modelo Comercial</label>
+                <select class="form-select bg-dark border-secondary text-white" id="unitModelSelect">
+                  <option value="1">Montacargas IoT Arcade</option>
+                  <option value="2">Batman Tumbler IoT</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Número de Serie</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="unitSerial" placeholder="SN-FORKLIFT-002" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Estado Inicial</label>
+                <select class="form-select bg-dark border-secondary text-white" id="unitCommercialStatus">
+                  <option value="disponible">Disponible</option>
+                  <option value="exhibicion">Exhibición</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Microcontrolador</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="unitMcu" value="ESP8266">
+              </div>
+            </div>
+            <div class="modal-footer border-secondary">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-cyan btn-sm">Registrar Unidad</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Crear Cliente -->
+    <div class="modal fade" id="newClientModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title text-cyan">Registrar Nuevo Cliente Comprador</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="newClientForm">
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label small">Nombre Completo</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="clientFullName" placeholder="Carlos Slim" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Nombre de Usuario</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="clientUsername" placeholder="carlos_iot" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Correo Electrónico</label>
+                <input type="email" class="form-control bg-dark border-secondary text-white" id="clientEmail" placeholder="carlos@empresa.com" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Contraseña Temporal</label>
+                <input type="password" class="form-control bg-dark border-secondary text-white" id="clientPassword" value="Pass1234!" required>
+              </div>
+            </div>
+            <div class="modal-footer border-secondary">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-cyan btn-sm">Dar de Alta</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="./js/app.js?v=20261114-43"></script>
   </body>
 </html>

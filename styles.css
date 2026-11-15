@@ -2119,3 +2119,96 @@ main#main {
     max-height: calc(100% - 12px);
   }
 }
+
+
+/* =============================================================================
+   ESTILOS ADICIONALES · MÓDULO 3 ADMINISTRACIÓN IoT (PRÁCTICA 4.3)
+   ============================================================================= */
+
+.text-cyan {
+  color: var(--cyan) !important;
+}
+
+.btn-cyan {
+  background-color: var(--cyan);
+  color: #080c19;
+  font-weight: 600;
+  border: 1px solid var(--cyan);
+}
+.btn-cyan:hover, .btn-cyan:focus {
+  background-color: #18cbbd;
+  color: #080c19;
+  box-shadow: 0 0 12px rgba(34, 227, 237, 0.5);
+}
+
+.btn-outline-cyan {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background-color: transparent;
+}
+.btn-outline-cyan:hover, .btn-outline-cyan:focus, .btn-outline-cyan.active {
+  background-color: var(--cyan);
+  color: #080c19;
+  box-shadow: 0 0 10px rgba(34, 227, 237, 0.4);
+}
+
+.brand-tag {
+  background: var(--line);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--cyan);
+}
+
+.top-auth-bar {
+  font-family: var(--sans);
+}
+
+.admin-view {
+  min-height: 480px;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.admin-subnav .btn {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.demo-step-row select, .demo-step-row input {
+  background-color: #151f33;
+  color: #f3f7ff;
+  border-color: #254055;
+}
+.demo-step-row select:focus, .demo-step-row input:focus {
+  background-color: #17243a;
+  color: #fff;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 0.2rem rgba(34, 227, 237, 0.25);
+}
+
+.modal-content {
+  border: 2px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+}
+.modal-content input, .modal-content select, .modal-content textarea {
+  background-color: #101729 !important;
+  color: #f3f7ff !important;
+  border-color: var(--line) !important;
+}
+.modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus {
+  border-color: var(--cyan) !important;
+  box-shadow: 0 0 0 0.2rem rgba(34, 227, 237, 0.25) !important;
+}
+
+.btn-xs {
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
