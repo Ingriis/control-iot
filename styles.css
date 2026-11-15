@@ -1999,10 +1999,338 @@ main#main {
 @media (orientation: landscape) and (max-height: 600px) {
   .app-shell {
     padding-top: max(2px, env(safe-area-inset-top));
-    padding-bottom: max(2px, env(safe-area-inset-bottom));
+    padding-bottom: clamp(34px, 7.5vh, 42px) !important;
     padding-left: max(6px, env(safe-area-inset-left));
     padding-right: max(6px, env(safe-area-inset-right));
+    height: 100vh !important;
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
+  main#main {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  #controlView {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  #controlView > article.col-12 {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .control-card {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    gap: clamp(2px, 0.8vh, 4px) !important;
+    padding: 2px clamp(4px, 1.2vw, 10px) !important;
+    justify-content: space-evenly !important;
+    border: 1px solid rgba(40, 113, 132, 0.4) !important;
+    border-radius: 6px !important;
+  }
+
+  .control-card > .direction-console {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 0 1 auto !important;
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    gap: clamp(2px, 0.7vh, 4px) !important;
+    justify-content: center !important;
+  }
+
+  .primary-controls {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 780px !important;
+    margin: 0 auto !important;
+    gap: clamp(6px, 1.5vw, 16px) !important;
+    flex: 0 1 auto !important;
+  }
+
+  /* Joysticks centrados simétricamente con los pulgares */
+  .primary-controls > .joystick-wrap,
+  .primary-controls > .fork-control {
+    width: clamp(82px, 24vh, 116px) !important;
+    height: clamp(82px, 24vh, 116px) !important;
+    min-height: 0 !important;
+    max-height: clamp(82px, 24vh, 116px) !important;
+    aspect-ratio: 1 !important;
+    flex: 0 0 clamp(82px, 24vh, 116px) !important;
+    margin: auto 0 !important;
+    align-self: center !important;
+    border-radius: 50% !important;
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 0, 0, 0.5) !important;
+  }
+  .joy-base, .fork-joy-base {
+    width: min(100px, calc(100% - 8px)) !important;
+    height: min(100px, calc(100% - 8px)) !important;
+    max-width: calc(100% - 8px) !important;
+    max-height: calc(100% - 8px) !important;
+  }
+
+  /* Panel central entre pulgares */
+  .primary-controls > .stop-panel {
+    flex: 1 1 280px !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+    gap: 2px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    min-height: 0 !important;
+  }
+
+  /* Fila superior: Velocidad, Encender/Apagar, Crucero */
+  .top-control-row {
+    gap: 4px !important;
+    min-height: clamp(26px, 6vh, 32px) !important;
+    height: clamp(26px, 6vh, 32px) !important;
+    margin-bottom: 2px !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .power-button {
+    font-size: clamp(8px, 1vw, 9.5px) !important;
+    min-height: clamp(26px, 6vh, 32px) !important;
+    height: clamp(26px, 6vh, 32px) !important;
+    padding: 2px 6px !important;
+    letter-spacing: 0.2px !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+  }
+  .power-button .power-label {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 2px !important;
+    line-height: 1 !important;
+  }
+  .power-button .power-label .pwr-sep {
+    display: inline !important;
+  }
+  .power-lamp {
+    width: 6px !important;
+    height: 6px !important;
+    flex-shrink: 0 !important;
+  }
+  .speed-semaphore,
+  .cruise-button {
+    min-width: clamp(36px, 5vw, 44px) !important;
+    min-height: clamp(26px, 6vh, 32px) !important;
+    height: clamp(26px, 6vh, 32px) !important;
+    padding: 2px 3px !important;
+  }
+  .speed-semaphore .semaphore-housing {
+    gap: 2px !important;
+  }
+  .speed-semaphore .semaphore-lamp {
+    width: 6px !important;
+    height: 6px !important;
+  }
+  .speed-semaphore .semaphore-caption,
+  .cruise-button .cruise-caption {
+    font-size: 7.5px !important;
+    line-height: 1 !important;
+  }
+  .cruise-button .cruise-led {
+    width: 5px !important;
+    height: 5px !important;
+  }
+  .cruise-button .cruise-switch-lever {
+    height: 3px !important;
+    width: 12px !important;
+  }
+
+  /* Botón Detener (Paro de Emergencia) */
+  .stop-control {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1px !important;
+    margin: 1px 0 !important;
+    width: 100% !important;
+  }
+  .stop-caption {
+    font-size: clamp(7px, 0.9vw, 8.5px) !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    margin-bottom: 1px !important;
+  }
+  .stop-bezel {
+    width: clamp(52px, 14vh, 68px) !important;
+    height: clamp(52px, 14vh, 68px) !important;
+    max-width: 68px !important;
+    max-height: 68px !important;
+    aspect-ratio: 1 !important;
+    margin: 0 auto !important;
+  }
+  .stop-button {
+    font-size: clamp(8px, 1.05vw, 10px) !important;
+    font-weight: 800 !important;
+  }
+
+  /* Estado del vehículo: "En espera" / movimiento actual */
+  .drive-status {
+    min-height: clamp(13px, 2.6vh, 16px) !important;
+    height: clamp(13px, 2.6vh, 16px) !important;
+    font-size: clamp(7.5px, 0.95vw, 9px) !important;
+    margin: 1px 0 2px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    line-height: 1 !important;
+  }
+  .status-indicator {
+    width: 5px !important;
+    height: 5px !important;
+  }
+
+  /* Botones de Luces y Sonido situados limpiamente debajo del status */
+  .utility-command-buttons {
+    max-width: 300px !important;
+    margin: 1px auto 0 auto !important;
+    gap: 6px !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+  }
+  .utility-command {
+    min-height: clamp(22px, 4.8vh, 28px) !important;
+    height: clamp(22px, 4.8vh, 28px) !important;
+    padding: 1px 6px !important;
+    font-size: clamp(8.5px, 1.05vw, 10px) !important;
+    font-weight: 800 !important;
+    gap: 4px !important;
+  }
+  .utility-command .pixel-icon {
+    width: clamp(14px, 3vh, 18px) !important;
+    height: clamp(14px, 3vh, 18px) !important;
+  }
+  .utility-command .switch-track {
+    width: clamp(20px, 3.8vh, 24px) !important;
+    height: clamp(9px, 1.8vh, 12px) !important;
+  }
+
+  /* DEMO: Panel inferior compacto, por encima del dock de navegación */
+  .demo-side-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 380px !important;
+    margin: 0 auto !important;
+    gap: 2px !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  .demo-console-title {
+    display: none !important;
+  }
+  .demo-control-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) clamp(44px, 6vw, 56px) !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0 !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  .demo-carousel {
+    min-height: clamp(24px, 5vh, 28px) !important;
+    height: clamp(24px, 5vh, 28px) !important;
+    gap: 3px !important;
+    grid-template-columns: clamp(26px, 3.8vw, 34px) 1fr clamp(26px, 3.8vw, 34px) !important;
+  }
+  .demo-arrow-btn {
+    min-height: clamp(22px, 4.6vh, 26px) !important;
+    height: clamp(22px, 4.6vh, 26px) !important;
+    font-size: clamp(11px, 1.4vw, 13px) !important;
+    font-weight: 800 !important;
+  }
+  .demo-cartridge-screen {
+    font-size: clamp(8.5px, 1.05vw, 10px) !important;
+    padding: 2px 6px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+  }
+  .demo-control-panel .action-button {
+    min-height: clamp(24px, 5vh, 28px) !important;
+    height: clamp(24px, 5vh, 28px) !important;
+    font-size: clamp(9px, 1.05vw, 10.5px) !important;
+    font-weight: 800 !important;
+  }
+  .demo-progress {
+    display: flex !important;
+    width: 100% !important;
+    max-height: clamp(18px, 3.6vh, 22px) !important;
+    height: clamp(18px, 3.6vh, 22px) !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    background: rgba(11, 20, 37, 0.85) !important;
+    border: 1px solid rgba(40, 113, 132, 0.6) !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+  .demo-progress-heading {
+    display: none !important;
+  }
+  .demo-progress ol {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .demo-progress li {
+    padding: 0 4px !important;
+    font-size: clamp(7px, 0.85vw, 8.5px) !important;
+    white-space: nowrap !important;
+    line-height: 1.1 !important;
+  }
+  .demo-progress-empty {
+    font-size: clamp(7px, 0.85vw, 8.5px) !important;
+    color: var(--muted) !important;
+    text-align: center !important;
+  }
+
+  /* Dock de navegación inferior: situado en su propio espacio reservado, sin tapar la DEMO */
   .floating-view-switcher {
     bottom: max(3px, env(safe-area-inset-bottom)) !important;
     left: 50% !important;
@@ -2014,218 +2342,25 @@ main#main {
     z-index: 100 !important;
   }
   .view-switcher .view-nav-button {
-    min-width: clamp(70px, 9.5vw, 88px) !important;
-    min-height: clamp(24px, 5.2vh, 28px) !important;
-    padding: 2px 7px !important;
-    font-size: clamp(8px, 1vw, 9.5px) !important;
+    min-width: clamp(68px, 9vw, 86px) !important;
+    min-height: clamp(23px, 4.8vh, 27px) !important;
+    padding: 2px 6px !important;
+    font-size: clamp(7.5px, 0.95vw, 9px) !important;
     font-weight: 800 !important;
   }
-  .control-card {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: clamp(3px, 1vh, 6px);
-    padding: 2px clamp(6px, 1.4vw, 12px);
-    justify-content: center !important;
+  .app-footer {
+    position: fixed !important;
+    bottom: max(2px, env(safe-area-inset-bottom)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 0 max(8px, env(safe-area-inset-right)) !important;
+    z-index: 90 !important;
+    pointer-events: none !important;
   }
-  .control-card > .direction-console {
-    display: flex;
-    flex-direction: column;
-    flex: 0 1 auto;
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1px 2px;
-    gap: clamp(3px, 1vh, 6px);
-    justify-content: center;
-  }
-  .primary-controls {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 780px;
-    margin: 0 auto;
-    gap: clamp(8px, 2vw, 20px);
-    flex: 0 1 auto;
-  }
-  /* Pulgar izquierdo: joystick de dirección con bisel cibernético cian agrandado */
-  .primary-controls > .joystick-wrap {
-    width: clamp(100px, 36vh, 142px);
-    height: clamp(100px, 36vh, 142px);
-    min-height: 0 !important;
-    max-height: clamp(100px, 36vh, 142px);
-    aspect-ratio: 1;
-    flex: 0 0 clamp(100px, 36vh, 142px);
-    margin: 0;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%, rgba(34, 227, 237, 0.14) 0%, rgba(13, 23, 37, 0.8) 68%, transparent 100%);
-    border: 1px solid rgba(34, 227, 237, 0.4);
-    box-shadow: inset 0 0 20px rgba(34, 227, 237, 0.18), 0 0 16px rgba(0, 0, 0, 0.65);
-  }
-  /* Pulgar derecho: joystick vertical de horquillas con bisel cibernético lima agrandado */
-  .primary-controls > .fork-control {
-    width: clamp(100px, 36vh, 142px);
-    height: clamp(100px, 36vh, 142px);
-    min-height: 0 !important;
-    max-height: clamp(100px, 36vh, 142px);
-    aspect-ratio: 1;
-    flex: 0 0 clamp(100px, 36vh, 142px);
-    margin: 0;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%, rgba(185, 255, 53, 0.14) 0%, rgba(13, 23, 37, 0.8) 68%, transparent 100%);
-    border: 1px solid rgba(185, 255, 53, 0.4);
-    box-shadow: inset 0 0 20px rgba(185, 255, 53, 0.18), 0 0 16px rgba(0, 0, 0, 0.65);
-  }
-  /* Centro entre pulgares: panel ampliado con botones táctiles grandes que aprovechan todo el espacio */
-  .primary-controls > .stop-panel {
-    flex: 1 1 330px;
-    max-width: 350px;
-    margin: 0 auto;
-    gap: 4px;
-  }
-  .top-control-row {
-    gap: 6px;
-    min-height: clamp(42px, 9.6vh, 48px);
-  }
-  .power-button {
-    font-size: clamp(9.5px, 1.25vw, 12px);
-    min-height: clamp(42px, 9.6vh, 48px);
-    padding: 3px 8px;
-    letter-spacing: 0.3px;
-    font-weight: 800;
-  }
-  .power-lamp {
-    width: 8px;
-    height: 8px;
-  }
-  .speed-semaphore,
-  .cruise-button {
-    min-width: clamp(42px, 5.5vw, 52px);
-    min-height: clamp(42px, 9.6vh, 48px);
-    padding: 3px 4px;
-  }
-  .speed-semaphore .semaphore-caption,
-  .cruise-button .cruise-caption {
-    font-size: 8.5px;
-  }
-  .stop-bezel {
-    width: clamp(86px, 23vh, 100px);
-  }
-  .stop-caption {
-    font-size: clamp(8.5px, 1.1vw, 10.5px);
-    font-weight: 700;
-  }
-  .drive-status {
-    min-height: clamp(15px, 2.8vh, 20px);
-    font-size: clamp(9px, 1.15vw, 11px);
-  }
-  .utility-command-buttons {
-    max-width: 350px;
-    margin: 0 auto;
-    gap: 8px;
-  }
-  .utility-command {
-    min-height: clamp(40px, 9.2vh, 48px);
-    padding: 3px 10px;
-    font-size: clamp(11px, 1.4vw, 13.5px);
-    font-weight: 800;
-  }
-  .utility-command .pixel-icon {
-    width: clamp(24px, 5.2vh, 30px);
-    height: clamp(24px, 5.2vh, 30px);
-  }
-  .utility-command .switch-track {
-    width: clamp(28px, 5.5vh, 36px);
-    height: clamp(14px, 2.8vh, 18px);
-  }
-  /* DEMO: Módulo central compacto, con botones amplios y fáciles de pulsar */
-  .demo-side-panel {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center;
-    flex: 0 0 auto;
-    width: 100%;
-    max-width: 440px;
-    margin: 0 auto;
-    gap: 4px;
-    grid-column: unset;
-    grid-row: unset;
-  }
-  .demo-console-title {
-    display: none;
-  }
-  .demo-control-panel {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) clamp(56px, 7.8vw, 72px);
-    align-items: center;
-    width: 100%;
-    padding: 0;
-    gap: 6px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-  }
-  .demo-carousel {
-    min-height: clamp(38px, 8.8vh, 46px);
-    gap: 4px;
-    grid-template-columns: clamp(38px, 5.2vw, 48px) 1fr clamp(38px, 5.2vw, 48px);
-  }
-  .demo-arrow-btn {
-    min-height: clamp(36px, 8.2vh, 44px);
-    font-size: clamp(16px, 2vw, 19px);
-    font-weight: 800;
-  }
-  .demo-cartridge-screen {
-    font-size: clamp(10.5px, 1.35vw, 12.5px);
-    padding: 3px 8px;
-    font-weight: 700;
-  }
-  .demo-control-panel .action-button {
-    min-height: clamp(38px, 8.8vh, 46px);
-    font-size: clamp(11px, 1.3vw, 12.5px);
-    font-weight: 800;
-  }
-  .demo-progress {
-    display: flex !important;
-    width: 100%;
-    max-height: clamp(24px, 4.5vh, 28px);
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: rgba(11, 20, 37, 0.85);
-    border: 1px solid rgba(40, 113, 132, 0.6);
-    justify-content: center;
-    align-items: center;
-  }
-  .demo-progress-heading {
-    display: none;
-  }
-  .demo-progress ol {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: 4px;
-    white-space: nowrap;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
-  .demo-progress li {
-    padding: 1px 5px;
-    font-size: clamp(7.5px, 0.9vw, 9px);
-    white-space: nowrap;
-    line-height: 1.15;
-  }
-  .demo-progress-empty {
-    font-size: clamp(7.5px, 0.9vw, 9px);
-    color: var(--muted);
-    text-align: center;
-  }
-  .joy-base, .fork-joy-base {
-    width: min(120px, calc(100% - 12px));
-    height: min(120px, calc(100% - 12px));
-    max-width: calc(100% - 12px);
-    max-height: calc(100% - 12px);
+  .app-footer span {
+    font-size: 7px !important;
+    opacity: 0.7 !important;
   }
 
   /* -------------------------------------------------------------------------
