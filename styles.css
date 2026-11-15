@@ -934,19 +934,19 @@ body {
 .view-nav-button:hover, .monitor-refresh:hover { border-color: var(--cyan); }
 .view-nav-button.is-active { border-color: var(--cyan); background: #0c4052; color: #fff; box-shadow: inset 0 -2px var(--cyan); }
 .view-nav-button:focus-visible, .monitor-refresh:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
-.monitor-view { margin-top: 18px; }
-.monitor-heading-row, .monitor-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.monitor-view { margin-top: 0; }
+.monitor-heading-row, .monitor-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .monitor-heading-row h1, .monitor-history-heading h2 { margin: 0; color: var(--text); font-weight: 750; }
-.monitor-heading-row h1 { font-size: clamp(21px, 4vw, 29px); letter-spacing: .4px; }
-.monitor-vehicle { margin: 4px 0 0; color: #b7c9de; font-size: 13px; }
+.monitor-heading-row h1 { font-size: clamp(16px, 3vw, 24px); letter-spacing: .4px; }
+.monitor-vehicle { margin: 2px 0 0; color: #b7c9de; font-size: 12px; }
 .monitor-refresh { flex: 0 0 auto; }
-.monitor-latest { margin-top: 16px; padding: clamp(17px, 3vw, 25px); border: 1px solid #36896e; border-radius: 10px; background: linear-gradient(125deg, #102d2b, #101a2a 75%); box-shadow: inset 4px 0 #56d99a, 0 10px 30px #0003; }
-.monitor-card-label { display: flex; align-items: center; gap: 9px; color: #afd6c5; font-size: 12px; font-weight: 650; letter-spacing: .4px; text-transform: uppercase; }
-.monitor-pulse { width: 9px; height: 9px; border-radius: 50%; background: #56d99a; box-shadow: 0 0 10px #56d99a99; }
-.monitor-command { display: block; margin-top: 11px; color: #f3fff8; font-size: clamp(22px, 5vw, 34px); font-weight: 750; line-height: 1.2; overflow-wrap: anywhere; }
-.monitor-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 8px; color: #d6e8df; font-size: 13px; }
-.monitor-note { margin: 13px 0 0; color: #aabbb7; font-size: 11px; line-height: 1.5; }
-.monitor-history { margin-top: 21px; padding: clamp(15px, 2.5vw, 21px); border: 1px solid #324b65; border-radius: 10px; background: #0e1728ed; }
+.monitor-latest { margin-top: 4px; padding: clamp(6px, 1.2vh, 12px) clamp(8px, 1.5vw, 16px); border: 1px solid #36896e; border-radius: 8px; background: linear-gradient(125deg, #102d2b, #101a2a 75%); box-shadow: inset 4px 0 #56d99a, 0 10px 30px #0003; }
+.monitor-card-label { display: flex; align-items: center; gap: 7px; color: #afd6c5; font-size: 11px; font-weight: 650; letter-spacing: .4px; text-transform: uppercase; }
+.monitor-pulse { width: 8px; height: 8px; border-radius: 50%; background: #56d99a; box-shadow: 0 0 10px #56d99a99; }
+.monitor-command { display: block; margin-top: 4px; color: #f3fff8; font-size: clamp(15px, 2.5vw, 24px); font-weight: 750; line-height: 1.2; overflow-wrap: anywhere; }
+.monitor-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 4px; color: #d6e8df; font-size: 11.5px; }
+.monitor-note { margin: 4px 0 0; color: #aabbb7; font-size: 10px; line-height: 1.35; }
+.monitor-history { margin-top: 6px; padding: clamp(8px, 1.5vh, 14px) clamp(8px, 1.5vw, 14px); border: 1px solid #324b65; border-radius: 8px; background: #0e1728ed; }
 .monitor-history-heading { margin-bottom: 13px; }
 .monitor-history-heading h2 { font-size: clamp(17px, 3vw, 21px); }
 .monitor-history-heading .eyebrow { margin-bottom: 4px; }
@@ -1656,14 +1656,27 @@ main#main {
 
 .monitor-latest {
   flex: 0 0 auto;
-  padding: clamp(4px, 0.8vh, 8px) clamp(6px, 1vw, 12px);
+  margin-top: 0 !important;
+  padding: clamp(3px, 0.6vh, 6px) clamp(6px, 1vw, 12px);
   border: 1px solid #287184;
   border-radius: 6px;
-  background: #0d1729;
+  background: linear-gradient(125deg, #102d2b, #101a2a 75%);
 }
 
 .monitor-command {
-  font-size: clamp(13px, 2vw, 20px);
+  font-size: clamp(12px, 1.6vw, 16px);
+  margin-top: 2px !important;
+}
+
+.monitor-meta {
+  margin-top: 2px !important;
+  font-size: clamp(8.5px, 0.95vw, 11px);
+}
+
+.monitor-note {
+  margin: 2px 0 0 !important;
+  font-size: clamp(7.5px, 0.8vw, 9.5px);
+  line-height: 1.2;
 }
 
 .monitor-history {
@@ -1671,6 +1684,7 @@ main#main {
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
+  margin-top: 0 !important;
   overflow: hidden;
   border: 1px solid #287184;
   border-radius: 6px;
@@ -1904,7 +1918,7 @@ main#main {
 }
 
 /* 10. Dispositivos móviles en orientación horizontal (Cabina Arcade Gamepad ergonómica) */
-@media (orientation: landscape) and (max-height: 520px) {
+@media (orientation: landscape) and (max-height: 600px) {
   .app-shell {
     padding-top: max(2px, env(safe-area-inset-top));
     padding-bottom: max(2px, env(safe-area-inset-bottom));
@@ -2117,6 +2131,163 @@ main#main {
     height: min(120px, calc(100% - 12px));
     max-width: calc(100% - 12px);
     max-height: calc(100% - 12px);
+  }
+
+  /* -------------------------------------------------------------------------
+     VISTA DE MONITOREO EN HORIZONTAL MÓVIL (COMPACTO PARA VISUALIZAR HISTORIAL)
+     Apartado "Último movimiento reportado" ultra-achicado en barra horizontal (22px)
+     para que la tabla de los últimos 10 movimientos sea inmediatamente visible.
+     ------------------------------------------------------------------------- */
+  .monitor-view {
+    gap: 3px !important;
+    margin-top: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+  .monitor-view .connectivity {
+    gap: 4px !important;
+    margin-top: 0 !important;
+    margin-bottom: 2px !important;
+  }
+  .monitor-view .connectivity-item {
+    min-height: 22px !important;
+    padding: 1px 6px !important;
+    gap: 4px !important;
+  }
+  .monitor-view .connectivity-item .connection-icon {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  .monitor-view .connectivity-item b {
+    font-size: 7.5px !important;
+    line-height: 1.1 !important;
+  }
+  .monitor-view .connectivity-item small {
+    font-size: 6.5px !important;
+    line-height: 1.1 !important;
+  }
+  .monitor-view .service-led {
+    width: 5px !important;
+    height: 5px !important;
+  }
+
+  .monitor-heading-row {
+    margin: 0 !important;
+    padding: 0 2px !important;
+    min-height: 0 !important;
+  }
+  .monitor-heading-row .eyebrow {
+    display: none !important;
+  }
+  .monitor-heading-row h1 {
+    font-size: 11px !important;
+    display: inline !important;
+    margin: 0 !important;
+  }
+  .monitor-vehicle {
+    display: inline !important;
+    margin: 0 0 0 8px !important;
+    font-size: 9.5px !important;
+    color: #9cb5cf !important;
+  }
+  .monitor-refresh {
+    min-height: 20px !important;
+    padding: 1px 7px !important;
+    font-size: 8px !important;
+  }
+
+  /* Apartado de ÚLTIMO MOVIMIENTO REPORTADO achicado y horizontalizado */
+  .monitor-latest {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    margin: 0 !important;
+    padding: 2px 8px !important;
+    min-height: 22px !important;
+    gap: 8px !important;
+    background: linear-gradient(90deg, rgba(16, 45, 43, 0.95), rgba(16, 26, 42, 0.95)) !important;
+    border: 1px solid #287184 !important;
+    border-radius: 5px !important;
+  }
+  .monitor-card-label {
+    font-size: 8px !important;
+    gap: 4px !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+  .monitor-pulse {
+    width: 5px !important;
+    height: 5px !important;
+  }
+  .monitor-command {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    margin: 0 !important;
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: #56d99a !important;
+  }
+  .monitor-meta {
+    font-size: 8px !important;
+    margin: 0 !important;
+    gap: 6px !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+  .monitor-note {
+    display: none !important;
+  }
+
+  /* Historial de últimos 10 movimientos con altura máxima para visualización completa */
+  .monitor-history {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 2px 6px !important;
+    border: 1px solid #287184 !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+  }
+  .monitor-history-heading {
+    margin: 0 0 2px 0 !important;
+  }
+  .monitor-history-heading .eyebrow {
+    display: none !important;
+  }
+  .monitor-history-heading h2 {
+    font-size: 9.5px !important;
+    display: inline !important;
+    margin: 0 !important;
+  }
+  .history-count {
+    font-size: 8px !important;
+  }
+  .history-table-wrap {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    border: 1px solid #1a3249 !important;
+    border-radius: 4px !important;
+  }
+  .history-table {
+    font-size: 8.5px !important;
+  }
+  .history-table th,
+  .history-table td {
+    padding: 2px 5px !important;
+    line-height: 1.15 !important;
+  }
+  .history-badge {
+    padding: 0 4px !important;
+    font-size: 7.5px !important;
+    line-height: 1.1 !important;
   }
 }
 
