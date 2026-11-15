@@ -37,10 +37,11 @@ export function createApi(config) {
     const abortFromCaller = () => controller.abort();
     options.signal?.addEventListener('abort', abortFromCaller, { once: true });
 
+    const activeToken = currentAuthToken || sessionStorage.getItem('iot_token') || localStorage.getItem('iot_token');
     const headers = {
       Accept: 'application/json',
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(currentAuthToken ? { Authorization: `Bearer ${currentAuthToken}` } : {}),
+      ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
       ...options.headers,
     };
 
@@ -87,12 +88,27 @@ export function createApi(config) {
     getApiHealth: () => request('/health'),
     getDatabaseHealth: () => request('/health/database'),
 
+    setAuthToken,
+    getAuthToken,
+
     // Autenticación
-    login: (username, password) => request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    }),
-    logout: () => request('/auth/logout', { method: 'POST' }),
+    login: async (username, password) => {
+      const res = await request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+      if (res && res.access_token) {
+        setAuthToken(res.access_token);
+      }
+      return res;
+    },
+    logout: async () => {
+      try {
+        await request('/auth/logout', { method: 'POST' });
+      } finally {
+        setAuthToken(null);
+      }
+    },
     getMe: () => request('/auth/me'),
 
     // Control y Monitoreo (4.1 y 4.2)

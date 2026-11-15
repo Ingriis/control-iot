@@ -3,6 +3,8 @@
  * Práctica 4.3 IoT Pachuca.
  */
 
+import { setAuthToken } from './api.js';
+
 export class AdminModule {
   constructor(api, options = {}) {
     this.api = api;
@@ -210,7 +212,11 @@ export class AdminModule {
 
     try {
       const res = await this.api.login(userField.value.trim(), passField.value);
-      sessionStorage.setItem('iot_token', res.access_token);
+      if (res && res.access_token) {
+        setAuthToken(res.access_token);
+        sessionStorage.setItem('iot_token', res.access_token);
+        localStorage.setItem('iot_token', res.access_token);
+      }
       this.setCurrentUser(res.user);
 
       // Cerrar modal bootstrap si existe
@@ -233,7 +239,9 @@ export class AdminModule {
     } catch (e) {
       // Ignorar si ya expiró
     }
+    setAuthToken(null);
     sessionStorage.removeItem('iot_token');
+    localStorage.removeItem('iot_token');
     this.setCurrentUser(null);
   }
 
