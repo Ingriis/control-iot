@@ -348,8 +348,14 @@ async function refreshDatabaseHealth() {
     const result = await currentApi.getDatabaseHealth();
     if (generation !== apiGeneration || currentApi !== api) return false;
 
-    if (result.status === 'available' && result.database === 'connected') {
-      setIndicator('dbIndicator', 'available', 'Conectado · RDS responde');
+    const isConnected = result?.status === 'available' && (
+      result?.database === 'connected' ||
+      (typeof result?.database === 'string' && result.database.toLowerCase().includes('rds'))
+    );
+
+    if (isConnected) {
+      const ms = Number.isFinite(result.latency_ms) ? ` (${result.latency_ms} ms)` : '';
+      setIndicator('dbIndicator', 'available', `Conectado · RDS responde${ms}`);
     } else {
       setIndicator('dbIndicator', 'unavailable', 'No disponible · RDS sin conexión');
     }
