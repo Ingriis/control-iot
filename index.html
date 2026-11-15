@@ -216,7 +216,7 @@
             <button class="btn btn-sm btn-danger" id="releaseGuestSessionBtn" type="button">Detener y Finalizar</button>
           </aside>
 
-          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 admin-header-row">
             <div>
               <p class="eyebrow text-cyan mb-0">GESTIÓN MULTIUSUARIO & COMERCIAL</p>
               <h1 id="adminMainHeading" class="h3 mb-0">ADMINISTRACIÓN IoT</h1>
@@ -387,9 +387,9 @@
 
           <!-- SUBTAB: Invitados y Exhibición -->
           <div class="admin-subtab-pane d-none" id="subtab-guestDemo">
-            <div class="card bg-dark border-warning p-3 mb-3">
-              <h4 class="h5 text-warning mb-1">Prueba Comercial de Vehículos IoT</h4>
-              <p class="small text-muted mb-0">
+            <div class="card bg-dark border-warning p-3 mb-3 guest-banner-card">
+              <h4 class="h5 text-warning mb-1 guest-banner-title">Prueba Comercial de Vehículos IoT</h4>
+              <p class="guest-banner-text mb-0">
                 Como cliente potencial puedes explorar nuestro catálogo y solicitar una prueba de conducción limitada a 3 minutos sobre una de nuestras unidades de exhibición. Dos personas no pueden controlar la misma unidad simultáneamente.
               </p>
             </div>
@@ -484,7 +484,7 @@
           <div class="modal-body">
             <input type="hidden" id="guestBookVehicleId">
             <p>Vehículo: <strong id="guestBookVehicleName" class="text-cyan"></strong></p>
-            <p class="small text-muted">
+            <p class="guest-modal-desc mb-3">
               Se te asignará una reserva exclusiva durante 3 minutos. Podrás mover el vehículo y detenerlo. Al finalizar el tiempo la reserva se libera automáticamente.
             </p>
             <div class="mb-3">

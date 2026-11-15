@@ -669,14 +669,16 @@ export class AdminModule {
       container.innerHTML = units.map((u) => {
         const isOccupied = u.estado_reserva === 'OCUPADO';
         return `
-          <div class="col-md-6 col-lg-4">
-            <div class="card bg-dark border-${isOccupied ? 'warning' : 'info'} h-100 p-3">
-              <h5 class="text-cyan">${u.nombre_modelo}</h5>
-              <p class="small text-muted mb-2">Unidad #${u.id_vehiculo} · Microcontrolador ${u.microcontrolador}</p>
-              <p class="small">${u.descripcion || 'Vehículo de prueba en exhibición.'}</p>
-              <div class="mt-auto d-flex justify-content-between align-items-center">
+          <div class="col-12 col-md-6 col-lg-4 guest-catalog-col">
+            <div class="card bg-dark border-${isOccupied ? 'warning' : 'info'} h-100 p-3 guest-vehicle-card">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <h5 class="text-cyan mb-0 guest-vehicle-title">${u.nombre_modelo}</h5>
                 <span class="badge ${isOccupied ? 'bg-warning text-dark' : 'bg-success'}">${u.estado_reserva}</span>
-                <button class="btn btn-sm ${isOccupied ? 'btn-secondary' : 'btn-cyan'}" 
+              </div>
+              <p class="guest-unit-meta mb-1">Unidad #${u.id_vehiculo} · Microcontrolador ${u.microcontrolador}</p>
+              <p class="guest-unit-desc mb-2">${u.descripcion || 'Vehículo de prueba en exhibición.'}</p>
+              <div class="mt-auto d-flex justify-content-end align-items-center pt-2">
+                <button class="btn btn-sm ${isOccupied ? 'btn-secondary' : 'btn-cyan'} px-3 guest-book-btn" 
                   ${isOccupied ? 'disabled' : ''} 
                   onclick="window.adminModule.startGuestBooking(${u.id_vehiculo}, '${u.nombre_modelo}')">
                   ${isOccupied ? 'En Uso' : 'Probar Unidad'}
