@@ -2009,6 +2009,10 @@ main#main {
     box-sizing: border-box !important;
     overflow: hidden !important;
   }
+  .app-shell::before,
+  .app-shell::after {
+    display: none !important; /* Oculta la barra decorativa verde inferior ::after que tapaba el nombre de la autora */
+  }
   main#main {
     flex: 1 1 auto !important;
     min-height: 0 !important;
@@ -2045,12 +2049,13 @@ main#main {
     border-radius: 6px !important;
   }
 
+  /* Contenedores acotados ergonómicamente hacia el centro para que los joysticks no queden pegados a los bordes */
   .control-card > .direction-console {
     display: flex !important;
     flex-direction: column !important;
     flex: 0 1 auto !important;
     width: 100% !important;
-    max-width: 800px !important;
+    max-width: clamp(500px, 80vw, 640px) !important;
     margin: 0 auto !important;
     padding: 0 !important;
     gap: clamp(2px, 0.7vh, 4px) !important;
@@ -2062,9 +2067,10 @@ main#main {
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    max-width: 780px !important;
+    max-width: clamp(500px, 80vw, 640px) !important;
     margin: 0 auto !important;
-    gap: clamp(6px, 1.5vw, 16px) !important;
+    gap: clamp(8px, 2vw, 18px) !important;
+    padding: 0 4px !important;
     flex: 0 1 auto !important;
   }
 
@@ -2350,17 +2356,27 @@ main#main {
   }
   .app-footer {
     position: fixed !important;
-    bottom: max(2px, env(safe-area-inset-bottom)) !important;
+    bottom: max(3px, env(safe-area-inset-bottom)) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    padding: 0 max(8px, env(safe-area-inset-right)) !important;
+    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     z-index: 90 !important;
     pointer-events: none !important;
   }
   .app-footer span {
-    font-size: 7px !important;
-    opacity: 0.7 !important;
+    font-size: clamp(7.5px, 0.9vw, 9px) !important;
+    color: #9cb5cf !important;
+    opacity: 0.9 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+    pointer-events: auto !important;
+  }
+  .app-footer strong {
+    color: var(--cyan) !important;
+    font-weight: 700 !important;
   }
 
   /* -------------------------------------------------------------------------
