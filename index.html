@@ -13,7 +13,7 @@
     <link rel="preload" as="image" href="./assets/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=20261115-v46-auth" />
+    <link rel="stylesheet" href="./styles.css?v=20261115-v47-demo-layout" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -357,30 +357,41 @@
 
           <!-- SUBTAB: Editor de DEMOS (Comprador) -->
           <div class="admin-subtab-pane d-none" id="subtab-demoEditor">
-            <div class="card bg-dark border-secondary p-3">
-              <h4 class="h5 text-cyan mb-2">Editor Visual de Demostraciones Privadas</h4>
-              <p class="small text-muted mb-3">
+            <div class="card bg-dark border-secondary p-3 demo-editor-card">
+              <h4 class="h5 text-cyan mb-2 demo-editor-title">Editor Visual de Demostraciones Privadas</h4>
+              <p class="small text-muted mb-3 demo-editor-desc">
                 Diseña secuencias ordenadas de movimientos. La secuencia se guardará de forma persistente en Amazon RDS vinculada a tu unidad y podrás ejecutarla desde la vista CONTROL sin interferir con la prioridad de parada de emergencia.
               </p>
-              <form id="saveDemoForm">
-                <div class="row g-2 mb-3">
-                  <div class="col-md-6">
-                    <label class="form-label small" for="demoCustomName">Nombre de la DEMO</label>
-                    <input type="text" class="form-control form-control-sm" id="demoCustomName" placeholder="Ej. Recorrido Almacén A" required>
+              <form id="saveDemoForm" class="demo-editor-form">
+                <div class="demo-editor-grid">
+                  <!-- Metadatos de la DEMO -->
+                  <div class="demo-editor-meta-col">
+                    <div class="mb-2">
+                      <label class="form-label small mb-1" for="demoCustomName">Nombre de la DEMO</label>
+                      <input type="text" class="form-control form-control-sm" id="demoCustomName" placeholder="Ej. Recorrido Almacén A" required>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label small mb-1" for="demoCustomDesc">Descripción</label>
+                      <input type="text" class="form-control form-control-sm" id="demoCustomDesc" placeholder="Breve explicación de la secuencia">
+                    </div>
                   </div>
-                  <div class="col-md-6">
-                    <label class="form-label small" for="demoCustomDesc">Descripción</label>
-                    <input type="text" class="form-control form-control-sm" id="demoCustomDesc" placeholder="Breve explicación de la secuencia">
+
+                  <!-- Pasos y Secuencia -->
+                  <div class="demo-editor-steps-col">
+                    <div class="d-flex justify-content-between align-items-center mb-1 demo-steps-header">
+                      <label class="form-label small fw-bold mb-0">Pasos de la Secuencia:</label>
+                      <button type="button" class="btn btn-sm btn-outline-cyan py-0 px-2" id="addDemoStepBtn">+ Agregar Paso</button>
+                    </div>
+                    <div id="demoStepsContainer" class="demo-steps-scroll mb-1"></div>
+                  </div>
+
+                  <!-- Botón de Guardado Persistente -->
+                  <div class="demo-editor-save-wrap">
+                    <button type="submit" class="btn btn-sm btn-cyan w-100 demo-save-btn">
+                      Guardar DEMO en Amazon RDS
+                    </button>
                   </div>
                 </div>
-
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <label class="form-label small fw-bold mb-0">Pasos de la Secuencia:</label>
-                  <button type="button" class="btn btn-sm btn-outline-cyan" id="addDemoStepBtn">+ Agregar Paso</button>
-                </div>
-                <div id="demoStepsContainer" class="mb-3"></div>
-
-                <button type="submit" class="btn btn-sm btn-cyan">Guardar DEMO en Amazon RDS</button>
               </form>
             </div>
           </div>
@@ -624,6 +635,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./js/app.js?v=20261115-v46-auth"></script>
+    <script type="module" src="./js/app.js?v=20261115-v47-demo-layout"></script>
   </body>
 </html>

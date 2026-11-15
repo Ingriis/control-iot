@@ -593,7 +593,7 @@ export class AdminModule {
     const row = document.createElement('div');
     row.className = 'demo-step-row d-flex gap-2 align-items-center mb-2 p-2 bg-dark rounded border border-secondary';
     row.innerHTML = `
-      <span class="badge bg-secondary">#${stepIndex}</span>
+      <span class="badge bg-secondary demo-step-badge">#${stepIndex}</span>
       <select class="form-select form-select-sm step-command" required>
         <option value="1">AVANZAR</option>
         <option value="2">RETROCEDER</option>
@@ -605,15 +605,15 @@ export class AdminModule {
         <option value="11">SONIDO</option>
         <option value="9">DETENER</option>
       </select>
-      <div class="input-group input-group-sm" style="width: 140px;">
+      <div class="input-group input-group-sm demo-input-duration">
         <input type="number" class="form-control step-duration" value="1500" min="200" max="10000" step="100" title="Duración (ms)">
         <span class="input-group-text">ms</span>
       </div>
-      <div class="input-group input-group-sm" style="width: 130px;">
+      <div class="input-group input-group-sm demo-input-pause">
         <input type="number" class="form-control step-pause" value="300" min="0" max="5000" step="100" title="Pausa (ms)">
         <span class="input-group-text">pausa</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">✕</button>
+      <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" onclick="this.parentElement.remove()">✕</button>
     `;
     container.appendChild(row);
   }
