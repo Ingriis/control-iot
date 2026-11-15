@@ -369,10 +369,40 @@ function showView(view) {
   const isAdmin = view === 'admin';
 
   monitorVisible = isMonitor;
-  $('controlView').classList.toggle('d-none', !isControl);
-  $('monitorView').classList.toggle('d-none', !isMonitor);
-  const adminViewEl = $('adminView');
-  if (adminViewEl) adminViewEl.classList.toggle('d-none', !isAdmin);
+
+  const controlEl = $('controlView');
+  const monitorEl = $('monitorView');
+  const adminEl = $('adminView');
+
+  if (controlEl) {
+    controlEl.classList.toggle('d-none', !isControl);
+    controlEl.hidden = !isControl;
+    if (isControl) {
+      controlEl.style.removeProperty('display');
+    } else {
+      controlEl.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  if (monitorEl) {
+    monitorEl.classList.toggle('d-none', !isMonitor);
+    monitorEl.hidden = !isMonitor;
+    if (isMonitor) {
+      monitorEl.style.removeProperty('display');
+    } else {
+      monitorEl.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  if (adminEl) {
+    adminEl.classList.toggle('d-none', !isAdmin);
+    adminEl.hidden = !isAdmin;
+    if (isAdmin) {
+      adminEl.style.removeProperty('display');
+    } else {
+      adminEl.style.setProperty('display', 'none', 'important');
+    }
+  }
 
   $('controlTab').classList.toggle('is-active', isControl);
   $('monitorTab').classList.toggle('is-active', isMonitor);
@@ -817,6 +847,7 @@ async function executeDemo() {
 }
 
 async function boot() {
+  showView('control');
   enableFloatingSwitcherDrag();
   $('controlTab').addEventListener('click', () => showView('control'));
   $('monitorTab').addEventListener('click', () => showView('monitor'));

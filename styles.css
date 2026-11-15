@@ -2560,11 +2560,15 @@ main#main {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Regla de máxima prioridad para ocultamiento: garantiza que ninguna vista ni subtab con d-none se muestre por error */
+/* Regla de máxima prioridad para ocultamiento: garantiza que ninguna vista ni subtab con d-none o hidden se muestre por error */
+[hidden],
 .d-none,
 .admin-view.d-none,
 .monitor-view.d-none,
 .control-view.d-none,
-.admin-subtab-pane.d-none {
+.admin-subtab-pane.d-none,
+#adminView[hidden],
+#monitorView[hidden],
+#controlView[hidden] {
   display: none !important;
 }
