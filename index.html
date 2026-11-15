@@ -18,60 +18,8 @@
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
     <div class="container-xl app-shell">
-      
-      <!-- Barra Superior de Autenticación y Conectividad Global -->
-      <header class="top-auth-bar d-flex flex-wrap justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary gap-2">
-        <div class="d-flex align-items-center gap-2">
-          <span class="brand-tag">IoT 4.3</span>
-          <span id="currentRoleBadge" class="badge bg-secondary text-uppercase">INVITADO</span>
-          <span id="currentUserGreeting" class="small text-muted">Sesión pública</span>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <button class="btn btn-sm btn-outline-cyan" id="authActionBtn" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
-            Iniciar Sesión
-          </button>
-          <button class="btn btn-sm btn-outline-danger d-none" id="logoutBtn" type="button">
-            Cerrar Sesión
-          </button>
-        </div>
-      </header>
-
-      <!-- Banner de Sesión de Invitado con Contador -->
-      <aside id="guestSessionBanner" class="alert alert-warning d-flex justify-content-between align-items-center py-2 px-3 mb-3 d-none" role="region" aria-label="Sesión de prueba en curso">
-        <div>
-          <strong>PRUEBA TEMPORAL DE EXHIBICIÓN EN CURSO</strong>
-          <span class="ms-2">Tiempo restante: <strong id="guestSessionTimer" class="text-danger fs-5">03:00</strong></span>
-        </div>
-        <button class="btn btn-sm btn-danger" id="releaseGuestSessionBtn" type="button">Detener y Finalizar</button>
-      </aside>
-
-      <!-- Indicadores de Conectividad Independientes (WSS, API AWS, Amazon RDS) -->
-      <section class="connectivity mb-3" aria-label="Estado de los servicios de telecomunicación">
-        <div class="connectivity-item" id="wsIndicator" data-state="connecting" role="status" aria-live="polite">
-          <span class="state-symbol" aria-hidden="true">
-            <svg class="connection-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><rect x="16" y="16" width="5" height="5"/><path d="M8 5.5h4v6h4M5.5 8v4h6v4M18.5 8v4h-2M8 18.5h4v-3"/></svg>
-          </span>
-          <span class="service-led" aria-hidden="true"></span>
-          <span><b>WebSocket WSS · navegador</b><small id="wsStatus">Conectando…</small></span>
-        </div>
-        <div class="connectivity-item" id="apiIndicator" data-state="checking" role="status" aria-live="polite">
-          <span class="state-symbol" aria-hidden="true">
-            <svg class="connection-icon" viewBox="0 0 24 24" fill="none"><path d="M6 17h12a3 3 0 0 0 .4-6A6.5 6.5 0 0 0 6 9.5 3.8 3.8 0 0 0 6 17Z"/><path d="M8 20h8M10 17v3m4-3v3"/></svg>
-          </span>
-          <span class="service-led" aria-hidden="true"></span>
-          <span><b>Servidor AWS · API</b><small id="apiStatus">Comprobando catálogo…</small></span>
-        </div>
-        <div class="connectivity-item" id="dbIndicator" data-state="unknown" role="status" aria-live="polite">
-          <span class="state-symbol" aria-hidden="true">
-            <svg class="connection-icon" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
-          </span>
-          <span class="service-led" aria-hidden="true"></span>
-          <span><b>Amazon RDS</b><small id="dbStatus">Verificando conexión…</small></span>
-        </div>
-      </section>
-
       <!-- Navegación Principal de 3 Módulos -->
-      <nav class="view-nav view-switcher floating-view-switcher mb-3" aria-label="Navegación de módulos">
+      <nav class="view-nav view-switcher floating-view-switcher" aria-label="Navegación de módulos">
         <button class="view-nav-button is-active" id="controlTab" type="button" aria-controls="controlView" aria-current="page">CONTROL</button>
         <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">MONITOREO</button>
         <button class="view-nav-button" id="adminTab" type="button" aria-controls="adminView">ADMINISTRACIÓN</button>
@@ -193,6 +141,17 @@
              MÓDULO 2: MONITOREO (4.2)
              =================================================================== -->
         <section class="monitor-view d-none" id="monitorView" aria-labelledby="monitorHeading">
+          <section class="connectivity" aria-label="Estado de los servicios">
+            <div class="connectivity-item" id="wsIndicator" data-state="connecting" role="status" aria-live="polite">
+              <span class="state-symbol" aria-hidden="true"><svg class="connection-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><rect x="16" y="16" width="5" height="5"/><path d="M8 5.5h4v6h4M5.5 8v4h6v4M18.5 8v4h-2M8 18.5h4v-3"/></svg></span><span class="service-led" aria-hidden="true"></span><span><b>WebSocket WSS · navegador</b><small id="wsStatus">Conectando…</small></span>
+            </div>
+            <div class="connectivity-item" id="apiIndicator" data-state="checking" role="status" aria-live="polite">
+              <span class="state-symbol" aria-hidden="true"><svg class="connection-icon" viewBox="0 0 24 24" fill="none"><path d="M6 17h12a3 3 0 0 0 .4-6A6.5 6.5 0 0 0 6 9.5 3.8 3.8 0 0 0 6 17Z"/><path d="M8 20h8M10 17v3m4-3v3"/></svg></span><span class="service-led" aria-hidden="true"></span><span><b>Servidor AWS · API</b><small id="apiStatus">Comprobando catálogo…</small></span>
+            </div>
+            <div class="connectivity-item" id="dbIndicator" data-state="unknown" role="status" aria-live="polite">
+              <span class="state-symbol" aria-hidden="true"><svg class="connection-icon" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span><span class="service-led" aria-hidden="true"></span><span><b>Amazon RDS</b><small id="dbStatus">Verificando conexión…</small></span>
+            </div>
+          </section>
           <div class="monitor-heading-row">
             <div>
               <p class="eyebrow">TELEMETRÍA DEL VEHÍCULO</p>
@@ -231,6 +190,32 @@
              MÓDULO 3: ADMINISTRACIÓN (4.3)
              =================================================================== -->
         <section class="admin-view d-none" id="adminView" aria-labelledby="adminMainHeading">
+          <!-- Barra Superior de Autenticación y Estado de Sesión -->
+          <header class="top-auth-bar d-flex flex-wrap justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="brand-tag">IoT 4.3</span>
+              <span id="currentRoleBadge" class="badge bg-secondary text-uppercase">INVITADO</span>
+              <span id="currentUserGreeting" class="small text-muted">Sesión pública</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-cyan" id="authActionBtn" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+                Iniciar Sesión
+              </button>
+              <button class="btn btn-sm btn-outline-danger d-none" id="logoutBtn" type="button">
+                Cerrar Sesión
+              </button>
+            </div>
+          </header>
+
+          <!-- Banner de Sesión de Invitado con Contador -->
+          <aside id="guestSessionBanner" class="alert alert-warning d-flex justify-content-between align-items-center py-2 px-3 mb-3 d-none" role="region" aria-label="Sesión de prueba en curso">
+            <div>
+              <strong>PRUEBA TEMPORAL DE EXHIBICIÓN EN CURSO</strong>
+              <span class="ms-2">Tiempo restante: <strong id="guestSessionTimer" class="text-danger fs-5">03:00</strong></span>
+            </div>
+            <button class="btn btn-sm btn-danger" id="releaseGuestSessionBtn" type="button">Detener y Finalizar</button>
+          </aside>
+
           <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <div>
               <p class="eyebrow text-cyan mb-0">GESTIÓN MULTIUSUARIO & COMERCIAL</p>
