@@ -77,9 +77,28 @@ async function releaseWakeLock() {
   }
 }
 
+function updateNavMonitorDot() {
+  const dot = $('monitorNavDot');
+  if (!dot) return;
+  const wsState = $('wsIndicator')?.dataset?.state;
+  const dbState = $('dbIndicator')?.dataset?.state;
+  const apiState = $('apiIndicator')?.dataset?.state;
+
+  if (wsState === 'online' && (dbState === 'available' || !dbState)) {
+    dot.className = 'nav-status-dot is-online is-pulse';
+    dot.title = 'Monitoreo: Servicios operativos (WebSocket y RDS activos)';
+  } else if (wsState === 'offline' || dbState === 'unavailable' || apiState === 'unavailable') {
+    dot.className = 'nav-status-dot is-offline';
+    dot.title = 'Monitoreo: Alerta en infraestructura (Revisa telemetría)';
+  } else {
+    dot.className = 'nav-status-dot is-warning is-pulse';
+    dot.title = 'Monitoreo: Conectando / Verificando servicios…';
+  }
+}
+
 function setIndicator(id, state, text) {
   const indicator = $(id);
-  indicator.dataset.state = state;
+  if (indicator) indicator.dataset.state = state;
 
   const targets = {
     wsIndicator: $('wsStatus'),
@@ -87,7 +106,10 @@ function setIndicator(id, state, text) {
     dbIndicator: $('dbStatus'),
   };
 
-  targets[id].textContent = text;
+  if (targets[id]) {
+    targets[id].textContent = text;
+  }
+  updateNavMonitorDot();
 }
 
 function showAlert(id, message) {
@@ -373,6 +395,13 @@ function showView(view) {
   const isControl = view === 'control';
   const isMonitor = view === 'monitor';
   const isAdmin = view === 'admin';
+
+  // Enclavamiento de Seguridad (Safety Interlock):
+  // Si el operador sale de la vista CONTROL mientras el vehículo estaba en marcha,
+  // detener el movimiento automáticamente para evitar operación desatendida.
+  if (!isControl && isPoweredOn() && !demoRunning) {
+    requestStop();
+  }
 
   monitorVisible = isMonitor;
 
@@ -763,60 +792,18 @@ function requestStop(isEmergencyButton = false) {
 }
 
 function enableFloatingSwitcherDrag() {
-  const bubble = document.querySelector('.floating-view-switcher');
-  if (!bubble) return;
+  // Switcher anclado de forma fija e inamovible en el dock inferior (estándar industrial).
+  // Se remueven coordenadas residuales en localStorage e inline styles para que el anclaje CSS gobierne siempre.
   try {
-    const saved = JSON.parse(localStorage.getItem('controlIoT.switcherPosition') || 'null');
-    if (Number.isFinite(saved?.x) && Number.isFinite(saved?.y)) {
-      bubble.style.left = `${Math.max(0, Math.min(innerWidth - bubble.offsetWidth, saved.x))}px`;
-      bubble.style.top = `${Math.max(0, Math.min(innerHeight - bubble.offsetHeight, saved.y))}px`;
-      bubble.style.right = 'auto';
-      bubble.style.bottom = 'auto';
+    localStorage.removeItem('controlIoT.switcherPosition');
+    const bubble = document.querySelector('.floating-view-switcher');
+    if (bubble) {
+      bubble.style.removeProperty('left');
+      bubble.style.removeProperty('top');
+      bubble.style.removeProperty('right');
+      bubble.style.removeProperty('bottom');
     }
-  } catch { /* Posición guardada no disponible. */ }
-
-  let drag = null;
-  let suppressClick = false;
-  bubble.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0) return;
-    const rect = bubble.getBoundingClientRect();
-    drag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, left: rect.left, top: rect.top, moved: false };
-  });
-  window.addEventListener('pointermove', (event) => {
-    if (!drag || drag.id !== event.pointerId) return;
-    const dx = event.clientX - drag.startX;
-    const dy = event.clientY - drag.startY;
-    if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
-    if (!drag.moved) return;
-    const x = Math.max(0, Math.min(innerWidth - bubble.offsetWidth, drag.left + dx));
-    const y = Math.max(0, Math.min(innerHeight - bubble.offsetHeight, drag.top + dy));
-    bubble.style.left = `${x}px`;
-    bubble.style.top = `${y}px`;
-    bubble.style.right = 'auto';
-    bubble.style.bottom = 'auto';
-  });
-  window.addEventListener('pointerup', (event) => {
-    if (!drag) return;
-    if (drag.id !== event.pointerId) return;
-    suppressClick = drag.moved;
-    if (drag.moved) {
-      const rect = bubble.getBoundingClientRect();
-      try { localStorage.setItem('controlIoT.switcherPosition', JSON.stringify({ x: rect.left, y: rect.top })); } catch { /* Preferencias no disponibles. */ }
-    }
-    drag = null;
-  });
-  bubble.addEventListener('click', (event) => {
-    if (!suppressClick) return;
-    event.preventDefault();
-    event.stopPropagation();
-    suppressClick = false;
-  }, true);
-  window.addEventListener('resize', () => {
-    if (!bubble.style.left) return;
-    const rect = bubble.getBoundingClientRect();
-    bubble.style.left = `${Math.max(0, Math.min(innerWidth - bubble.offsetWidth, rect.left))}px`;
-    bubble.style.top = `${Math.max(0, Math.min(innerHeight - bubble.offsetHeight, rect.top))}px`;
-  });
+  } catch { /* Ignorar si no está disponible */ }
 }
 
 async function executeDemo() {

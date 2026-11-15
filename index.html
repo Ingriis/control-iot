@@ -13,15 +13,18 @@
     <link rel="preload" as="image" href="./assets/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=20261115-v48-audit-rows" />
+    <link rel="stylesheet" href="./styles.css?v=20261115-v49-nav-dock" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
     <div class="container-xl app-shell">
-      <!-- Navegación Principal de 3 Módulos -->
-      <nav class="view-nav view-switcher floating-view-switcher" aria-label="Navegación de módulos">
+      <!-- Navegación Principal de 3 Módulos (Dock Fijo Inferior) -->
+      <nav class="view-nav view-switcher floating-view-switcher" id="mainViewSwitcher" aria-label="Navegación de módulos">
         <button class="view-nav-button is-active" id="controlTab" type="button" aria-controls="controlView" aria-current="page">CONTROL</button>
-        <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">MONITOREO</button>
+        <button class="view-nav-button" id="monitorTab" type="button" aria-controls="monitorView">
+          <span class="nav-status-dot is-online is-pulse" id="monitorNavDot" aria-hidden="true" title="Telemetría operativa"></span>
+          MONITOREO
+        </button>
         <button class="view-nav-button" id="adminTab" type="button" aria-controls="adminView">ADMINISTRACIÓN</button>
       </nav>
 
@@ -635,6 +638,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./js/app.js?v=20261115-v48-audit-rows"></script>
+    <script type="module" src="./js/app.js?v=20261115-v49-nav-dock"></script>
   </body>
 </html>

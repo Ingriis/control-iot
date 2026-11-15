@@ -915,8 +915,27 @@ body {
 
 .view-nav { display: flex; gap: 7px; }
 .view-switcher { width: fit-content; gap: 4px; padding: 5px; border: 1px solid #2b697c; border-radius: 999px; background: #0b1425; box-shadow: inset 0 0 12px #050a1388, 0 0 16px #22e3ed16; }
-.floating-view-switcher { position: fixed; z-index: 20; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); bottom: auto; padding: 3px; gap: 2px; border-color: #22e3ed88; background: #08111feF; box-shadow: 0 4px 18px #0009, 0 0 12px #22e3ed33; touch-action: none; cursor: grab; user-select: none; }
-.floating-view-switcher:active { cursor: grabbing; }
+.floating-view-switcher {
+  position: fixed;
+  z-index: 100;
+  bottom: max(6px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  top: auto;
+  right: auto;
+  padding: 3px 5px;
+  gap: 3px;
+  border: 1px solid rgba(34, 227, 237, 0.55);
+  border-radius: 999px;
+  background: rgba(8, 17, 31, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(34, 227, 237, 0.22);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.floating-view-switcher:active { cursor: default; }
 .view-nav-button, .monitor-refresh {
   min-height: 42px;
   padding: 8px 16px;
@@ -928,12 +947,57 @@ body {
   letter-spacing: .5px;
   cursor: pointer;
 }
-.view-switcher .view-nav-button { min-width: 82px; min-height: 30px; padding: 5px 11px; border: 0; border-radius: 999px; background: transparent; color: #a8bed1; font-size: 10px; }
-.view-switcher .view-nav-button:hover { color: #fff; background: #17263a; }
-.view-switcher .view-nav-button.is-active { background: linear-gradient(135deg, #087b8a, #11556b); color: #fff; box-shadow: 0 0 12px #22e3ed55, inset 0 0 0 1px #39f2f2aa; }
+.view-switcher .view-nav-button {
+  min-width: clamp(75px, 8.5vw, 95px);
+  min-height: clamp(28px, 4.8vh, 34px);
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #a8bed1;
+  font-size: clamp(8.5px, 1.05vw, 10.5px);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.view-switcher .view-nav-button:hover { color: #fff; background: rgba(23, 38, 58, 0.85); }
+.view-switcher .view-nav-button.is-active { background: linear-gradient(135deg, #087b8a, #11556b); color: #fff; box-shadow: 0 0 12px #22e3ed55, inset 0 0 0 1px #39f2f2aa; font-weight: 800; }
 .view-nav-button:hover, .monitor-refresh:hover { border-color: var(--cyan); }
 .view-nav-button.is-active { border-color: var(--cyan); background: #0c4052; color: #fff; box-shadow: inset 0 -2px var(--cyan); }
 .view-nav-button:focus-visible, .monitor-refresh:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+
+/* Micro-indicador LED de Telemetría (Pestaña MONITOREO) */
+.nav-status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #56d99a;
+  box-shadow: 0 0 6px rgba(86, 217, 154, 0.85);
+  margin-right: 2px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+.nav-status-dot.is-offline {
+  background-color: #ff4757;
+  box-shadow: 0 0 6px rgba(255, 71, 87, 0.9);
+}
+.nav-status-dot.is-warning {
+  background-color: #ffa502;
+  box-shadow: 0 0 6px rgba(255, 165, 2, 0.9);
+}
+.nav-status-dot.is-pulse {
+  animation: navPulse 2s infinite ease-in-out;
+}
+@keyframes navPulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 10px rgba(86, 217, 154, 1); }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
 .monitor-view { margin-top: 0; }
 .monitor-heading-row, .monitor-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .monitor-heading-row h1, .monitor-history-heading h2 { margin: 0; color: var(--text); font-weight: 750; }
@@ -1560,28 +1624,42 @@ main#main {
   background: #101b2e;
 }
 
-/* 7. Switcher flotante y pie de página */
+/* 7. Switcher anclado y pie de página */
 .floating-view-switcher {
   position: fixed;
-  z-index: 50;
-  top: max(6px, env(safe-area-inset-top));
-  right: max(8px, env(safe-area-inset-right));
+  z-index: 100;
+  bottom: max(6px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  top: auto !important;
+  right: auto !important;
   display: flex;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid #22e3ed88;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border: 1px solid rgba(34, 227, 237, 0.5);
   border-radius: 999px;
-  background: #08111fef;
-  box-shadow: 0 4px 18px #0009, 0 0 12px #22e3ed33;
+  background: rgba(8, 17, 31, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(34, 227, 237, 0.22);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .view-switcher .view-nav-button {
-  min-width: clamp(58px, 6.5vw, 78px);
-  min-height: clamp(22px, 3.2vh, 26px);
-  padding: 2px 6px;
-  font-size: clamp(7.5px, 0.95vw, 9.5px);
+  min-width: clamp(75px, 8.5vw, 95px);
+  min-height: clamp(28px, 4.8vh, 34px);
+  padding: 3px 9px;
+  font-size: clamp(8.5px, 1.05vw, 10.5px);
+  font-weight: 700;
   border: 0;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 .app-footer {
@@ -1924,6 +2002,23 @@ main#main {
     padding-bottom: max(2px, env(safe-area-inset-bottom));
     padding-left: max(6px, env(safe-area-inset-left));
     padding-right: max(6px, env(safe-area-inset-right));
+  }
+  .floating-view-switcher {
+    bottom: max(3px, env(safe-area-inset-bottom)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: auto !important;
+    right: auto !important;
+    padding: 2px 4px !important;
+    gap: 3px !important;
+    z-index: 100 !important;
+  }
+  .view-switcher .view-nav-button {
+    min-width: clamp(70px, 9.5vw, 88px) !important;
+    min-height: clamp(24px, 5.2vh, 28px) !important;
+    padding: 2px 7px !important;
+    font-size: clamp(8px, 1vw, 9.5px) !important;
+    font-weight: 800 !important;
   }
   .control-card {
     display: flex !important;
