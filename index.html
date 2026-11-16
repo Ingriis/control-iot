@@ -13,7 +13,7 @@
     <link rel="preload" as="image" href="./assets/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=20261115-v52-arcade-toasts-admin" />
+    <link rel="stylesheet" href="./styles.css?v=20261115-v53-compact-guest-modal" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -27,6 +27,14 @@
         </button>
         <button class="view-nav-button" id="adminTab" type="button" aria-controls="adminView">ADMINISTRACIÓN</button>
       </nav>
+
+      <!-- HUD Flotante Global: Cronómetro de Sesión de Invitado (Visible en CONTROL, MONITOREO y ADMIN) -->
+      <aside id="guestSessionBanner" class="guest-session-hud d-none" role="region" aria-label="Sesión de prueba en curso">
+        <span class="guest-hud-dot is-pulse" aria-hidden="true"></span>
+        <span class="guest-hud-label">DEMO 1:1</span>
+        <strong id="guestSessionTimer" class="guest-hud-timer text-warning">03:00</strong>
+        <button class="btn btn-xs btn-outline-danger guest-hud-btn" id="releaseGuestSessionBtn" type="button" title="Finalizar prueba anticipadamente">Terminar</button>
+      </aside>
 
       <main id="main">
         <!-- ===================================================================
@@ -209,15 +217,6 @@
               </button>
             </div>
           </header>
-
-          <!-- Banner de Sesión de Invitado con Contador -->
-          <aside id="guestSessionBanner" class="alert alert-warning d-flex justify-content-between align-items-center py-2 px-3 mb-3 d-none" role="region" aria-label="Sesión de prueba en curso">
-            <div>
-              <strong>PRUEBA TEMPORAL DE EXHIBICIÓN EN CURSO</strong>
-              <span class="ms-2">Tiempo restante: <strong id="guestSessionTimer" class="text-danger fs-5">03:00</strong></span>
-            </div>
-            <button class="btn btn-sm btn-danger" id="releaseGuestSessionBtn" type="button">Detener y Finalizar</button>
-          </aside>
 
           <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 admin-header-row">
             <div>
@@ -512,29 +511,35 @@
       </div>
     </div>
 
-    <!-- MODAL: Solicitud de Reserva para Invitado -->
-    <div class="modal fade" id="guestBookingModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+    <!-- MODAL: Solicitud de Reserva para Invitado (Compacto & Ergonómico) -->
+    <div class="modal fade" id="guestBookingModal" tabindex="-1" aria-labelledby="guestModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-guest-compact">
         <div class="modal-content bg-dark border-warning text-white">
-          <div class="modal-header border-warning">
-            <h5 class="modal-title text-warning">Prueba Comercial de Exhibición</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="guestBookVehicleId">
-            <p>Vehículo: <strong id="guestBookVehicleName" class="text-cyan"></strong></p>
-            <p class="guest-modal-desc mb-3">
-              Se te asignará una reserva exclusiva durante 3 minutos. Podrás mover el vehículo y detenerlo. Al finalizar el tiempo la reserva se libera automáticamente.
-            </p>
-            <div class="mb-3">
-              <label for="guestAliasInput" class="form-label small">Tu nombre o alias:</label>
-              <input type="text" class="form-control bg-dark border-secondary text-white" id="guestAliasInput" value="Cliente Potencial" required>
+          <form id="guestBookingForm">
+            <div class="modal-header border-warning py-2 px-3">
+              <h5 class="modal-title text-warning fs-6 mb-0" id="guestModalTitle">🎮 Iniciar Demostración</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-          </div>
-          <div class="modal-footer border-warning">
-            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-warning btn-sm" id="requestGuestSessionBtn">Comenzar Prueba</button>
-          </div>
+            <div class="modal-body py-2 px-3">
+              <input type="hidden" id="guestBookVehicleId">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <small class="text-muted">Unidad:</small>
+                <span class="badge bg-dark border border-cyan text-cyan text-truncate" id="guestBookVehicleName" style="max-width: 190px;">Montacargas IoT</span>
+              </div>
+              <div class="guest-compact-notice d-flex align-items-center gap-2 mb-2 p-1 px-2 rounded border border-warning bg-warning-subtle text-warning small">
+                <span>⏱️</span>
+                <span style="font-size: 0.8rem; line-height: 1.2;"><strong>3 minutos</strong> de control monousuario exclusivo.</span>
+              </div>
+              <div class="mb-1">
+                <label for="guestAliasInput" class="form-label small mb-1 text-muted">Tu nombre o alias:</label>
+                <input type="text" class="form-control form-control-sm bg-dark border-secondary text-white" id="guestAliasInput" value="Cliente Potencial" placeholder="Ej. Invitado 1" required autocomplete="name">
+              </div>
+            </div>
+            <div class="modal-footer border-warning py-1 px-3 d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary btn-sm py-1 px-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-warning btn-sm py-1 px-3 fw-bold" id="requestGuestSessionBtn">Comenzar Prueba</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -666,6 +671,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./js/app.js?v=20261115-v52-arcade-toasts-admin"></script>
+    <script type="module" src="./js/app.js?v=20261115-v53-compact-guest-modal"></script>
   </body>
 </html>

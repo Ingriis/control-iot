@@ -180,9 +180,12 @@ export class AdminModule {
     }
 
     // Invitados
-    const requestGuestBtn = document.getElementById('requestGuestSessionBtn');
-    if (requestGuestBtn) {
-      requestGuestBtn.addEventListener('click', () => this.handleRequestGuestSession());
+    const guestBookingForm = document.getElementById('guestBookingForm');
+    if (guestBookingForm) {
+      guestBookingForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleRequestGuestSession();
+      });
     }
 
     const releaseGuestBtn = document.getElementById('releaseGuestSessionBtn');
@@ -790,7 +793,8 @@ export class AdminModule {
     document.getElementById('guestBookVehicleId').value = vId;
     document.getElementById('guestBookVehicleName').textContent = modelName;
     if (window.bootstrap) {
-      const modal = new window.bootstrap.Modal(document.getElementById('guestBookingModal'));
+      const modalEl = document.getElementById('guestBookingModal');
+      const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
       modal.show();
     }
   }
@@ -798,6 +802,12 @@ export class AdminModule {
   async handleRequestGuestSession() {
     const vId = Number(document.getElementById('guestBookVehicleId').value);
     const alias = document.getElementById('guestAliasInput').value.trim() || 'Invitado';
+    const btn = document.getElementById('requestGuestSessionBtn');
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Reservando...';
+    }
 
     try {
       const res = await this.api.requestGuestSession(vId, alias, 180);
@@ -805,11 +815,12 @@ export class AdminModule {
       this.notify(`¡Sesión concedida para la unidad #${vId}! Tienes 3 minutos de prueba exclusiva.`, 'success', 5000);
 
       if (window.bootstrap) {
-        const modal = window.bootstrap.Modal.getInstance(document.getElementById('guestBookingModal'));
+        const modalEl = document.getElementById('guestBookingModal');
+        const modal = window.bootstrap.Modal.getInstance(modalEl);
         if (modal) modal.hide();
       }
 
-      // Activar cronómetro y panel de prueba
+      // Activar cronómetro y panel de prueba HUD global
       this.startGuestCountdown(res.duracion_segundos || 180);
       this.api.setVehicleId(vId);
       this.onVehicleChange(vId);
@@ -819,6 +830,12 @@ export class AdminModule {
       if (controlTab) controlTab.click();
     } catch (err) {
       this.notify(`No se pudo reservar la unidad: ${err.message}`, 'error', 4500);
+      this.loadGuestCatalog();
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = 'Comenzar Prueba';
+      }
     }
   }
 
@@ -828,7 +845,10 @@ export class AdminModule {
     const banner = document.getElementById('guestSessionBanner');
     const timerText = document.getElementById('guestSessionTimer');
 
-    if (banner) banner.classList.remove('d-none');
+    if (banner) {
+      banner.classList.remove('d-none');
+      banner.classList.remove('is-urgent');
+    }
 
     const tick = () => {
       const mins = Math.floor(remaining / 60);
@@ -836,10 +856,20 @@ export class AdminModule {
       if (timerText) {
         timerText.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
       }
+      if (remaining <= 30 && banner) {
+        banner.classList.add('is-urgent');
+      }
       if (remaining <= 0) {
         window.clearInterval(this.guestTimer);
+        // Parada física obligatoria al expirar
+        if (typeof window.requestStop === 'function') {
+          window.requestStop(true);
+        }
         this.notify('Tu tiempo de prueba ha finalizado. La unidad se ha detenido de forma segura.', 'warning', 6000);
         this.handleReleaseGuestSession();
+        // Redirigir a vista de administración
+        const adminTab = document.getElementById('adminTab');
+        if (adminTab) adminTab.click();
       }
       remaining--;
     };
@@ -850,16 +880,23 @@ export class AdminModule {
 
   async handleReleaseGuestSession() {
     window.clearInterval(this.guestTimer);
+    // Parada física obligatoria inmediata
+    if (typeof window.requestStop === 'function') {
+      window.requestStop(true);
+    }
     if (this.guestSession?.token_sesion) {
       try {
         await this.api.releaseGuestSession(this.guestSession.token_sesion);
       } catch (e) {
-        // Ignorar
+        // Ignorar si expiró en backend
       }
     }
     this.guestSession = null;
     const banner = document.getElementById('guestSessionBanner');
-    if (banner) banner.classList.add('d-none');
+    if (banner) {
+      banner.classList.add('d-none');
+      banner.classList.remove('is-urgent');
+    }
     this.loadGuestCatalog();
   }
 }

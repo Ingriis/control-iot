@@ -2864,6 +2864,38 @@ main#main {
     max-width: min(500px, 92vw) !important;
     margin: 8px auto !important;
   }
+  #guestBookingModal .modal-dialog,
+  .modal-dialog.modal-guest-compact {
+    max-width: clamp(270px, 40vw, 330px) !important;
+    margin: 6px auto !important;
+  }
+  #guestBookingModal .modal-content {
+    max-height: calc(100dvh - 12px) !important;
+  }
+  #guestBookingModal .modal-header {
+    padding: 4px 10px !important;
+  }
+  #guestBookingModal .modal-body {
+    padding: 6px 10px !important;
+  }
+  #guestBookingModal .modal-footer {
+    padding: 3px 10px !important;
+  }
+  #guestBookingModal .guest-compact-notice {
+    font-size: 8px !important;
+    padding: 2px 6px !important;
+    margin-bottom: 4px !important;
+  }
+  #guestBookingModal .form-control-sm {
+    font-size: 9.5px !important;
+    height: 24px !important;
+    padding: 2px 6px !important;
+  }
+  #guestBookingModal .btn-sm {
+    font-size: 9.5px !important;
+    min-height: 24px !important;
+    padding: 1px 8px !important;
+  }
   .modal-content {
     max-height: calc(100dvh - 16px) !important;
     display: flex !important;
@@ -3256,6 +3288,95 @@ main#main {
   to {
     opacity: 0;
     transform: translateY(-8px) scale(0.96);
+  }
+}
+
+/* Modal de Reserva de Invitado Compacto (Ergonómico para Móvil) */
+.modal-guest-compact {
+  max-width: clamp(280px, 44vw, 340px) !important;
+  margin: auto !important;
+}
+
+/* HUD Flotante Global de Sesión de Invitado (Visible en CONTROL, MONITOREO y ADMIN) */
+.guest-session-hud {
+  position: fixed;
+  z-index: 990;
+  top: max(6px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px;
+  background: rgba(9, 18, 32, 0.95);
+  border: 1.5px solid var(--amber);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 14px rgba(255, 184, 51, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  user-select: none;
+  -webkit-user-select: none;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.guest-session-hud.is-urgent {
+  border-color: #ff4d6d !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 77, 109, 0.45) !important;
+  animation: hudPulseUrgent 1s infinite alternate ease-in-out;
+}
+
+.guest-hud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+  flex-shrink: 0;
+}
+
+.guest-session-hud.is-urgent .guest-hud-dot {
+  background: #ff4d6d;
+  box-shadow: 0 0 10px #ff4d6d;
+}
+
+.guest-hud-label {
+  font-family: var(--mono);
+  font-size: clamp(8px, 0.95vw, 10px);
+  font-weight: 700;
+  color: #a4bed5;
+  letter-spacing: 0.5px;
+}
+
+.guest-hud-timer {
+  font-family: var(--mono);
+  font-size: clamp(11.5px, 1.4vw, 14px);
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: 0.5px;
+  min-width: 42px;
+  text-align: center;
+}
+
+.guest-session-hud.is-urgent .guest-hud-timer {
+  color: #ff4d6d !important;
+}
+
+.guest-hud-btn {
+  padding: 1px 7px !important;
+  font-size: clamp(8px, 0.95vw, 9.5px) !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  border-radius: 999px !important;
+  min-height: 20px !important;
+}
+
+@keyframes hudPulseUrgent {
+  from {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  to {
+    transform: scale(1.03);
+    filter: brightness(1.2);
   }
 }
 

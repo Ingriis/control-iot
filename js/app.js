@@ -931,6 +931,7 @@ async function boot() {
     },
   });
   window.adminModule = adminModule;
+  window.requestStop = requestStop;
   adminModule.init();
 
   try {
