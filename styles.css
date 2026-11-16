@@ -14,6 +14,18 @@
   --red: #ff454d;
   --mono: 'Pixelify Sans', 'Courier New', monospace;
   --sans: 'Pixelify Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* --- Tokens de Arquitectura Adaptativa (Fase 1: Blindaje de Escala) --- */
+  --app-shell-max-w: 1240px;
+  --app-shell-radius: 18px;
+  --app-shell-border: 3px;
+  --app-shell-pad-y: 20px;
+  --app-shell-pad-x: 26px;
+  --joy-base-dim: clamp(86px, 16vw, 134px);
+  --stop-bezel-dim: clamp(84px, 14vw, 122px);
+  --switcher-height: clamp(32px, 5.5vh, 42px);
+  --header-title-size: clamp(14px, 2vw, 24px);
+  --table-font-size: clamp(9px, 0.95vw, 12.5px);
 }
 
 * { box-sizing: border-box; }
@@ -21,6 +33,7 @@ button, input, select, textarea { font-family: var(--sans); }
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   color: var(--text);
   font-family: var(--sans);
@@ -31,17 +44,18 @@ body {
     radial-gradient(ellipse at 50% 0%, #123145 0, transparent 54%),
     radial-gradient(ellipse at 50% 100%, #25153b77 0, transparent 40%);
   background-size: 32px 32px, 32px 32px, auto, auto;
+  overflow-x: hidden;
 }
 
 .app-shell {
   position: relative;
-  max-width: 1240px;
+  max-width: var(--app-shell-max-w, 1240px);
   margin-top: 18px;
   margin-bottom: 18px;
-  padding: 20px 26px 16px;
+  padding: var(--app-shell-pad-y, 20px) var(--app-shell-pad-x, 26px) 16px;
   overflow: hidden;
-  border: 3px solid #26dbe4a8;
-  border-radius: 18px;
+  border: var(--app-shell-border, 3px) solid #26dbe4a8;
+  border-radius: var(--app-shell-radius, 18px);
   background: linear-gradient(145deg, #111a2dee, #090e1cf5 72%);
   box-shadow: 0 0 0 5px #0d1725, 0 0 32px #03d9eb25, 0 28px 80px #0009;
 }
@@ -1862,13 +1876,36 @@ main#main {
   border-color: #64748b;
 }
 
-/* 9. Dispositivos móviles en orientación vertical estrecha (Portrait compacto < 480px) */
-@media (max-width: 480px) {
+/* 9. Arquitectura Adaptativa: Orientación Vertical (Portrait Móviles y Tablets < 768px) - FASE 1 */
+@media (orientation: portrait), (max-width: 767px) and (orientation: portrait) {
+  :root {
+    --app-shell-radius: 0px;
+    --app-shell-border: 0px;
+  }
+  body {
+    overflow-y: auto !important;
+  }
   .app-shell {
-    padding-top: max(3px, env(safe-area-inset-top));
-    padding-bottom: max(3px, env(safe-area-inset-bottom));
-    padding-left: max(4px, env(safe-area-inset-left));
-    padding-right: max(4px, env(safe-area-inset-right));
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: 1px solid rgba(34, 227, 237, 0.4) !important;
+    padding-top: max(4px, env(safe-area-inset-top));
+    padding-bottom: clamp(55px, 8.5vh, 72px) !important;
+    padding-left: max(6px, env(safe-area-inset-left));
+    padding-right: max(6px, env(safe-area-inset-right));
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  main#main {
+    overflow: visible !important;
+    min-height: auto !important;
   }
   .control-card {
     padding: 6px 4px;
@@ -3468,6 +3505,47 @@ main#main {
   to {
     transform: scale(1.03);
     filter: brightness(1.2);
+  }
+}
+
+/* =============================================================================
+   12. ARQUITECTURA DE RESPONSIVIDAD: PC / ESCRITORIO (>= 1024px) - FASE 1
+   ============================================================================= */
+@media (min-width: 1024px) and (min-height: 601px) {
+  :root {
+    --app-shell-max-w: 1240px;
+    --app-shell-radius: 18px;
+    --app-shell-border: 3px;
+  }
+  body {
+    overflow-y: auto;
+  }
+  .app-shell {
+    margin: 24px auto;
+    border-radius: var(--app-shell-radius);
+    border: var(--app-shell-border) solid rgba(38, 219, 228, 0.65);
+    box-shadow: 0 0 0 5px #0d1725, 0 0 40px rgba(3, 217, 235, 0.22), 0 32px 80px rgba(0, 0, 0, 0.85);
+    min-height: min(820px, calc(100vh - 48px));
+    padding: 22px 28px 18px;
+  }
+  /* Mejoras de cursor e interacción para Mouse en PC */
+  .view-nav-button,
+  .action-button,
+  .power-button,
+  .stop-button,
+  .btn {
+    cursor: pointer !important;
+  }
+  .view-switcher {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(34, 227, 237, 0.25) !important;
+  }
+  .view-switcher .view-nav-button:hover:not(.is-active) {
+    background: rgba(34, 227, 237, 0.15) !important;
+    color: var(--cyan) !important;
+    transform: translateY(-1px);
+  }
+  .app-footer {
+    padding-top: 16px;
   }
 }
 
