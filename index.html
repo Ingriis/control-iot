@@ -13,7 +13,7 @@
     <link rel="preload" as="image" href="./assets/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=20261115-v53-compact-guest-modal" />
+    <link rel="stylesheet" href="./styles.css?v=20261115-v54-admin-dashboard-fit" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -242,49 +242,57 @@
 
           <!-- SUBTAB: Dashboard (KPIs reales) -->
           <div class="admin-subtab-pane" id="subtab-dashboard">
-            <div class="row g-3 mb-4">
-              <div class="col-6 col-md-4 col-lg-2">
-                <div class="card bg-dark border-secondary p-3 text-center h-100">
-                  <small class="text-muted">Modelos</small>
-                  <span class="fs-3 fw-bold text-cyan" id="kpiModels">0</span>
+            <div class="dashboard-kpis-grid mb-3">
+              <div class="kpi-card-col">
+                <div class="card bg-dark border-secondary text-center kpi-card">
+                  <small class="kpi-label text-muted">Modelos</small>
+                  <span class="kpi-value text-cyan" id="kpiModels">0</span>
                 </div>
               </div>
-              <div class="col-6 col-md-4 col-lg-2">
-                <div class="card bg-dark border-secondary p-3 text-center h-100">
-                  <small class="text-muted">Unidades Totales</small>
-                  <span class="fs-3 fw-bold text-white" id="kpiUnitsTotal">0</span>
+              <div class="kpi-card-col">
+                <div class="card bg-dark border-secondary text-center kpi-card">
+                  <small class="kpi-label text-muted">Unidades</small>
+                  <span class="kpi-value text-white" id="kpiUnitsTotal">0</span>
                 </div>
               </div>
-              <div class="col-6 col-md-4 col-lg-2">
-                <div class="card bg-dark border-secondary p-3 text-center h-100">
-                  <small class="text-muted">Vendidas</small>
-                  <span class="fs-3 fw-bold text-primary" id="kpiUnitsSold">0</span>
+              <div class="kpi-card-col">
+                <div class="card bg-dark border-secondary text-center kpi-card">
+                  <small class="kpi-label text-muted">Vendidas</small>
+                  <span class="kpi-value text-primary" id="kpiUnitsSold">0</span>
                 </div>
               </div>
-              <div class="col-6 col-md-4 col-lg-2">
-                <div class="card bg-dark border-secondary p-3 text-center h-100">
-                  <small class="text-muted">Exhibición</small>
-                  <span class="fs-3 fw-bold text-warning" id="kpiUnitsExhib">0</span>
+              <div class="kpi-card-col">
+                <div class="card bg-dark border-secondary text-center kpi-card">
+                  <small class="kpi-label text-muted">Exhibición</small>
+                  <span class="kpi-value text-warning" id="kpiUnitsExhib">0</span>
                 </div>
               </div>
-              <div class="col-6 col-md-4 col-lg-2">
-                <div class="card bg-dark border-secondary p-3 text-center h-100">
-                  <small class="text-muted">Disponibles</small>
-                  <span class="fs-3 fw-bold text-success" id="kpiUnitsAvail">0</span>
+              <div class="kpi-card-col">
+                <div class="card bg-dark border-secondary text-center kpi-card">
+                  <small class="kpi-label text-muted">Disponibles</small>
+                  <span class="kpi-value text-success" id="kpiUnitsAvail">0</span>
                 </div>
               </div>
-              <div class="col-6 col-md-4 col-lg-2">
-                <div class="card bg-dark border-secondary p-3 text-center h-100">
-                  <small class="text-muted">Clientes</small>
-                  <span class="fs-3 fw-bold text-info" id="kpiClients">0</span>
+              <div class="kpi-card-col">
+                <div class="card bg-dark border-secondary text-center kpi-card">
+                  <small class="kpi-label text-muted">Clientes</small>
+                  <span class="kpi-value text-info" id="kpiClients">0</span>
                 </div>
               </div>
             </div>
-            <div class="card bg-dark border-secondary p-3">
-              <h5 class="text-cyan mb-2">Panel de Control de la Empresa Comercializadora</h5>
-              <p class="small text-muted">
-                Desde esta consola el Administrador gestiona el inventario de modelos y unidades físicas, da de alta nuevos clientes y asigna vehículos mediante las APIs de AWS conectadas a Amazon RDS. Los cambios quedan registrados en la bitácora de auditoría.
+            <div class="card bg-dark border-secondary dashboard-info-card">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <h5 class="text-cyan mb-0 dashboard-info-title">Panel de Control de la Empresa Comercializadora</h5>
+                <span class="badge bg-dark border border-cyan text-cyan d-none d-sm-inline-block">AWS RDS · PostgreSQL</span>
+              </div>
+              <p class="small text-muted dashboard-info-text mb-2">
+                Consola para gestionar el inventario de modelos y unidades físicas, dar de alta clientes compradores y asignar vehículos mediante las APIs de AWS conectadas a Amazon RDS. Todos los eventos quedan registrados en la bitácora de auditoría.
               </p>
+              <div class="d-flex flex-wrap gap-2 dashboard-status-chips">
+                <span class="badge bg-dark border border-secondary text-muted">🛡️ Rol: Administrador Maestro</span>
+                <span class="badge bg-dark border border-secondary text-success">⚡ API REST: Operativa</span>
+                <span class="badge bg-dark border border-secondary text-info">🗄️ AWS RDS: Conectado</span>
+              </div>
             </div>
           </div>
 
@@ -671,6 +679,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./js/app.js?v=20261115-v53-compact-guest-modal"></script>
+    <script type="module" src="./js/app.js?v=20261115-v54-admin-dashboard-fit"></script>
   </body>
 </html>

@@ -2796,6 +2796,65 @@ main#main {
     font-size: 9px !important;
   }
 
+  /* Dashboard Admin en horizontal móvil (Zero-scroll & proporción ágil) */
+  #subtab-dashboard:not(.d-none) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(4px, 1vh, 8px) !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .dashboard-kpis-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: clamp(4px, 0.8vw, 8px) !important;
+    margin-bottom: clamp(4px, 1vh, 8px) !important;
+    flex: 0 0 auto !important;
+  }
+  .kpi-card-col {
+    width: 100% !important;
+  }
+  .kpi-card {
+    padding: clamp(3px, 0.6vh, 6px) clamp(3px, 0.6vw, 6px) !important;
+    min-height: clamp(42px, 10.5vh, 54px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  .kpi-label {
+    font-size: clamp(7px, 0.85vw, 8.5px) !important;
+    margin-bottom: 1px !important;
+    line-height: 1.1 !important;
+  }
+  .kpi-value {
+    font-size: clamp(15px, 2.2vw, 20px) !important;
+    line-height: 1.1 !important;
+  }
+  .dashboard-info-card {
+    padding: clamp(5px, 1vh, 8px) clamp(8px, 1.4vw, 14px) !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+  .dashboard-info-title {
+    font-size: clamp(10.5px, 1.25vw, 12.5px) !important;
+    margin-bottom: 2px !important;
+  }
+  .dashboard-info-text {
+    font-size: clamp(8px, 0.95vw, 9.5px) !important;
+    line-height: 1.25 !important;
+    margin-bottom: 3px !important;
+  }
+  .dashboard-status-chips .badge {
+    font-size: clamp(7.5px, 0.85vw, 8.5px) !important;
+    padding: 1.5px 5px !important;
+  }
+
   /* Tablas de Administración en horizontal móvil (Auditoría, Modelos, Unidades, Clientes) */
   .admin-subtab-pane:not(.d-none) {
     min-height: 0 !important;
@@ -2959,6 +3018,38 @@ main#main {
 /* =============================================================================
    ESTILOS ADICIONALES · MÓDULO 3 ADMINISTRACIÓN IoT (PRÁCTICA 4.3)
    ============================================================================= */
+
+/* Estilos generales Dashboard KPI Grid */
+.dashboard-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+.kpi-card {
+  padding: 12px 8px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #121c2e, #0c1422 85%) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--line) !important;
+}
+.kpi-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.kpi-value {
+  font-family: var(--mono);
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.dashboard-info-card {
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #101a2c, #0a111e 80%) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
 
 .text-cyan {
   color: var(--cyan) !important;
