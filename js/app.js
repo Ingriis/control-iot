@@ -900,7 +900,7 @@ async function boot() {
   $('runDemoButton').addEventListener('click', executeDemo);
   window.addEventListener('keydown', (event) => {
     if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
-    if (event.key === ' ' || event.key === 'Escape' || event.key === 's' || event.key === 'S') {
+    if (event.key === ' ' || event.key === 'Escape') {
       event.preventDefault();
       requestStop(true);
     } else if (event.key === 'v' || event.key === 'V') {
@@ -909,6 +909,20 @@ async function boot() {
     } else if (event.key === 'c' || event.key === 'C') {
       event.preventDefault();
       handleCruiseToggle();
+    } else if (event.key === 'l' || event.key === 'L') {
+      event.preventDefault();
+      toggleUtility('LUCES', 'lightsButton');
+    } else if (event.key === 'k' || event.key === 'K') {
+      event.preventDefault();
+      toggleUtility('SONIDO', 'soundButton');
+    } else if (event.key === '1' || event.key === '2' || event.key === '3') {
+      event.preventDefault();
+      const targetSpeed = parseInt(event.key, 10);
+      currentSpeedState = targetSpeed;
+      updateSpeedVisual(currentSpeedState);
+      triggerHaptic('click');
+      playBip(440 + currentSpeedState * 100, 0.08);
+      showArcadeToast(`Velocidad ${currentSpeedState} seleccionada`, 'info', 1400);
     }
   });
   connectSocket();

@@ -1,6 +1,10 @@
 const DIRECTIONS = {
   ArrowUp: 'forward', ArrowDown: 'backward',
   ArrowLeft: 'left', ArrowRight: 'right',
+  w: 'forward', W: 'forward',
+  s: 'backward', S: 'backward',
+  a: 'left', A: 'left',
+  d: 'right', D: 'right',
 };
 
 export function initJoystick(element, knob, { onDirection, onRelease, canMove }) {
@@ -135,7 +139,7 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
   element.addEventListener('pointercancel', (event) => { if (event.pointerId === pointerId) release(); });
   element.addEventListener('lostpointercapture', () => { if (pointerId !== null) release(); });
   element.addEventListener('keydown', (event) => {
-    const direction = event.key === 'ArrowUp' ? 'up' : event.key === 'ArrowDown' ? 'down' : null;
+    const direction = (event.key === 'ArrowUp' || event.key === 'q' || event.key === 'Q') ? 'up' : (event.key === 'ArrowDown' || event.key === 'e' || event.key === 'E') ? 'down' : null;
     if (!direction || event.repeat || !canMove()) return;
     event.preventDefault();
     const rect = element.getBoundingClientRect();
@@ -143,7 +147,7 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
     if (direction !== current) move(direction, maxOffset);
   });
   element.addEventListener('keyup', (event) => {
-    if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && current) {
+    if ((event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'q' || event.key === 'Q' || event.key === 'e' || event.key === 'E') && current) {
       event.preventDefault();
       current = null;
       center();
