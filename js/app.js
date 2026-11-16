@@ -284,7 +284,9 @@ function updateDemoDisplay() {
   const nextBtn = $('demoNextBtn');
   if (!display || !select) return;
   const activeOption = select.options[select.selectedIndex];
-  display.textContent = activeOption?.text ? activeOption.text.replaceAll('_', ' ') : 'No hay DEMO';
+  const fullText = activeOption?.text ? activeOption.text.replaceAll('_', ' ') : 'No hay DEMO';
+  display.textContent = fullText;
+  display.title = fullText;
   const powered = isPoweredOn();
   const canCycle = powered && apiReady && !demoRunning && !commandPending && select.options.length > 1;
   if (prevBtn) prevBtn.disabled = !canCycle;
@@ -938,6 +940,8 @@ async function boot() {
     const me = await api.getMe();
     if (me && me.id_usuario) {
       adminModule.setCurrentUser(me);
+    } else {
+      adminModule.setCurrentUser(null);
     }
   } catch (e) {
     adminModule.setCurrentUser(null);

@@ -13,7 +13,7 @@
     <link rel="preload" as="image" href="./assets/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=20261115-v57-portrait-zero-scroll-refined" />
+    <link rel="stylesheet" href="./styles.css?v=20261115-v58-guaranteed-clean-reload" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -225,23 +225,23 @@
             </div>
             <div class="btn-group admin-subnav" role="tablist">
               <!-- Subtabs de Administrador -->
-              <button class="btn btn-outline-cyan active role-admin-only" data-admin-subtab="dashboard">Dashboard</button>
-              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="models">Modelos</button>
-              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="units">Inventario</button>
-              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="clients">Clientes</button>
-              <button class="btn btn-outline-cyan role-admin-only" data-admin-subtab="audit">Auditoría</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="dashboard">Dashboard</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="models">Modelos</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="units">Inventario</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="clients">Clientes</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="audit">Auditoría</button>
               
               <!-- Subtabs de Usuario Comprador -->
               <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="myVehicles">Mis Vehículos</button>
               <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="demoEditor">Editor de Demos</button>
 
               <!-- Subtabs de Invitado -->
-              <button class="btn btn-outline-warning role-guest-only" data-admin-subtab="guestDemo">Prueba de Exhibición</button>
+              <button class="btn btn-outline-warning role-guest-only active" data-admin-subtab="guestDemo">Prueba de Exhibición</button>
             </div>
           </div>
 
           <!-- SUBTAB: Dashboard (KPIs reales) -->
-          <div class="admin-subtab-pane" id="subtab-dashboard">
+          <div class="admin-subtab-pane d-none" id="subtab-dashboard">
             <div class="dashboard-kpis-grid mb-3">
               <div class="kpi-card-col">
                 <div class="card bg-dark border-secondary text-center kpi-card">
@@ -407,7 +407,7 @@
           </div>
 
           <!-- SUBTAB: Invitados y Exhibición -->
-          <div class="admin-subtab-pane d-none" id="subtab-guestDemo">
+          <div class="admin-subtab-pane" id="subtab-guestDemo">
             <div class="card bg-dark border-warning p-3 mb-3 guest-banner-card">
               <div>
                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -679,6 +679,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./js/app.js?v=20261115-v57-portrait-zero-scroll-refined"></script>
+    <script type="module" src="./js/app.js?v=20261115-v58-guaranteed-clean-reload"></script>
   </body>
 </html>

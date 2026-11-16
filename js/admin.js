@@ -100,6 +100,7 @@ export class AdminModule {
   init() {
     this.bindEvents();
     this.renderRoleBar();
+    this.adaptViewForRole();
   }
 
   bindEvents() {
