@@ -13,7 +13,7 @@
     <link rel="preload" as="image" href="./assets/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./styles.css?v=20261115-v58-guaranteed-clean-reload" />
+    <link rel="stylesheet" href="./styles.css?v=20261115-v59-semaphore-and-guest-role-fix" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -225,15 +225,15 @@
             </div>
             <div class="btn-group admin-subnav" role="tablist">
               <!-- Subtabs de Administrador -->
-              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="dashboard">Dashboard</button>
-              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="models">Modelos</button>
-              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="units">Inventario</button>
-              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="clients">Clientes</button>
-              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="audit">Auditoría</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="dashboard" hidden>Dashboard</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="models" hidden>Modelos</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="units" hidden>Inventario</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="clients" hidden>Clientes</button>
+              <button class="btn btn-outline-cyan role-admin-only d-none" data-admin-subtab="audit" hidden>Auditoría</button>
               
               <!-- Subtabs de Usuario Comprador -->
-              <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="myVehicles">Mis Vehículos</button>
-              <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="demoEditor">Editor de Demos</button>
+              <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="myVehicles" hidden>Mis Vehículos</button>
+              <button class="btn btn-outline-primary role-user-only d-none" data-admin-subtab="demoEditor" hidden>Editor de Demos</button>
 
               <!-- Subtabs de Invitado -->
               <button class="btn btn-outline-warning role-guest-only active" data-admin-subtab="guestDemo">Prueba de Exhibición</button>
@@ -241,7 +241,7 @@
           </div>
 
           <!-- SUBTAB: Dashboard (KPIs reales) -->
-          <div class="admin-subtab-pane d-none" id="subtab-dashboard">
+          <div class="admin-subtab-pane d-none" id="subtab-dashboard" hidden>
             <div class="dashboard-kpis-grid mb-3">
               <div class="kpi-card-col">
                 <div class="card bg-dark border-secondary text-center kpi-card">
@@ -297,7 +297,7 @@
           </div>
 
           <!-- SUBTAB: Modelos Comerciales -->
-          <div class="admin-subtab-pane d-none" id="subtab-models">
+          <div class="admin-subtab-pane d-none" id="subtab-models" hidden>
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h4 class="h5 mb-0 admin-subtab-title">Catálogo de Modelos Comerciales</h4>
               <button class="btn btn-sm btn-cyan" data-bs-toggle="modal" data-bs-target="#newModelModal">+ Nuevo Modelo</button>
@@ -311,7 +311,7 @@
           </div>
 
           <!-- SUBTAB: Unidades Físicas e Inventario -->
-          <div class="admin-subtab-pane d-none" id="subtab-units">
+          <div class="admin-subtab-pane d-none" id="subtab-units" hidden>
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h4 class="h5 mb-0 admin-subtab-title">Inventario de Unidades Físicas</h4>
               <button class="btn btn-sm btn-cyan" data-bs-toggle="modal" data-bs-target="#newUnitModal">+ Nueva Unidad Física</button>
@@ -325,7 +325,7 @@
           </div>
 
           <!-- SUBTAB: Clientes Compradores -->
-          <div class="admin-subtab-pane d-none" id="subtab-clients">
+          <div class="admin-subtab-pane d-none" id="subtab-clients" hidden>
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h4 class="h5 mb-0 admin-subtab-title">Clientes Compradores Registrados</h4>
               <button class="btn btn-sm btn-cyan" data-bs-toggle="modal" data-bs-target="#newClientModal">+ Nuevo Cliente</button>
@@ -339,7 +339,7 @@
           </div>
 
           <!-- SUBTAB: Auditoría -->
-          <div class="admin-subtab-pane d-none" id="subtab-audit">
+          <div class="admin-subtab-pane d-none" id="subtab-audit" hidden>
             <h4 class="h5 mb-2 admin-subtab-title">Bitácora de Auditoría del Sistema</h4>
             <div class="table-responsive">
               <table class="table table-dark table-sm table-hover table-striped align-middle">
@@ -350,7 +350,7 @@
           </div>
 
           <!-- SUBTAB: Mis Vehículos (Comprador) -->
-          <div class="admin-subtab-pane d-none" id="subtab-myVehicles">
+          <div class="admin-subtab-pane d-none" id="subtab-myVehicles" hidden>
             <div class="card bg-dark border-secondary p-3 mb-3">
               <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
@@ -366,7 +366,7 @@
           </div>
 
           <!-- SUBTAB: Editor de DEMOS (Comprador) -->
-          <div class="admin-subtab-pane d-none" id="subtab-demoEditor">
+          <div class="admin-subtab-pane d-none" id="subtab-demoEditor" hidden>
             <div class="card bg-dark border-secondary p-3 demo-editor-card">
               <h4 class="h5 text-cyan mb-2 demo-editor-title">Editor Visual de Demostraciones Privadas</h4>
               <p class="small text-muted mb-3 demo-editor-desc">
@@ -679,6 +679,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./js/app.js?v=20261115-v58-guaranteed-clean-reload"></script>
+    <script type="module" src="./js/app.js?v=20261115-v59-semaphore-and-guest-role-fix"></script>
   </body>
 </html>

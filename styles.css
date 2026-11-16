@@ -2052,33 +2052,92 @@ main#main {
   }
 
   /* Fila 2 Columna 1: Semáforo de Velocidad */
-  .speed-semaphore {
+  .top-control-row .speed-semaphore,
+  #speedButton {
     grid-column: 1 !important;
     grid-row: 2 !important;
     width: 100% !important;
     height: 28px !important;
     min-height: 28px !important;
+    max-height: 28px !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 3px !important;
-    padding: 1px 3px !important;
+    gap: 4px !important;
+    padding: 1px 4px !important;
     box-sizing: border-box !important;
     border-radius: 4px !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+  .speed-semaphore::after {
+    display: none !important;
+  }
+  .speed-semaphore .semaphore-housing {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    padding: 1px 2px !important;
+    background: #04080e !important;
+    border: 1px solid #14202e !important;
+    border-radius: 2px !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .speed-semaphore .semaphore-lamp {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+    min-width: 6px !important;
+    min-height: 6px !important;
+    max-width: 6px !important;
+    max-height: 6px !important;
+    border: 1px solid #000 !important;
+    box-sizing: border-box !important;
+    flex: 0 0 6px !important;
+    margin: 0 !important;
+  }
+  .speed-semaphore .green-lamp,
+  .speed-semaphore .red-lamp {
+    box-shadow: none !important;
+  }
+  .speed-semaphore[data-speed="1"] .green-lamp {
+    box-shadow: 0 0 3px #b9ff35 !important;
+  }
+  .speed-semaphore[data-speed="2"] .green-lamp {
+    box-shadow: 0 0 2px #b9ff35 !important;
+  }
+  .speed-semaphore[data-speed="2"] .red-lamp {
+    box-shadow: 0 0 2px #ff454d !important;
+  }
+  .speed-semaphore[data-speed="3"] .red-lamp {
+    box-shadow: 0 0 3px #ff454d !important;
   }
   .speed-semaphore .semaphore-caption {
     font-size: 8px !important;
+    font-weight: 700 !important;
     line-height: 1 !important;
     margin: 0 !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+    letter-spacing: 0.2px !important;
   }
 
   /* Fila 2 Columna 2: Botón Crucero con casilla amplia (texto, led y switch 100% contenidos) */
-  .cruise-button {
+  .top-control-row .cruise-button,
+  #cruiseButton {
     grid-column: 2 !important;
     grid-row: 2 !important;
     width: 100% !important;
     height: 28px !important;
     min-height: 28px !important;
+    max-height: 28px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -2087,6 +2146,10 @@ main#main {
     box-sizing: border-box !important;
     border-radius: 4px !important;
     overflow: hidden !important;
+    position: relative !important;
+  }
+  .cruise-button::after {
+    display: none !important;
   }
   .cruise-button .cruise-header {
     display: flex !important;
@@ -2499,7 +2562,7 @@ main#main {
   }
 
   /* Paneles de Subtabs: Encapsulamiento sin scroll en viewport */
-  .admin-subtab-pane {
+  .admin-subtab-pane:not(.d-none):not([hidden]) {
     flex: 1 1 auto !important;
     min-height: 0 !important;
     height: 100% !important;
@@ -2509,7 +2572,7 @@ main#main {
   }
 
   /* Subtab Invitado (Prueba de Exhibición): panel inicial para no autenticados */
-  #subtab-guestDemo {
+  #subtab-guestDemo:not(.d-none):not([hidden]) {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     display: flex !important;
@@ -2559,9 +2622,11 @@ main#main {
   }
 
   /* Dashboard: scroll interno solo en su panel si pantalla es pequeña */
-  #subtab-dashboard {
+  #subtab-dashboard:not(.d-none):not([hidden]) {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   .dashboard-kpis-grid {
     display: grid !important;
@@ -2599,7 +2664,7 @@ main#main {
   }
 
   /* SUBTAB AUDITORÍA: SOLO LA TABLA TIENE SCROLL */
-  #subtab-audit {
+  #subtab-audit:not(.d-none):not([hidden]) {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 1 auto !important;
@@ -2631,9 +2696,9 @@ main#main {
   }
 
   /* SUBTABS MODELOS, INVENTARIO Y CLIENTES: SOLO LA TABLA TIENE SCROLL */
-  #subtab-models,
-  #subtab-units,
-  #subtab-clients {
+  #subtab-models:not(.d-none):not([hidden]),
+  #subtab-units:not(.d-none):not([hidden]),
+  #subtab-clients:not(.d-none):not([hidden]) {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 1 auto !important;
@@ -2698,7 +2763,7 @@ main#main {
   }
 
   /* SUBTAB EDITOR DE DEMOS (COMPRADOR): CERO SCROLL DE PÁGINA, SOLO SCROLL EN PASOS */
-  #subtab-demoEditor {
+  #subtab-demoEditor:not(.d-none):not([hidden]) {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 1 auto !important;
@@ -2808,7 +2873,7 @@ main#main {
   }
 
   /* Subtabs de Mis Vehículos: scroll interno */
-  #subtab-myVehicles {
+  #subtab-myVehicles:not(.d-none):not([hidden]) {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
@@ -2816,6 +2881,34 @@ main#main {
     width: 100% !important;
     max-width: 100% !important;
     flex: 0 0 100% !important;
+  }
+
+  /* Ocultamiento absoluto en móvil vertical: los subtabs inactivos o no autorizados JAMÁS se renderizan */
+  #subtab-guestDemo.d-none, #subtab-guestDemo[hidden],
+  #subtab-dashboard.d-none, #subtab-dashboard[hidden],
+  #subtab-models.d-none, #subtab-models[hidden],
+  #subtab-units.d-none, #subtab-units[hidden],
+  #subtab-clients.d-none, #subtab-clients[hidden],
+  #subtab-audit.d-none, #subtab-audit[hidden],
+  #subtab-myVehicles.d-none, #subtab-myVehicles[hidden],
+  #subtab-demoEditor.d-none, #subtab-demoEditor[hidden],
+  .admin-subtab-pane.d-none, .admin-subtab-pane[hidden],
+  .admin-subnav .btn.d-none, .admin-subnav .btn[hidden],
+  .admin-subnav [data-admin-subtab].d-none, .admin-subnav [data-admin-subtab][hidden],
+  .role-admin-only.d-none, .role-admin-only[hidden],
+  .role-user-only.d-none, .role-user-only[hidden],
+  .role-guest-only.d-none, .role-guest-only[hidden] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   /* -------------------------------------------------------------
@@ -4412,6 +4505,18 @@ main#main {
 .admin-subtab-pane.d-none,
 #adminView[hidden],
 #monitorView[hidden],
-#controlView[hidden] {
+#controlView[hidden],
+#subtab-guestDemo.d-none, #subtab-guestDemo[hidden],
+#subtab-dashboard.d-none, #subtab-dashboard[hidden],
+#subtab-models.d-none, #subtab-models[hidden],
+#subtab-units.d-none, #subtab-units[hidden],
+#subtab-clients.d-none, #subtab-clients[hidden],
+#subtab-audit.d-none, #subtab-audit[hidden],
+#subtab-myVehicles.d-none, #subtab-myVehicles[hidden],
+#subtab-demoEditor.d-none, #subtab-demoEditor[hidden],
+.role-admin-only.d-none, .role-admin-only[hidden],
+.role-user-only.d-none, .role-user-only[hidden],
+.role-guest-only.d-none, .role-guest-only[hidden] {
   display: none !important;
+  visibility: hidden !important;
 }

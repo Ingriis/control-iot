@@ -230,22 +230,47 @@ export class AdminModule {
     const guestSections = document.querySelectorAll('.role-guest-only');
 
     if (role === 'ADMINISTRADOR') {
-      adminTabs.forEach((el) => el.classList.remove('d-none'));
-      userTabs.forEach((el) => el.classList.add('d-none'));
-      guestSections.forEach((el) => el.classList.add('d-none'));
+      adminTabs.forEach((el) => {
+        el.classList.remove('d-none');
+        el.removeAttribute('hidden');
+      });
+      userTabs.forEach((el) => {
+        el.classList.add('d-none');
+        el.setAttribute('hidden', '');
+      });
+      guestSections.forEach((el) => {
+        el.classList.add('d-none');
+        el.setAttribute('hidden', '');
+      });
       this.switchSubtab('dashboard');
     } else if (role === 'USUARIO') {
-      adminTabs.forEach((el) => el.classList.add('d-none'));
-      userTabs.forEach((el) => el.classList.remove('d-none'));
-      guestSections.forEach((el) => el.classList.add('d-none'));
+      adminTabs.forEach((el) => {
+        el.classList.add('d-none');
+        el.setAttribute('hidden', '');
+      });
+      userTabs.forEach((el) => {
+        el.classList.remove('d-none');
+        el.removeAttribute('hidden');
+      });
+      guestSections.forEach((el) => {
+        el.classList.add('d-none');
+        el.setAttribute('hidden', '');
+      });
       this.switchSubtab('myVehicles');
       this.loadMyVehicles();
     } else {
       // INVITADO
-      adminTabs.forEach((el) => el.classList.add('d-none'));
-      userTabs.forEach((el) => el.classList.add('d-none'));
+      adminTabs.forEach((el) => {
+        el.classList.add('d-none');
+        el.setAttribute('hidden', '');
+      });
+      userTabs.forEach((el) => {
+        el.classList.add('d-none');
+        el.setAttribute('hidden', '');
+      });
       guestSections.forEach((el) => {
         el.classList.remove('d-none');
+        el.removeAttribute('hidden');
         if (el.dataset && el.dataset.adminSubtab === 'guestDemo') {
           el.textContent = '🎯 Catálogo Demo (1 Unidad)';
         }
@@ -257,6 +282,13 @@ export class AdminModule {
   }
 
   switchSubtab(subtabId) {
+    const role = (this.currentUser?.rol || 'INVITADO').toUpperCase();
+    if (role === 'INVITADO' && subtabId !== 'guestDemo') {
+      subtabId = 'guestDemo';
+    } else if (role === 'USUARIO' && (subtabId !== 'myVehicles' && subtabId !== 'demoEditor')) {
+      subtabId = 'myVehicles';
+    }
+
     this.activeSubtab = subtabId;
     document.querySelectorAll('[data-admin-subtab]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.adminSubtab === subtabId);
@@ -264,11 +296,13 @@ export class AdminModule {
 
     document.querySelectorAll('.admin-subtab-pane').forEach((pane) => {
       pane.classList.add('d-none');
+      pane.setAttribute('hidden', '');
     });
 
     const activePane = document.getElementById(`subtab-${subtabId}`);
     if (activePane) {
       activePane.classList.remove('d-none');
+      activePane.removeAttribute('hidden');
     }
 
     // Cargar datos según la sección
