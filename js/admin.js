@@ -4,6 +4,61 @@
  */
 
 import { setAuthToken } from './api.js';
+import { playBip, triggerHaptic } from './feedback.js';
+
+/**
+ * Notificación flotante estilo Arcade Cyberpunk no bloqueante
+ */
+export function showArcadeToast(message, type = 'info', duration = 3500) {
+  let container = document.getElementById('arcadeToastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'arcadeToastContainer';
+    container.className = 'arcade-toast-container';
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `arcade-toast toast-${type}`;
+
+  const iconMap = {
+    success: '✅',
+    error: '⚠️',
+    warning: '⏳',
+    info: 'ℹ️',
+  };
+  const icon = iconMap[type] || 'ℹ️';
+
+  toast.innerHTML = `
+    <span class="arcade-toast-icon">${icon}</span>
+    <span class="arcade-toast-msg">${message}</span>
+    <button type="button" class="arcade-toast-close" aria-label="Cerrar">&times;</button>
+  `;
+
+  let dismissed = false;
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+    toast.classList.add('toast-fadeOut');
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 220);
+  };
+
+  const closeBtn = toast.querySelector('.arcade-toast-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', dismiss);
+  }
+
+  container.appendChild(toast);
+
+  if (duration > 0) {
+    setTimeout(dismiss, duration);
+  }
+}
+window.showArcadeToast = showArcadeToast;
 
 export class AdminModule {
   constructor(api, options = {}) {
@@ -14,6 +69,22 @@ export class AdminModule {
     this.onVehicleChange = options.onVehicleChange || (() => {});
     this.onRoleChange = options.onRoleChange || (() => {});
     this.activeSubtab = 'dashboard';
+  }
+
+  notify(message, type = 'info', duration = 3500) {
+    try {
+      if (type === 'success') {
+        playBip(650, 0.08);
+        triggerHaptic('tap');
+      } else if (type === 'error') {
+        playBip(220, 0.12);
+        triggerHaptic('warning');
+      } else if (type === 'warning') {
+        playBip(440, 0.09);
+        triggerHaptic('click');
+      }
+    } catch (_) {}
+    showArcadeToast(message, type, duration);
   }
 
   setCurrentUser(user) {
@@ -169,7 +240,12 @@ export class AdminModule {
       // INVITADO
       adminTabs.forEach((el) => el.classList.add('d-none'));
       userTabs.forEach((el) => el.classList.add('d-none'));
-      guestSections.forEach((el) => el.classList.remove('d-none'));
+      guestSections.forEach((el) => {
+        el.classList.remove('d-none');
+        if (el.dataset && el.dataset.adminSubtab === 'guestDemo') {
+          el.textContent = '🎯 Catálogo Demo (1 Unidad)';
+        }
+      });
       this.switchSubtab('guestDemo');
       this.loadGuestCatalog();
     }
@@ -314,12 +390,12 @@ export class AdminModule {
 
     try {
       await this.api.createModel({ nombre, codigo_modelo, categoria, descripcion });
-      alert('Modelo creado con éxito.');
+      this.notify('Modelo comercial creado con éxito en Amazon RDS.', 'success');
       this.loadModels();
       this.loadDashboardMetrics();
       e.target.reset();
     } catch (err) {
-      alert(`Error al crear modelo: ${err.message}`);
+      this.notify(`Error al crear modelo: ${err.message}`, 'error', 4500);
     }
   }
 
@@ -329,12 +405,12 @@ export class AdminModule {
   async loadUnits() {
     const tableBody = document.getElementById('unitsTableBody');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3">Cargando unidades...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Cargando unidades...</td></tr>';
 
     try {
       const units = await this.api.getUnits();
       if (!units.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin unidades registradas.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin unidades registradas. Pulsa [+ Nueva Unidad Física] para dar de alta una.</td></tr>';
         return;
       }
 
@@ -372,9 +448,10 @@ export class AdminModule {
   async toggleUnitSupport(vehicleId, authorized) {
     try {
       await this.api.toggleSupport(vehicleId, { soporte_autorizado: authorized });
+      this.notify(`Soporte técnico ${authorized ? 'autorizado' : 'desactivado'}.`, 'info');
       this.loadUnits();
     } catch (err) {
-      alert(`No se pudo actualizar soporte: ${err.message}`);
+      this.notify(`No se pudo actualizar soporte: ${err.message}`, 'error', 4500);
       this.loadUnits();
     }
   }
@@ -414,7 +491,7 @@ export class AdminModule {
 
     try {
       await this.api.assignUnit(vId, { propietario_id, estado_comercial: statusVal });
-      alert('Asignación guardada con éxito.');
+      this.notify('Asignación de unidad guardada con éxito.', 'success');
       this.loadUnits();
       this.loadDashboardMetrics();
       if (window.bootstrap) {
@@ -422,7 +499,7 @@ export class AdminModule {
         if (modal) modal.hide();
       }
     } catch (err) {
-      alert(`Error al guardar asignación: ${err.message}`);
+      this.notify(`Error al guardar asignación: ${err.message}`, 'error', 4500);
     }
   }
 
@@ -438,12 +515,12 @@ export class AdminModule {
       await this.api.createUnit({
         nombre, id_modelo, numero_serie, estado_comercial, microcontrolador, descripcion: 'Unidad física de prueba'
       });
-      alert('Unidad registrada con éxito.');
+      this.notify('Unidad física registrada con éxito en Amazon RDS.', 'success');
       this.loadUnits();
       this.loadDashboardMetrics();
       e.target.reset();
     } catch (err) {
-      alert(`Error al crear unidad: ${err.message}`);
+      this.notify(`Error al crear unidad: ${err.message}`, 'error', 4500);
     }
   }
 
@@ -453,7 +530,7 @@ export class AdminModule {
   async loadClients() {
     const tableBody = document.getElementById('clientsTableBody');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-3">Cargando clientes...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">Cargando clientes...</td></tr>';
 
     try {
       const clients = await this.api.getClients();
@@ -484,12 +561,12 @@ export class AdminModule {
 
     try {
       await this.api.createClient({ username, nombre_completo, email, password });
-      alert('Cliente comprador registrado con éxito.');
+      this.notify('Cliente comprador registrado con éxito.', 'success');
       this.loadClients();
       this.loadDashboardMetrics();
       e.target.reset();
     } catch (err) {
-      alert(`Error al registrar cliente: ${err.message}`);
+      this.notify(`Error al registrar cliente: ${err.message}`, 'error', 4500);
     }
   }
 
@@ -569,6 +646,7 @@ export class AdminModule {
     const select = document.getElementById('myVehiclesSelect');
     if (select) select.value = String(vId);
     this.onVehicleChange(vId);
+    this.notify(`Vehículo #${vId} seleccionado para operar.`, 'info');
 
     // Cambiar a pestaña Control
     const controlTab = document.getElementById('controlTab');
@@ -627,7 +705,7 @@ export class AdminModule {
     const container = document.getElementById('demoStepsContainer');
     const rows = container ? container.querySelectorAll('.demo-step-row') : [];
     if (!rows.length) {
-      alert('Debe agregar al menos un paso a la DEMO.');
+      this.notify('Debe agregar al menos un paso a la secuencia DEMO.', 'warning');
       return;
     }
 
@@ -651,11 +729,11 @@ export class AdminModule {
         });
       }
 
-      alert('¡DEMO privada guardada exitosamente en Amazon RDS!');
+      this.notify('¡DEMO privada guardada exitosamente en Amazon RDS!', 'success');
       e.target.reset();
       this.loadDemoEditor();
     } catch (err) {
-      alert(`Error al guardar la DEMO: ${err.message}`);
+      this.notify(`Error al guardar la DEMO: ${err.message}`, 'error', 4500);
     }
   }
 
@@ -665,7 +743,7 @@ export class AdminModule {
   async loadGuestCatalog() {
     const container = document.getElementById('guestCatalogCards');
     if (!container) return;
-    container.innerHTML = '<div class="col-12 text-center py-3">Cargando vehículos disponibles para prueba...</div>';
+    container.innerHTML = '<div class="col-12 text-center py-4 text-muted"><span class="spinner-border spinner-border-sm text-cyan me-2"></span>Cargando vehículos disponibles para prueba...</div>';
 
     try {
       const units = await this.api.getGuestCatalog();
@@ -679,17 +757,24 @@ export class AdminModule {
         return `
           <div class="col-12 col-md-6 col-lg-4 guest-catalog-col">
             <div class="card bg-dark border-${isOccupied ? 'warning' : 'info'} h-100 p-3 guest-vehicle-card">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <h5 class="text-cyan mb-0 guest-vehicle-title">${u.nombre_modelo}</h5>
-                <span class="badge ${isOccupied ? 'bg-warning text-dark' : 'bg-success'}">${u.estado_reserva}</span>
+              <div>
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <h5 class="text-cyan mb-0 guest-vehicle-title">${u.nombre_modelo}</h5>
+                  <span class="badge ${isOccupied ? 'bg-warning text-dark' : 'bg-success'}">${u.estado_reserva}</span>
+                </div>
+                <p class="guest-unit-meta mb-1">Unidad #${u.id_vehiculo} · Microcontrolador ${u.microcontrolador}</p>
+                <p class="guest-unit-desc mb-2">${u.descripcion || 'Carretilla elevadora de control remoto mediante microcontrolador ESP8266'}</p>
+                <div class="d-flex flex-wrap gap-1 mb-2 guest-specs-chips">
+                  <span class="badge bg-dark border border-secondary text-info">📡 AWS WebSockets</span>
+                  <span class="badge bg-dark border border-secondary text-cyan">🕹️ Mandos Duales</span>
+                  <span class="badge bg-dark border border-secondary text-warning">⚡ Tracción Diferencial</span>
+                </div>
               </div>
-              <p class="guest-unit-meta mb-1">Unidad #${u.id_vehiculo} · Microcontrolador ${u.microcontrolador}</p>
-              <p class="guest-unit-desc mb-2">${u.descripcion || 'Vehículo de prueba en exhibición.'}</p>
-              <div class="mt-auto d-flex justify-content-end align-items-center pt-2">
-                <button class="btn btn-sm ${isOccupied ? 'btn-secondary' : 'btn-cyan'} px-3 guest-book-btn" 
+              <div class="mt-auto d-flex justify-content-end align-items-center pt-2 border-top border-secondary">
+                <button class="btn btn-sm ${isOccupied ? 'btn-secondary' : 'btn-cyan'} w-100 guest-book-btn" 
                   ${isOccupied ? 'disabled' : ''} 
                   onclick="window.adminModule.startGuestBooking(${u.id_vehiculo}, '${u.nombre_modelo}')">
-                  ${isOccupied ? 'En Uso' : 'Probar Unidad'}
+                  ${isOccupied ? '⏳ Unidad en Uso por Otro Invitado' : '🎮 Solicitar Prueba de Conducción (3 min)'}
                 </button>
               </div>
             </div>
@@ -717,7 +802,7 @@ export class AdminModule {
     try {
       const res = await this.api.requestGuestSession(vId, alias, 180);
       this.guestSession = res;
-      alert(`¡Sesión concedida para la unidad ${vId}! Tienes 3 minutos de prueba exclusiva.`);
+      this.notify(`¡Sesión concedida para la unidad #${vId}! Tienes 3 minutos de prueba exclusiva.`, 'success', 5000);
 
       if (window.bootstrap) {
         const modal = window.bootstrap.Modal.getInstance(document.getElementById('guestBookingModal'));
@@ -733,7 +818,7 @@ export class AdminModule {
       const controlTab = document.getElementById('controlTab');
       if (controlTab) controlTab.click();
     } catch (err) {
-      alert(`No se pudo reservar la unidad: ${err.message}`);
+      this.notify(`No se pudo reservar la unidad: ${err.message}`, 'error', 4500);
     }
   }
 
@@ -753,7 +838,7 @@ export class AdminModule {
       }
       if (remaining <= 0) {
         window.clearInterval(this.guestTimer);
-        alert('Tu tiempo de prueba ha finalizado. La unidad se ha detenido de forma segura.');
+        this.notify('Tu tiempo de prueba ha finalizado. La unidad se ha detenido de forma segura.', 'warning', 6000);
         this.handleReleaseGuestSession();
       }
       remaining--;
