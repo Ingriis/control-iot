@@ -227,10 +227,15 @@ export class AdminModule {
     const role = (this.currentUser?.rol || 'INVITADO').toUpperCase();
     const adminTabs = document.querySelectorAll('.role-admin-only');
     const userTabs = document.querySelectorAll('.role-user-only');
+    const userAndAdminTabs = document.querySelectorAll('.role-user-and-admin');
     const guestSections = document.querySelectorAll('.role-guest-only');
 
     if (role === 'ADMINISTRADOR') {
       adminTabs.forEach((el) => {
+        el.classList.remove('d-none');
+        el.removeAttribute('hidden');
+      });
+      userAndAdminTabs.forEach((el) => {
         el.classList.remove('d-none');
         el.removeAttribute('hidden');
       });
@@ -252,6 +257,10 @@ export class AdminModule {
         el.classList.remove('d-none');
         el.removeAttribute('hidden');
       });
+      userAndAdminTabs.forEach((el) => {
+        el.classList.remove('d-none');
+        el.removeAttribute('hidden');
+      });
       guestSections.forEach((el) => {
         el.classList.add('d-none');
         el.setAttribute('hidden', '');
@@ -265,6 +274,10 @@ export class AdminModule {
         el.setAttribute('hidden', '');
       });
       userTabs.forEach((el) => {
+        el.classList.add('d-none');
+        el.setAttribute('hidden', '');
+      });
+      userAndAdminTabs.forEach((el) => {
         el.classList.add('d-none');
         el.setAttribute('hidden', '');
       });
@@ -447,6 +460,7 @@ export class AdminModule {
 
     try {
       const units = await this.api.getUnits();
+      this.currentUnits = units;
       if (!units.length) {
         tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin unidades registradas. Pulsa [+ Nueva Unidad Física] para dar de alta una.</td></tr>';
         return;
@@ -456,6 +470,8 @@ export class AdminModule {
         const stateColor = u.estado_comercial === 'vendido' ? 'primary' :
           u.estado_comercial === 'exhibicion' ? 'warning' :
           u.estado_comercial === 'disponible' ? 'success' : 'secondary';
+
+        const safeName = (u.nombre || '').replace(/'/g, "\\'");
 
         return `
           <tr>
@@ -471,8 +487,8 @@ export class AdminModule {
               </div>
             </td>
             <td>
-              <button class="btn btn-sm btn-outline-info" onclick="window.adminModule.openAssignModal(${u.id_vehiculo}, '${u.nombre}', ${u.propietario_id || 'null'}, '${u.estado_comercial}')">
-                Asignar
+              <button class="btn btn-sm btn-outline-cyan" onclick="window.adminModule.openAssignModal(${u.id_vehiculo}, '${safeName}', ${u.propietario_id || 'null'}, '${u.estado_comercial}')">
+                ✏️ Editar / Asignar
               </button>
             </td>
           </tr>
@@ -496,7 +512,8 @@ export class AdminModule {
 
   async openAssignModal(vehicleId, unitName, currentOwnerId, currentStatus) {
     document.getElementById('assignUnitId').value = vehicleId;
-    document.getElementById('assignUnitName').textContent = unitName;
+    const nameInput = document.getElementById('assignUnitNameInput');
+    if (nameInput) nameInput.value = unitName;
     document.getElementById('assignStatus').value = currentStatus;
 
     // Llenar select de clientes
@@ -523,13 +540,25 @@ export class AdminModule {
 
   async handleSaveAssignment() {
     const vId = document.getElementById('assignUnitId').value;
+    const nameInput = document.getElementById('assignUnitNameInput');
+    const newName = nameInput ? nameInput.value.trim() : '';
     const clientVal = document.getElementById('assignClientSelect').value;
     const statusVal = document.getElementById('assignStatus').value;
     const propietario_id = clientVal ? Number(clientVal) : null;
+    const unit = this.currentUnits?.find((u) => String(u.id_vehiculo) === String(vId));
 
     try {
+      if (newName && unit && newName !== unit.nombre) {
+        await this.api.updateVehicle(vId, {
+          nombre: newName,
+          modelo: unit.nombre_modelo || unit.modelo || 'Montacargas IoT',
+          descripcion: unit.descripcion || 'Unidad física',
+          microcontrolador: unit.microcontrolador || 'ESP8266',
+          activo: true,
+        }).catch((err) => console.warn('Error al actualizar nombre del vehículo:', err));
+      }
       await this.api.assignUnit(vId, { propietario_id, estado_comercial: statusVal });
-      this.notify('Asignación de unidad guardada con éxito.', 'success');
+      this.notify('¡Unidad comercial actualizada y asignada con éxito!', 'success');
       this.loadUnits();
       this.loadDashboardMetrics();
       if (window.bootstrap) {
@@ -537,7 +566,7 @@ export class AdminModule {
         if (modal) modal.hide();
       }
     } catch (err) {
-      this.notify(`Error al guardar asignación: ${err.message}`, 'error', 4500);
+      this.notify(`Error al guardar cambios: ${err.message}`, 'error', 4500);
     }
   }
 
@@ -729,7 +758,7 @@ export class AdminModule {
         <input type="number" class="form-control step-pause" value="300" min="0" max="5000" step="100" title="Pausa (ms)">
         <span class="input-group-text">pausa</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" onclick="this.parentElement.remove()">✕</button>
+      <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" title="Quitar movimiento" onclick="this.parentElement.remove()">✕ Quitar</button>
     `;
     container.appendChild(row);
   }
@@ -767,7 +796,7 @@ export class AdminModule {
         });
       }
 
-      this.notify('¡DEMO privada guardada exitosamente en Amazon RDS!', 'success');
+      this.notify('¡DEMO guardada exitosamente en Amazon RDS!', 'success');
       e.target.reset();
       this.loadDemoEditor();
     } catch (err) {

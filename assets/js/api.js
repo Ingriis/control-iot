@@ -134,6 +134,10 @@ export function createApi(config) {
 
     getUnits: () => request('/admin/units'),
     createUnit: (payload) => request('/admin/units', { method: 'POST', body: JSON.stringify(payload) }),
+    updateVehicle: (vId, payload) => request(`/vehicles/${encodeURIComponent(vId)}/update`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
     assignUnit: (vId, payload) => request(`/admin/units/${encodeURIComponent(vId)}/assignment`, { method: 'PUT', body: JSON.stringify(payload) }),
     toggleSupport: (vId, payload) => request(`/admin/units/${encodeURIComponent(vId)}/support`, { method: 'PUT', body: JSON.stringify(payload) }),
 

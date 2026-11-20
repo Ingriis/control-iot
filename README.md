@@ -48,13 +48,13 @@ flowchart TD
 |---|:---:|:---:|:---:|
 | **Dashboard y KPIs Comerciales** |  Total | ❌ Denegado | ❌ Denegado |
 | **Catálogo de Modelos (CRUD)** |  Total | 👁️ Solo lectura | 👁️ Solo lectura |
-| **Inventario de Unidades Físicas** |  Total | ❌ Denegado | ❌ Denegado |
+| **Inventario de Unidades Físicas** |  Total (Altas y Renombrar) | ❌ Denegado | ❌ Denegado |
 | **Asignación de Comprador / Estado** |  Total | ❌ Denegado | ❌ Denegado |
 | **Bitácora de Auditoría** |  Consulta | ❌ Denegado | ❌ Denegado |
 | **Módulo «Mis Vehículos»** | 👁️ Todos |  Solo propias | ❌ Denegado |
 | **Operación en CONTROL** | ⚠️ Requiere soporte en vendidas |  Solo unidades propias | ⚠️ Limitado a unidad de exhibición |
 | **Lectura en MONITOREO** |  Auditoría |  Solo unidades propias | ❌ Denegado |
-| **Editor de DEMOS Privadas** | ❌ (Usa de fábrica) |  Creación y edición | ❌ Denegado |
+| **Editor de DEMOS (Crear/Quitar pasos)** |  Total (Fábrica y Soporte) |  Creación y edición (Propias) | ❌ Denegado |
 | **Prueba de Exhibición con Reserva** | 👁️ Monitoreo | ❌ (Usa sus unidades) |  Reserva exclusiva temporal (3 min) |
 
 > **Aislamiento por Recurso (Anti-BOLA/IDOR):** FastAPI valida en cada petición que el `id_usuario` autenticado coincida con el `propietario_id` de la unidad física solicitada. Si se altera el `vehicle_id` desde DevTools o Postman, el backend responde con **`403 Forbidden`**.
