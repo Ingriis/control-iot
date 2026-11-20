@@ -172,7 +172,17 @@ export class AdminModule {
     // Editor de Demos
     const addStepBtn = document.getElementById('addDemoStepBtn');
     if (addStepBtn) {
-      addStepBtn.addEventListener('click', () => this.addDemoStepRow());
+      addStepBtn.addEventListener('click', () => this.addDemoStepRow({ isNew: true }));
+    }
+
+    const demoVehicleSelect = document.getElementById('demoVehicleSelect');
+    if (demoVehicleSelect) {
+      demoVehicleSelect.addEventListener('change', () => this.loadDemosForSelectedVehicle());
+    }
+
+    const demoTargetSelect = document.getElementById('demoTargetSelect');
+    if (demoTargetSelect) {
+      demoTargetSelect.addEventListener('change', () => this.handleDemoTargetChange());
     }
 
     const saveDemoForm = document.getElementById('saveDemoForm');
@@ -721,13 +731,14 @@ export class AdminModule {
   }
 
   // ---------------------------------------------------------------------------
-  // Editor de DEMOS
+  // Editor de DEMOS (Creación y Modificación de Secuencias de Movimientos)
   // ---------------------------------------------------------------------------
   async loadDemoEditor() {
     this.demoSteps = [];
+    this.pendingDeletedMovementIds = [];
     const container = document.getElementById('demoStepsContainer');
     if (container) container.innerHTML = '';
-    this.addDemoStepRow(); // Paso inicial
+    this.addDemoStepRow({ isNew: true }); // Paso inicial
 
     // Llenar selector de unidades de destino según el rol
     const vehicleSelect = document.getElementById('demoVehicleSelect');
@@ -763,38 +774,168 @@ export class AdminModule {
         vehicleSelect.innerHTML = `<option value="${fallbackId}">#${fallbackId} - Vehículo Activo</option>`;
       }
     }
+
+    // Cargar demos asociadas al vehículo activo
+    await this.loadDemosForSelectedVehicle();
   }
 
-  addDemoStepRow() {
+  async loadDemosForSelectedVehicle() {
+    const vSelect = document.getElementById('demoVehicleSelect');
+    const targetSelect = document.getElementById('demoTargetSelect');
+    if (!vSelect || !targetSelect) return;
+
+    const vId = vSelect.value || this.api.getVehicleId();
+    targetSelect.innerHTML = '<option value="new">➕ [Crear Nueva DEMO]</option><option disabled>Cargando demos existentes...</option>';
+
+    try {
+      const demos = await this.api.getDemos(vId);
+      this.vehicleDemosMap = this.vehicleDemosMap || {};
+      this.vehicleDemosMap[vId] = demos || [];
+
+      targetSelect.innerHTML = '<option value="new">➕ [Crear Nueva DEMO]</option>';
+      if (demos && demos.length) {
+        demos.forEach((d) => {
+          const opt = document.createElement('option');
+          opt.value = d.id_demo || d.id;
+          opt.textContent = `📋 #${d.id_demo || d.id} - ${d.nombre}`;
+          targetSelect.appendChild(opt);
+        });
+      }
+    } catch (err) {
+      console.warn('Error al consultar demos existentes del vehículo:', err);
+      targetSelect.innerHTML = '<option value="new">➕ [Crear Nueva DEMO]</option>';
+    }
+
+    await this.handleDemoTargetChange();
+  }
+
+  async handleDemoTargetChange() {
+    const targetSelect = document.getElementById('demoTargetSelect');
+    const vSelect = document.getElementById('demoVehicleSelect');
+    const nameInput = document.getElementById('demoCustomName');
+    const descInput = document.getElementById('demoCustomDesc');
+    const submitBtn = document.querySelector('#saveDemoForm button[type="submit"]');
+    const container = document.getElementById('demoStepsContainer');
+
+    if (!targetSelect || !container) return;
+    const mode = targetSelect.value;
+    const vId = vSelect ? vSelect.value : this.api.getVehicleId();
+
+    this.pendingDeletedMovementIds = [];
+
+    if (mode === 'new') {
+      if (nameInput) {
+        nameInput.value = '';
+        nameInput.removeAttribute('readonly');
+      }
+      if (descInput) {
+        descInput.value = '';
+        descInput.removeAttribute('readonly');
+      }
+      if (submitBtn) submitBtn.textContent = 'Guardar Nueva DEMO en Amazon RDS';
+      container.innerHTML = '';
+      this.addDemoStepRow({ isNew: true });
+    } else {
+      // Modo: Demo existente para agregar o quitar movimientos
+      const demoId = Number(mode);
+      const demos = (this.vehicleDemosMap && this.vehicleDemosMap[vId]) || [];
+      const currentDemo = demos.find((d) => (d.id_demo || d.id) === demoId);
+
+      if (currentDemo) {
+        if (nameInput) nameInput.value = currentDemo.nombre;
+        if (descInput) descInput.value = currentDemo.descripcion || '';
+      }
+      if (submitBtn) submitBtn.textContent = `Guardar / Agregar Movimientos a DEMO #${demoId}`;
+
+      container.innerHTML = '<div class="text-center py-2 text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Cargando movimientos de la DEMO...</div>';
+
+      try {
+        const movements = await this.api.getDemoMovements(vId, demoId);
+        container.innerHTML = '';
+        if (movements && movements.length) {
+          movements.forEach((m) => {
+            this.addDemoStepRow({
+              movementId: m.id_demo_movimiento,
+              commandId: m.id_comando,
+              duration: m.duracion_ms,
+              pause: m.pausa_ms,
+              isNew: false,
+            });
+          });
+        } else {
+          this.addDemoStepRow({ isNew: true });
+        }
+      } catch (err) {
+        container.innerHTML = '';
+        this.addDemoStepRow({ isNew: true });
+        console.warn('Error cargando movimientos de demo:', err);
+      }
+    }
+  }
+
+  addDemoStepRow(options = {}) {
     const container = document.getElementById('demoStepsContainer');
     if (!container) return;
     const stepIndex = container.children.length + 1;
+    const movementId = options.movementId || '';
+    const commandId = options.commandId || 1;
+    const duration = options.duration !== undefined ? options.duration : 1500;
+    const pause = options.pause !== undefined ? options.pause : 300;
+    const isNew = options.isNew !== undefined ? options.isNew : !movementId;
 
     const row = document.createElement('div');
     row.className = 'demo-step-row d-flex gap-2 align-items-center mb-2 p-2 bg-dark rounded border border-secondary';
+    if (movementId) row.dataset.movementId = movementId;
+    row.dataset.isNew = isNew ? 'true' : 'false';
+
+    const commandsList = [
+      { id: 1, name: 'AVANZAR' },
+      { id: 2, name: 'RETROCEDER' },
+      { id: 3, name: 'GIRAR IZQUIERDA' },
+      { id: 4, name: 'GIRAR DERECHA' },
+      { id: 5, name: 'SUBIR HORQUILLAS' },
+      { id: 6, name: 'BAJAR HORQUILLAS' },
+      { id: 8, name: 'LUCES' },
+      { id: 11, name: 'SONIDO' },
+      { id: 9, name: 'DETENER' },
+    ];
+
+    const optionsHtml = commandsList.map((c) =>
+      `<option value="${c.id}" ${Number(c.id) === Number(commandId) ? 'selected' : ''}>${c.name}</option>`
+    ).join('');
+
     row.innerHTML = `
-      <span class="badge bg-secondary demo-step-badge">#${stepIndex}</span>
+      <span class="badge ${isNew ? 'bg-primary' : 'bg-secondary'} demo-step-badge">#${stepIndex}${isNew && movementId ? '' : (isNew && container.children.length > 0 && document.getElementById('demoTargetSelect')?.value !== 'new' ? ' (Nuevo)' : '')}</span>
       <select class="form-select form-select-sm step-command" required>
-        <option value="1">AVANZAR</option>
-        <option value="2">RETROCEDER</option>
-        <option value="3">GIRAR IZQUIERDA</option>
-        <option value="4">GIRAR DERECHA</option>
-        <option value="5">SUBIR HORQUILLAS</option>
-        <option value="6">BAJAR HORQUILLAS</option>
-        <option value="8">LUCES</option>
-        <option value="11">SONIDO</option>
-        <option value="9">DETENER</option>
+        ${optionsHtml}
       </select>
       <div class="input-group input-group-sm demo-input-duration">
-        <input type="number" class="form-control step-duration" value="1500" min="200" max="10000" step="100" title="Duración (ms)">
+        <input type="number" class="form-control step-duration" value="${duration}" min="200" max="10000" step="100" title="Duración (ms)">
         <span class="input-group-text">ms</span>
       </div>
       <div class="input-group input-group-sm demo-input-pause">
-        <input type="number" class="form-control step-pause" value="300" min="0" max="5000" step="100" title="Pausa (ms)">
+        <input type="number" class="form-control step-pause" value="${pause}" min="0" max="5000" step="100" title="Pausa (ms)">
         <span class="input-group-text">pausa</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" title="Quitar movimiento" onclick="this.parentElement.remove()">✕ Quitar</button>
+      <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" title="Quitar movimiento">✕ Quitar</button>
     `;
+
+    const removeBtn = row.querySelector('.demo-step-remove-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        if (movementId) {
+          this.pendingDeletedMovementIds = this.pendingDeletedMovementIds || [];
+          this.pendingDeletedMovementIds.push(movementId);
+        }
+        row.remove();
+        // Renumerar badges
+        const badges = container.querySelectorAll('.demo-step-badge');
+        badges.forEach((b, idx) => {
+          b.textContent = `#${idx + 1}`;
+        });
+      });
+    }
+
     container.appendChild(row);
   }
 
@@ -804,6 +945,8 @@ export class AdminModule {
     const descripcion = document.getElementById('demoCustomDesc').value.trim();
     const vSelect = document.getElementById('demoVehicleSelect');
     const vId = (vSelect && vSelect.value) ? vSelect.value : this.api.getVehicleId();
+    const targetSelect = document.getElementById('demoTargetSelect');
+    const targetMode = targetSelect ? targetSelect.value : 'new';
 
     if (!vId) {
       this.notify('Por favor selecciona la unidad física de destino para la DEMO.', 'warning');
@@ -818,30 +961,69 @@ export class AdminModule {
     }
 
     try {
-      // 1. Crear demo vinculada al vehículo seleccionado
-      const demoRes = await this.api.createCustomDemo(vId, { nombre, descripcion });
-      const demoId = demoRes.id_demo || demoRes.id;
+      if (targetMode === 'new') {
+        // 1. Crear demo vinculada al vehículo seleccionado
+        const demoRes = await this.api.createCustomDemo(vId, { nombre, descripcion });
+        const demoId = demoRes.id_demo || demoRes.id;
 
-      // 2. Agregar pasos ordenados a la demo
-      let orden = 1;
-      for (const r of rows) {
-        const id_comando = Number(r.querySelector('.step-command').value);
-        const duracion_ms = Number(r.querySelector('.step-duration').value);
-        const pausa_ms = Number(r.querySelector('.step-pause').value);
+        // 2. Agregar pasos ordenados a la demo
+        let orden = 1;
+        for (const r of rows) {
+          const id_comando = Number(r.querySelector('.step-command').value);
+          const duracion_ms = Number(r.querySelector('.step-duration').value);
+          const pausa_ms = Number(r.querySelector('.step-pause').value);
 
-        await this.api.addDemoMovement(vId, demoId, {
-          id_comando,
-          orden: orden++,
-          duracion_ms,
-          pausa_ms,
-        });
+          await this.api.addDemoMovement(vId, demoId, {
+            id_comando,
+            orden: orden++,
+            duracion_ms,
+            pausa_ms,
+          });
+        }
+
+        this.notify(`¡DEMO #${demoId} creada exitosamente con sus movimientos para el vehículo #${vId}!`, 'success');
+      } else {
+        // Modo: Agregar movimientos o quitar de una demo existente
+        const demoId = Number(targetMode);
+
+        // A. Eliminar movimientos quitados en backend si existen
+        if (this.pendingDeletedMovementIds && this.pendingDeletedMovementIds.length) {
+          for (const movId of this.pendingDeletedMovementIds) {
+            await this.api.deleteDemoMovement(vId, demoId, movId).catch((err) =>
+              console.warn('Eliminación de movimiento omitida o no soportada:', err)
+            );
+          }
+          this.pendingDeletedMovementIds = [];
+        }
+
+        // B. Agregar las filas de movimientos nuevos agregados por el usuario
+        let orden = 1;
+        let movimientosAgregados = 0;
+        for (const r of rows) {
+          const id_comando = Number(r.querySelector('.step-command').value);
+          const duracion_ms = Number(r.querySelector('.step-duration').value);
+          const pausa_ms = Number(r.querySelector('.step-pause').value);
+          const isNew = r.dataset.isNew === 'true';
+
+          if (isNew) {
+            await this.api.addDemoMovement(vId, demoId, {
+              id_comando,
+              orden: orden,
+              duracion_ms,
+              pausa_ms,
+            });
+            movimientosAgregados++;
+          }
+          orden++;
+        }
+
+        this.notify(`¡Secuencia actualizada en DEMO #${demoId}! Movimientos nuevos guardados: ${movimientosAgregados}`, 'success');
       }
 
-      this.notify(`¡DEMO guardada exitosamente en Amazon RDS para el vehículo #${vId}!`, 'success');
       e.target.reset();
-      this.loadDemoEditor();
+      await this.loadDemoEditor();
     } catch (err) {
-      this.notify(`Error al guardar la DEMO: ${err.message}`, 'error', 4500);
+      this.notify(`Error al guardar en la DEMO: ${err.message}`, 'error', 4500);
     }
   }
 

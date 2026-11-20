@@ -152,9 +152,13 @@ export function createApi(config) {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+    getDemoMovements: (vId, demoId) => request(`/vehicles/${encodeURIComponent(vId)}/demos/${encodeURIComponent(demoId)}/movements`),
     addDemoMovement: (vId, demoId, payload) => request(`/vehicles/${encodeURIComponent(vId)}/demos/${encodeURIComponent(demoId)}/movements`, {
       method: 'POST',
       body: JSON.stringify(payload),
+    }),
+    deleteDemoMovement: (vId, demoId, movementId) => request(`/vehicles/${encodeURIComponent(vId)}/demos/${encodeURIComponent(demoId)}/movements/${encodeURIComponent(movementId)}`, {
+      method: 'POST',
     }),
 
     // Módulo Invitados
