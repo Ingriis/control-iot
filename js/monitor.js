@@ -96,8 +96,6 @@ export function renderHistory(records, { loading = false, error = '' } = {}) {
     else if (upper.includes('DETEN') || upper.includes('STOP') || upper.includes('PARO')) cmdType = 'stop';
     else if (upper.includes('HORQ')) cmdType = 'fork';
     else if (upper.includes('ENCEN') || upper.includes('APAG') || upper.includes('POWER')) cmdType = 'power';
-    else if (upper.includes('VELOC')) cmdType = 'speed';
-    else if (upper.includes('CRUC')) cmdType = 'cruise';
 
     const th = document.createElement('th');
     th.scope = 'row';

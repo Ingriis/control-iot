@@ -48,9 +48,6 @@ export function triggerHaptic(type = 'tap') {
       case 'direction':
         navigator.vibrate(16);
         break;
-      case 'speed':
-        navigator.vibrate([15, 20, 15]);
-        break;
       case 'stop':
         navigator.vibrate([70, 40, 120]);
         break;
@@ -119,62 +116,7 @@ export function playPowerSound(turnOn = true) {
   });
 }
 
-/**
- * Tono de cambio de velocidad
- */
-export function playSpeedSound(speedState) {
-  if (!isSoundEnabled()) return;
-  const ctx = getAudioContext();
-  if (!ctx) return;
 
-  const now = ctx.currentTime;
-  const freqs = { 1: [440], 2: [440, 554], 3: [440, 554, 659] };
-  const notes = freqs[speedState] || [440];
-
-  notes.forEach((freq, idx) => {
-    const time = now + (idx * 0.035);
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(freq, time);
-
-    gain.gain.setValueAtTime(0.05, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(time);
-    osc.stop(time + 0.04);
-  });
-}
-
-/**
- * Tono de modo crucero
- */
-export function playCruiseSound(active) {
-  if (!isSoundEnabled()) return;
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(active ? 600 : 350, now);
-  osc.frequency.exponentialRampToValueAtTime(active ? 900 : 250, now + 0.09);
-
-  gain.gain.setValueAtTime(0.07, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start(now);
-  osc.stop(now + 0.09);
-}
 
 /**
  * Golpe industrial de Paro de Emergencia

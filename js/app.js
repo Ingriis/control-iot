@@ -8,8 +8,6 @@ import {
   triggerHaptic,
   playBip,
   playPowerSound,
-  playSpeedSound,
-  playCruiseSound,
   playStopSound,
   playForkSound,
   startReverseBeep,
@@ -155,58 +153,7 @@ function getPowerCommand(isCurrentlyOn = false) {
     || activeCommandByName('APAGAR');
 }
 
-let currentSpeedState = 1; // 1: Verde (normal), 2: Verde y Rojo (medio), 3: Rojo (rápido)
 
-function updateSpeedVisual(state) {
-  const btn = $('speedButton');
-  if (!btn) return;
-  btn.dataset.speed = String(state);
-  const info = {
-    1: { name: 'Normal', lamps: 'Verde', next: 'Media (Verde y Rojo)' },
-    2: { name: 'Media', lamps: 'Verde y Rojo', next: 'Rápida (Rojo)' },
-    3: { name: 'Rápida', lamps: 'Rojo', next: 'Normal (Verde)' },
-  };
-  const current = info[state] || info[1];
-  btn.setAttribute('aria-label', `Velocidad: ${current.name} (${current.lamps}). Clic para cambiar a ${current.next}.`);
-  btn.title = `Velocidad ${current.name} (${current.lamps}) · Haz clic para cambiar a ${current.next}`;
-}
-
-function getSpeedCommand() {
-  return activeCommandByName('CAMBIAR_VELOCIDAD') || commands.find((c) => c.nombre?.includes('VELOCIDAD') && Number(c.activo) === 1);
-}
-
-function getCruiseCommand() {
-  return activeCommandByName('ACTIVAR_CRUCERO') || commands.find((c) => c.nombre?.includes('CRUCERO') && Number(c.activo) === 1);
-}
-
-async function handleSpeedCycle() {
-  if (!isPoweredOn()) return;
-  triggerHaptic('tap');
-  const cmd = getSpeedCommand();
-  if (!cmd) return;
-  if (!await sendCommand(cmd)) return;
-  currentSpeedState = (currentSpeedState % 3) + 1;
-  updateSpeedVisual(currentSpeedState);
-  triggerHaptic('speed');
-  playSpeedSound(currentSpeedState);
-  const labels = { 1: 'NORMAL', 2: 'MEDIA', 3: 'RÁPIDA' };
-  $('driveText').textContent = `VELOCIDAD ${labels[currentSpeedState]}`;
-}
-
-async function handleCruiseToggle() {
-  if (!isPoweredOn()) return;
-  triggerHaptic('tap');
-  const cmd = getCruiseCommand();
-  if (!cmd) return;
-  if (!await sendCommand(cmd)) return;
-  const btn = $('cruiseButton');
-  const isCurrentlyOn = btn.getAttribute('aria-pressed') === 'true';
-  const nextState = !isCurrentlyOn;
-  btn.setAttribute('aria-pressed', String(nextState));
-  btn.setAttribute('aria-label', `Modo crucero ${nextState ? 'activado' : 'desactivado'}.`);
-  triggerHaptic('click');
-  playCruiseSound(nextState);
-}
 
 function directionsAvailable() {
   return ['AVANZAR', 'RETROCEDER', 'GIRAR_IZQUIERDA', 'GIRAR_DERECHA'].every((name) => activeCommandByName(name));
@@ -245,8 +192,6 @@ function updateControls() {
   const powered = isPoweredOn();
   const stopReady = Boolean(activeCommandByName('DETENER'));
   const powerCmd = getPowerCommand(powered);
-  const speedCmd = getSpeedCommand();
-  const cruiseCmd = getCruiseCommand();
   const joystickDisabled = !powered || !apiReady || !directionsAvailable() || demoRunning || commandPending;
   const forkJoystickDisabled = !powered || !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
   $('joystick').setAttribute('aria-disabled', String(joystickDisabled));
@@ -255,14 +200,8 @@ function updateControls() {
   $('forkJoystick').classList.toggle('is-disabled', forkJoystickDisabled);
   if (!powered || !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning) forkJoystick?.reset();
 
-  $('speedButton').disabled = !powered || !apiReady || !speedCmd || demoRunning || commandPending;
-  $('speedButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (speedCmd ? `Velocidad actual: ${currentSpeedState === 1 ? 'Normal (Verde)' : currentSpeedState === 2 ? 'Media (Verde y Rojo)' : 'Rápida (Rojo)'}` : 'Comando de velocidad no disponible');
-
   $('powerButton').disabled = !apiReady || !powerCmd || demoRunning || commandPending;
   $('powerButton').title = powerCmd ? '' : 'El catálogo no contiene un comando de encendido/apagado activo.';
-
-  $('cruiseButton').disabled = !powered || !apiReady || !cruiseCmd || demoRunning || commandPending;
-  $('cruiseButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (cruiseCmd ? 'Activar/desactivar crucero' : 'Comando crucero no disponible');
 
   $('stopButton').disabled = !powered || !apiReady || !stopReady;
   $('stopButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (stopReady ? '' : 'El catálogo no contiene un comando DETENER activo.');
@@ -695,9 +634,7 @@ async function togglePower() {
     releaseWakeLock();
     requestStop();
     forkJoystick?.reset();
-    $('cruiseButton')?.setAttribute('aria-pressed', 'false');
-    currentSpeedState = 1;
-    updateSpeedVisual(currentSpeedState);
+
     $('driveText').textContent = 'Apagado';
     $('driveIndicator').classList.remove('active', 'is-emergency');
   } else {
@@ -858,10 +795,7 @@ async function boot() {
     onNeutral: () => { $('forkJoystickStatus').textContent = 'Control centrado · no se envió DETENER.'; },
     canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName(names.forkUp)) && Boolean(activeCommandByName(names.forkDown)) && !demoRunning && !commandPending,
   });
-  $('speedButton').addEventListener('click', handleSpeedCycle);
-  $('cruiseButton').addEventListener('click', handleCruiseToggle);
   $('powerButton').addEventListener('click', togglePower);
-  updateSpeedVisual(currentSpeedState);
   $('stopButton').addEventListener('click', () => {
     const bezel = document.querySelector('.stop-bezel');
     if (bezel?.classList.contains('is-latched')) {
@@ -903,26 +837,12 @@ async function boot() {
     if (event.key === ' ' || event.key === 'Escape') {
       event.preventDefault();
       requestStop(true);
-    } else if (event.key === 'v' || event.key === 'V') {
-      event.preventDefault();
-      handleSpeedCycle();
-    } else if (event.key === 'c' || event.key === 'C') {
-      event.preventDefault();
-      handleCruiseToggle();
     } else if (event.key === 'l' || event.key === 'L') {
       event.preventDefault();
       toggleUtility('LUCES', 'lightsButton');
     } else if (event.key === 'k' || event.key === 'K') {
       event.preventDefault();
       toggleUtility('SONIDO', 'soundButton');
-    } else if (event.key === '1' || event.key === '2' || event.key === '3') {
-      event.preventDefault();
-      const targetSpeed = parseInt(event.key, 10);
-      currentSpeedState = targetSpeed;
-      updateSpeedVisual(currentSpeedState);
-      triggerHaptic('click');
-      playBip(440 + currentSpeedState * 100, 0.08);
-      showArcadeToast(`Velocidad ${currentSpeedState} seleccionada`, 'info', 1400);
     }
   });
   connectSocket();
