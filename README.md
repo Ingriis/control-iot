@@ -141,7 +141,7 @@ La barra superior muestra tres comprobaciones de red independientes:
 ### Frontend:
 ```powershell
 cd frontend
-py serve.py
+py server/serve.py
 # Abrir en el navegador http://localhost:8081
 ```
 

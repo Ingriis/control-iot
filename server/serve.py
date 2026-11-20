@@ -1,5 +1,8 @@
 import mimetypes
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 mimetypes.init()
 mimetypes.add_type('text/javascript', '.js')
@@ -17,6 +20,9 @@ class FrontendHandler(SimpleHTTPRequestHandler):
         '.svg': 'image/svg+xml',
         '.webp': 'image/webp',
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(BASE_DIR), **kwargs)
 
     def end_headers(self):
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
