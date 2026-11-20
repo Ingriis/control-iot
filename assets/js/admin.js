@@ -728,6 +728,41 @@ export class AdminModule {
     const container = document.getElementById('demoStepsContainer');
     if (container) container.innerHTML = '';
     this.addDemoStepRow(); // Paso inicial
+
+    // Llenar selector de unidades de destino según el rol
+    const vehicleSelect = document.getElementById('demoVehicleSelect');
+    if (vehicleSelect) {
+      vehicleSelect.innerHTML = '<option value="">Cargando unidades disponibles...</option>';
+      const role = (this.currentUser?.rol || 'INVITADO').toUpperCase();
+      try {
+        let vehicles = [];
+        if (role === 'ADMINISTRADOR') {
+          // El Administrador tiene acceso a todas las unidades de la empresa
+          vehicles = await this.api.getUnits();
+        } else {
+          // El Usuario tiene acceso a sus unidades propias asignadas
+          vehicles = await this.api.getMyVehicles();
+        }
+
+        if (!vehicles || !vehicles.length) {
+          vehicleSelect.innerHTML = '<option value="">Sin unidades asignadas o disponibles</option>';
+        } else {
+          const currentVId = String(this.api.getVehicleId() || vehicles[0].id_vehiculo);
+          vehicleSelect.innerHTML = vehicles.map((v) => {
+            const id = v.id_vehiculo;
+            const name = v.nombre || `Vehículo #${id}`;
+            const model = v.nombre_modelo || v.modelo || 'IoT';
+            const owner = v.nombre_propietario ? ` [Propietario: ${v.nombre_propietario}]` : (role === 'ADMINISTRADOR' ? ' [Empresa]' : '');
+            const selected = String(id) === currentVId ? 'selected' : '';
+            return `<option value="${id}" ${selected}>#${id} - ${name} (${model})${owner}</option>`;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Error cargando vehículos para demo:', err);
+        const fallbackId = this.api.getVehicleId() || '1';
+        vehicleSelect.innerHTML = `<option value="${fallbackId}">#${fallbackId} - Vehículo Activo</option>`;
+      }
+    }
   }
 
   addDemoStepRow() {
@@ -767,7 +802,13 @@ export class AdminModule {
     e.preventDefault();
     const nombre = document.getElementById('demoCustomName').value.trim();
     const descripcion = document.getElementById('demoCustomDesc').value.trim();
-    const vId = this.api.getVehicleId();
+    const vSelect = document.getElementById('demoVehicleSelect');
+    const vId = (vSelect && vSelect.value) ? vSelect.value : this.api.getVehicleId();
+
+    if (!vId) {
+      this.notify('Por favor selecciona la unidad física de destino para la DEMO.', 'warning');
+      return;
+    }
 
     const container = document.getElementById('demoStepsContainer');
     const rows = container ? container.querySelectorAll('.demo-step-row') : [];
@@ -777,11 +818,11 @@ export class AdminModule {
     }
 
     try {
-      // 1. Crear demo
+      // 1. Crear demo vinculada al vehículo seleccionado
       const demoRes = await this.api.createCustomDemo(vId, { nombre, descripcion });
       const demoId = demoRes.id_demo || demoRes.id;
 
-      // 2. Agregar pasos ordenados
+      // 2. Agregar pasos ordenados a la demo
       let orden = 1;
       for (const r of rows) {
         const id_comando = Number(r.querySelector('.step-command').value);
@@ -796,7 +837,7 @@ export class AdminModule {
         });
       }
 
-      this.notify('¡DEMO guardada exitosamente en Amazon RDS!', 'success');
+      this.notify(`¡DEMO guardada exitosamente en Amazon RDS para el vehículo #${vId}!`, 'success');
       e.target.reset();
       this.loadDemoEditor();
     } catch (err) {

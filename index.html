@@ -364,6 +364,13 @@
                   <!-- Metadatos de la DEMO -->
                   <div class="demo-editor-meta-col">
                     <div class="mb-2">
+                      <label class="form-label small mb-1" for="demoVehicleSelect">Vehículo Destino</label>
+                      <select class="form-select form-select-sm bg-dark border-secondary text-white" id="demoVehicleSelect" required>
+                        <option value="">Cargando unidades disponibles...</option>
+                      </select>
+                      <small class="text-muted" id="demoVehicleHelp">Unidad física que ejecutará la secuencia.</small>
+                    </div>
+                    <div class="mb-2">
                       <label class="form-label small mb-1" for="demoCustomName">Nombre de la DEMO</label>
                       <input type="text" class="form-control form-control-sm" id="demoCustomName" placeholder="Ej. Recorrido Almacén A" required>
                     </div>
