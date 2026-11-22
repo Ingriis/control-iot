@@ -152,6 +152,10 @@ export function createApi(config) {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+    updateDemo: (vId, demoId, payload) => request(`/vehicles/${encodeURIComponent(vId)}/demos/${encodeURIComponent(demoId)}/update`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
     getDemoMovements: (vId, demoId) => request(`/vehicles/${encodeURIComponent(vId)}/demos/${encodeURIComponent(demoId)}/movements`),
     addDemoMovement: (vId, demoId, payload) => request(`/vehicles/${encodeURIComponent(vId)}/demos/${encodeURIComponent(demoId)}/movements`, {
       method: 'POST',

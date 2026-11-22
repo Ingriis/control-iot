@@ -983,20 +983,35 @@ export class AdminModule {
 
         this.notify(`¡DEMO #${demoId} creada exitosamente con sus movimientos para el vehículo #${vId}!`, 'success');
       } else {
-        // Modo: Agregar movimientos o quitar de una demo existente
+        // Modo: Renombrar demo y/o agregar/quitar movimientos de una demo existente
         const demoId = Number(targetMode);
+        const demos = (this.vehicleDemosMap && this.vehicleDemosMap[vId]) || [];
+        const currentDemo = demos.find((d) => (d.id_demo || d.id) === demoId);
 
-        // A. Eliminar movimientos quitados en backend si existen
+        // 1. Actualizar Nombre y Descripción de la DEMO si cambiaron en Amazon RDS
+        let nombreActualizado = false;
+        if (currentDemo && (nombre !== currentDemo.nombre || descripcion !== (currentDemo.descripcion || ''))) {
+          await this.api.updateDemo(vId, demoId, {
+            nombre,
+            descripcion: descripcion || '',
+            activo: currentDemo.activo !== undefined ? currentDemo.activo : true,
+          }).catch((err) => console.warn('Error al actualizar cabecera de la demo:', err));
+          nombreActualizado = true;
+        }
+
+        // 2. Eliminar movimientos quitados en backend si existen
+        let movimientosEliminados = 0;
         if (this.pendingDeletedMovementIds && this.pendingDeletedMovementIds.length) {
           for (const movId of this.pendingDeletedMovementIds) {
             await this.api.deleteDemoMovement(vId, demoId, movId).catch((err) =>
               console.warn('Eliminación de movimiento omitida o no soportada:', err)
             );
+            movimientosEliminados++;
           }
           this.pendingDeletedMovementIds = [];
         }
 
-        // B. Agregar las filas de movimientos nuevos agregados por el usuario
+        // 3. Agregar las filas de movimientos nuevos agregados por el usuario
         let orden = 1;
         let movimientosAgregados = 0;
         for (const r of rows) {
@@ -1017,7 +1032,13 @@ export class AdminModule {
           orden++;
         }
 
-        this.notify(`¡Secuencia actualizada en DEMO #${demoId}! Movimientos nuevos guardados: ${movimientosAgregados}`, 'success');
+        const detalles = [];
+        if (nombreActualizado) detalles.push(`Nombre cambiado a "${nombre}"`);
+        if (movimientosAgregados > 0) detalles.push(`${movimientosAgregados} paso(s) agregado(s)`);
+        if (movimientosEliminados > 0) detalles.push(`${movimientosEliminados} paso(s) eliminado(s)`);
+        const resumen = detalles.length ? detalles.join(', ') : 'Secuencia sincronizada';
+
+        this.notify(`¡DEMO #${demoId} actualizada en Amazon RDS! (${resumen})`, 'success');
       }
 
       e.target.reset();
