@@ -1,6 +1,6 @@
 import { createApi } from './api.js';
 import { loadConfig, validateConfig } from './config.js';
-import { initJoystick, initVerticalJoystick } from './joystick.js';
+import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
 import { AdminModule } from './admin.js';
@@ -35,6 +35,8 @@ let lastDirection = 'neutral';
 let apiGeneration = 0;
 let holdGeneration = 0;
 let heldDirection = null;
+let driveJoystick;
+let steerJoystick;
 let joystick;
 let forkJoystick;
 let monitorVisible = false;
@@ -129,7 +131,19 @@ function setEventStatus(status, detail) {
   if (d && detail !== undefined) d.textContent = detail;
 }
 
+function getDisabledCommandsForVehicle(vehicleId) {
+  try {
+    const raw = localStorage.getItem(`vehicle_disabled_commands_${vehicleId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 function activeCommandByName(name) {
+  const vId = config.vehicleId || '1';
+  const disabled = getDisabledCommandsForVehicle(vId);
+  if (disabled.includes(name)) return null;
   return commands.find((command) => command.nombre === name && Number(command.activo) === 1);
 }
 
@@ -156,7 +170,7 @@ function getPowerCommand(isCurrentlyOn = false) {
 
 
 function directionsAvailable() {
-  return ['AVANZAR', 'RETROCEDER', 'GIRAR_IZQUIERDA', 'GIRAR_DERECHA'].every((name) => activeCommandByName(name));
+  return ['AVANZAR', 'RETROCEDER', 'GIRAR_IZQUIERDA', 'GIRAR_DERECHA'].some((name) => activeCommandByName(name));
 }
 
 function renderCommands() {
@@ -189,26 +203,82 @@ function renderCommands() {
 }
 
 function updateControls() {
+  const vId = config.vehicleId || '1';
+  const disabledList = getDisabledCommandsForVehicle(vId);
+
   const powered = isPoweredOn();
   const stopReady = Boolean(activeCommandByName('DETENER'));
   const powerCmd = getPowerCommand(powered);
-  const joystickDisabled = !powered || !apiReady || !directionsAvailable() || demoRunning || commandPending;
-  const forkJoystickDisabled = !powered || !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
-  $('joystick').setAttribute('aria-disabled', String(joystickDisabled));
-  $('joystick').classList.toggle('is-disabled', joystickDisabled);
-  $('forkJoystick').setAttribute('aria-disabled', String(forkJoystickDisabled));
-  $('forkJoystick').classList.toggle('is-disabled', forkJoystickDisabled);
-  if (!powered || !apiReady || !activeCommandByName(names.forkUp) || !activeCommandByName(names.forkDown) || demoRunning) forkJoystick?.reset();
+
+  // Estados de palancas desacopladas
+  const driveAvailable = Boolean(activeCommandByName('AVANZAR') || activeCommandByName('RETROCEDER'));
+  const steerAvailable = Boolean(activeCommandByName('GIRAR_IZQUIERDA') || activeCommandByName('GIRAR_DERECHA'));
+
+  const driveDisabled = !powered || !apiReady || !driveAvailable || demoRunning || commandPending;
+  const steerDisabled = !powered || !apiReady || !steerAvailable || demoRunning || commandPending;
+
+  const driveEl = $('driveJoystick');
+  if (driveEl) {
+    driveEl.setAttribute('aria-disabled', String(driveDisabled));
+    driveEl.classList.toggle('is-disabled', driveDisabled);
+    if (driveDisabled) driveJoystick?.reset();
+  }
+
+  const steerEl = $('steerJoystick');
+  if (steerEl) {
+    steerEl.setAttribute('aria-disabled', String(steerDisabled));
+    steerEl.classList.toggle('is-disabled', steerDisabled);
+    if (steerDisabled) steerJoystick?.reset();
+  }
+
+  // Compatibilidad con elemento antiguo si existiera
+  const legacyJoy = $('joystick');
+  if (legacyJoy) {
+    const joyDis = !powered || !apiReady || !directionsAvailable() || demoRunning || commandPending;
+    legacyJoy.setAttribute('aria-disabled', String(joyDis));
+    legacyJoy.classList.toggle('is-disabled', joyDis);
+  }
+
+  // Botones dedicados de Horquillas
+  const forkUpDisabled = !powered || !apiReady || !activeCommandByName(names.forkUp) || demoRunning || commandPending;
+  const forkDownDisabled = !powered || !apiReady || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
+  const forkUpBtn = $('forkUpBtn');
+  const forkDownBtn = $('forkDownBtn');
+  if (forkUpBtn) {
+    forkUpBtn.disabled = forkUpDisabled;
+    forkUpBtn.title = disabledList.includes(names.forkUp)
+      ? 'SUBIR HORQUILLAS deshabilitado por el Administrador.'
+      : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : '');
+  }
+  if (forkDownBtn) {
+    forkDownBtn.disabled = forkDownDisabled;
+    forkDownBtn.title = disabledList.includes(names.forkDown)
+      ? 'BAJAR HORQUILLAS deshabilitado por el Administrador.'
+      : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : '');
+  }
+
+  if (disabledList.includes(names.forkUp) || disabledList.includes(names.forkDown)) {
+    if ($('forkJoystickStatus')) $('forkJoystickStatus').textContent = 'Horquillas deshabilitadas por Administrador';
+  }
 
   $('powerButton').disabled = !apiReady || !powerCmd || demoRunning || commandPending;
   $('powerButton').title = powerCmd ? '' : 'El catálogo no contiene un comando de encendido/apagado activo.';
 
   $('stopButton').disabled = !powered || !apiReady || !stopReady;
   $('stopButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (stopReady ? '' : 'El catálogo no contiene un comando DETENER activo.');
+
+  const lightsDisabledByAdmin = disabledList.includes('LUCES');
   $('lightsButton').disabled = !powered || !apiReady || !activeCommandByName('LUCES') || demoRunning || commandPending;
-  $('lightsButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar las luces.' : '';
+  $('lightsButton').title = lightsDisabledByAdmin
+    ? 'LUCES deshabilitadas para esta unidad por el Administrador.'
+    : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar las luces.' : '');
+
+  const soundDisabledByAdmin = disabledList.includes('SONIDO');
   $('soundButton').disabled = !powered || !apiReady || !activeCommandByName('SONIDO') || demoRunning || commandPending;
-  $('soundButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el sonido.' : '';
+  $('soundButton').title = soundDisabledByAdmin
+    ? 'SONIDO deshabilitado para esta unidad por el Administrador.'
+    : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar el sonido.' : '');
+
   $('runDemoButton').disabled = !powered || !apiReady || !demos.length || ! $('demoSelect').value || demoRunning || commandPending;
   $('runDemoButton').title = !powered ? 'Presiona ENCENDER/APAGAR para ejecutar una DEMO.' : '';
   $('demoSelect').disabled = !powered || !apiReady || demoRunning || commandPending || demos.length === 0;
@@ -663,7 +733,13 @@ function handleDirection(name) {
   activeMovementController?.abort();
   const command = activeCommandByName(names[name]);
   if (!command) {
-    setAction('Comando no disponible', `El catálogo no contiene ${names[name]} activo.`);
+    const vId = config.vehicleId || '1';
+    const disabled = getDisabledCommandsForVehicle(vId);
+    if (disabled.includes(names[name])) {
+      setAction('Movimiento bloqueado', `El movimiento ${names[name]} fue deshabilitado para la unidad #${vId} por el Administrador.`);
+    } else {
+      setAction('Comando no disponible', `El catálogo no contiene ${names[name]} activo.`);
+    }
     return;
   }
   if (command) renewWhileHeld(generation, name);
@@ -695,13 +771,19 @@ function handleForkDirection(direction) {
   const commandName = direction === 'up' ? names.forkUp : names.forkDown;
   const command = activeCommandByName(commandName);
   if (!command) {
-    setAction('Comando no disponible', `El catálogo no contiene ${commandName} activo.`);
-    $('forkJoystickStatus').textContent = 'Comando de horquillas no disponible';
+    const vId = config.vehicleId || '1';
+    const disabled = getDisabledCommandsForVehicle(vId);
+    if (disabled.includes(commandName)) {
+      setAction('Movimiento bloqueado', `Las horquillas están deshabilitadas para la unidad #${vId} por el Administrador.`);
+      $('forkJoystickStatus').textContent = 'Horquillas deshabilitadas por Administrador';
+    } else {
+      setAction('Comando no disponible', `El catálogo no contiene ${commandName} activo.`);
+      $('forkJoystickStatus').textContent = 'Comando de horquillas no disponible';
+    }
     return;
   }
   $('forkJoystickStatus').textContent = direction === 'up' ? 'Subiendo horquillas…' : 'Bajando horquillas…';
   sendCommand(command).then((sent) => {
-    if ($('forkJoystick').querySelector('.fork-joy-base')?.dataset.direction === 'neutral') return;
     if (sent) $('forkJoystickStatus').textContent = `${direction === 'up' ? 'Subir' : 'Bajar'} solicitado`;
     else $('forkJoystickStatus').textContent = 'Comando no enviado';
   });
@@ -721,6 +803,8 @@ function requestStop(isEmergencyButton = false) {
   holdGeneration += 1;
   heldDirection = null;
   lastDirection = 'neutral';
+  driveJoystick?.reset();
+  steerJoystick?.reset();
   joystick?.reset();
   const command = activeCommandByName('DETENER');
   if (!command) {
@@ -785,16 +869,83 @@ async function boot() {
   $('monitorTab').addEventListener('click', () => showView('monitor'));
   $('adminTab')?.addEventListener('click', () => showView('admin'));
   $('monitorRefresh').addEventListener('click', loadMonitorData);
-  joystick = initJoystick($('joystick'), $('joyKnob'), {
-    onDirection: handleDirection,
-    onRelease: requestStop,
-    canMove: () => isPoweredOn() && apiReady && directionsAvailable() && !demoRunning && !commandPending,
-  });
-  forkJoystick = initVerticalJoystick($('forkJoystick'), $('forkJoyKnob'), {
-    onDirection: handleForkDirection,
-    onNeutral: () => { $('forkJoystickStatus').textContent = 'Control centrado · no se envió DETENER.'; },
-    canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName(names.forkUp)) && Boolean(activeCommandByName(names.forkDown)) && !demoRunning && !commandPending,
-  });
+  // Palanca vertical de tracción (Adelante / Atrás)
+  const driveEl = $('driveJoystick');
+  if (driveEl) {
+    driveJoystick = initVerticalStick(driveEl, $('driveJoyKnob'), {
+      onDirection: handleDirection,
+      onRelease: requestStop,
+      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('AVANZAR') || activeCommandByName('RETROCEDER')) && !demoRunning && !commandPending,
+    });
+  }
+
+  // Palanca horizontal de dirección (Izquierda / Derecha)
+  const steerEl = $('steerJoystick');
+  if (steerEl) {
+    steerJoystick = initHorizontalStick(steerEl, $('steerJoyKnob'), {
+      onDirection: handleDirection,
+      onRelease: requestStop,
+      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('GIRAR_IZQUIERDA') || activeCommandByName('GIRAR_DERECHA')) && !demoRunning && !commandPending,
+    });
+  }
+
+  // Compatibilidad si existiera joystick legacy
+  const legacyJoy = $('joystick');
+  if (legacyJoy) {
+    joystick = initJoystick(legacyJoy, $('joyKnob'), {
+      onDirection: handleDirection,
+      onRelease: requestStop,
+      canMove: () => isPoweredOn() && apiReady && directionsAvailable() && !demoRunning && !commandPending,
+    });
+  }
+
+  // Configuración de botones táctiles dedicados para Horquillas
+  const setupForkButton = (btnId, direction) => {
+    const btn = $(btnId);
+    if (!btn) return;
+    let timer = null;
+    let active = false;
+
+    const start = (e) => {
+      e?.preventDefault();
+      if (!isPoweredOn() || !apiReady || demoRunning || commandPending) return;
+      const cmdName = direction === 'up' ? names.forkUp : names.forkDown;
+      if (!activeCommandByName(cmdName)) {
+        handleForkDirection(direction);
+        return;
+      }
+      active = true;
+      btn.classList.add('is-active');
+      handleForkDirection(direction);
+      timer = window.setInterval(() => {
+        if (!active || !isPoweredOn() || demoRunning) {
+          stop();
+          return;
+        }
+        handleForkDirection(direction);
+      }, 650);
+    };
+
+    const stop = (e) => {
+      e?.preventDefault();
+      if (!active) return;
+      active = false;
+      btn.classList.remove('is-active');
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+      if ($('forkJoystickStatus')) $('forkJoystickStatus').textContent = 'Horquillas detenidas';
+    };
+
+    btn.addEventListener('pointerdown', start);
+    btn.addEventListener('pointerup', stop);
+    btn.addEventListener('pointercancel', stop);
+    btn.addEventListener('pointerleave', stop);
+  };
+
+  setupForkButton('forkUpBtn', 'up');
+  setupForkButton('forkDownBtn', 'down');
   $('powerButton').addEventListener('click', togglePower);
   $('stopButton').addEventListener('click', () => {
     const bezel = document.querySelector('.stop-bezel');
@@ -843,6 +994,12 @@ async function boot() {
     } else if (event.key === 'k' || event.key === 'K') {
       event.preventDefault();
       toggleUtility('SONIDO', 'soundButton');
+    } else if (event.key === 'q' || event.key === 'Q') {
+      event.preventDefault();
+      handleForkDirection('up');
+    } else if (event.key === 'e' || event.key === 'E') {
+      event.preventDefault();
+      handleForkDirection('down');
     }
   });
   connectSocket();
@@ -869,6 +1026,11 @@ async function boot() {
   window.adminModule = adminModule;
   window.requestStop = requestStop;
   adminModule.init();
+
+  window.addEventListener('vehicle-commands-updated', () => {
+    updateControls();
+    renderCommands();
+  });
 
   try {
     const me = await api.getMe();

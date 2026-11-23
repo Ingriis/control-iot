@@ -190,6 +190,11 @@ export class AdminModule {
       saveDemoForm.addEventListener('submit', (e) => this.handleSaveCustomDemo(e));
     }
 
+    const deleteDemoBtn = document.getElementById('deleteDemoBtn');
+    if (deleteDemoBtn) {
+      deleteDemoBtn.addEventListener('click', () => this.handleDeleteDemo());
+    }
+
     // Invitados
     const guestBookingForm = document.getElementById('guestBookingForm');
     if (guestBookingForm) {
@@ -497,9 +502,14 @@ export class AdminModule {
               </div>
             </td>
             <td>
-              <button class="btn btn-sm btn-outline-cyan" onclick="window.adminModule.openAssignModal(${u.id_vehiculo}, '${safeName}', ${u.propietario_id || 'null'}, '${u.estado_comercial}')">
-                ✏️ Editar / Asignar
-              </button>
+              <div class="d-flex gap-1 flex-wrap">
+                <button class="btn btn-sm btn-outline-cyan" onclick="window.adminModule.openAssignModal(${u.id_vehiculo}, '${safeName}', ${u.propietario_id || 'null'}, '${u.estado_comercial}')" title="Editar nombre y asignación">
+                  ✏️ Editar
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="window.adminModule.openVehicleCommandsModal(${u.id_vehiculo}, '${safeName}')" title="Configurar o quitar movimientos y comandos">
+                  🎮 Comandos
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -580,6 +590,160 @@ export class AdminModule {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Gestión de Movimientos y Comandos por Unidad (Administrador)
+  // ---------------------------------------------------------------------------
+  getDisabledCommandsForVehicle(vehicleId) {
+    try {
+      const raw = localStorage.getItem(`vehicle_disabled_commands_${vehicleId}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  openVehicleCommandsModal(vehicleId, unitName) {
+    const unitIdInput = document.getElementById('vehicleCommandsUnitId');
+    const subtitle = document.getElementById('vehicleCommandsSubtitle');
+    const listContainer = document.getElementById('vehicleCommandsList');
+    if (!unitIdInput || !listContainer) return;
+
+    unitIdInput.value = vehicleId;
+    if (subtitle) subtitle.textContent = `Unidad #${vehicleId} · ${unitName || 'Vehículo'}`;
+
+    const disabled = this.getDisabledCommandsForVehicle(vehicleId);
+
+    const commandsDef = [
+      { id: 1, name: 'AVANZAR', icon: '⬆️', desc: 'Tracción frontal', category: 'Tracción' },
+      { id: 2, name: 'RETROCEDER', icon: '⬇️', desc: 'Tracción reversa', category: 'Tracción' },
+      { id: 3, name: 'GIRAR_IZQUIERDA', icon: '⬅️', desc: 'Dirección izquierda', category: 'Dirección' },
+      { id: 4, name: 'GIRAR_DERECHA', icon: '➡️', desc: 'Dirección derecha', category: 'Dirección' },
+      { id: 5, name: 'SUBIR_HORQUILLAS', icon: '🏗️', desc: 'Elevación del mástil', category: 'Horquillas' },
+      { id: 6, name: 'BAJAR_HORQUILLAS', icon: '📦', desc: 'Descenso de horquillas', category: 'Horquillas' },
+      { id: 8, name: 'LUCES', icon: '💡', desc: 'Faros delanteros LED', category: 'Accesorios' },
+      { id: 11, name: 'SONIDO', icon: '🔊', desc: 'Alarma sonora / claxon', category: 'Accesorios' },
+      { id: 7, name: 'CAMBIAR_VELOCIDAD', icon: '⚡', desc: 'Potencia y torque', category: 'Ajuste' },
+      { id: 12, name: 'ACTIVAR_CRUCERO', icon: '⏱️', desc: 'Control de crucero automático', category: 'Ajuste' },
+    ];
+
+    listContainer.innerHTML = commandsDef.map((cmd) => {
+      const isEnabled = !disabled.includes(cmd.name);
+      return `
+        <div class="d-flex justify-content-between align-items-center py-2 px-2 border-bottom border-secondary command-toggle-row">
+          <div>
+            <span class="me-2">${cmd.icon}</span>
+            <strong class="text-white">${cmd.name.replace(/_/g, ' ')}</strong>
+            <span class="badge bg-secondary ms-1 small">${cmd.category}</span>
+            <div class="small text-muted ps-4">${cmd.desc}</div>
+          </div>
+          <div class="form-check form-switch ms-3">
+            <input class="form-check-input cmd-switch" type="checkbox" role="switch"
+              id="cmd_switch_${cmd.name}" data-cmd="${cmd.name}" ${isEnabled ? 'checked' : ''}>
+            <label class="form-check-label small" for="cmd_switch_${cmd.name}">
+              ${isEnabled ? '<span class="text-success fw-bold">Habilitado</span>' : '<span class="text-danger fw-bold">Quitado</span>'}
+            </label>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    listContainer.querySelectorAll('.cmd-switch').forEach((sw) => {
+      sw.addEventListener('change', (e) => {
+        const label = e.target.nextElementSibling;
+        if (label) {
+          label.innerHTML = e.target.checked
+            ? '<span class="text-success fw-bold">Habilitado</span>'
+            : '<span class="text-danger fw-bold">Quitado</span>';
+        }
+      });
+    });
+
+    if (window.bootstrap) {
+      const modalEl = document.getElementById('vehicleCommandsModal');
+      const modal = new window.bootstrap.Modal(modalEl);
+      modal.show();
+    }
+  }
+
+  toggleAllCommands(enable) {
+    const listContainer = document.getElementById('vehicleCommandsList');
+    if (!listContainer) return;
+    listContainer.querySelectorAll('.cmd-switch').forEach((sw) => {
+      sw.checked = enable;
+      const label = sw.nextElementSibling;
+      if (label) {
+        label.innerHTML = enable
+          ? '<span class="text-success fw-bold">Habilitado</span>'
+          : '<span class="text-danger fw-bold">Quitado</span>';
+      }
+    });
+  }
+
+  saveVehicleCommands() {
+    const unitId = document.getElementById('vehicleCommandsUnitId')?.value;
+    if (!unitId) return;
+
+    const listContainer = document.getElementById('vehicleCommandsList');
+    const switches = listContainer ? listContainer.querySelectorAll('.cmd-switch') : [];
+    const disabledList = [];
+    const enabledList = [];
+
+    switches.forEach((sw) => {
+      const cmdName = sw.dataset.cmd;
+      if (sw.checked) {
+        enabledList.push(cmdName);
+      } else {
+        disabledList.push(cmdName);
+      }
+    });
+
+    localStorage.setItem(`vehicle_disabled_commands_${unitId}`, JSON.stringify(disabledList));
+
+    const detalle = disabledList.length
+      ? `Comandos deshabilitados en control: ${disabledList.join(', ')}`
+      : 'Todos los movimientos habilitados en control';
+    this.addAuditEntry('CONFIGURAR_MOVIMIENTOS', `vehiculos/${unitId}`, detalle);
+
+    this.notify(`¡Permisos de movimientos actualizados para el Vehículo #${unitId}!`, 'success');
+
+    window.dispatchEvent(new CustomEvent('vehicle-commands-updated', {
+      detail: { vehicleId: unitId, disabled: disabledList }
+    }));
+
+    if (window.bootstrap) {
+      const modalEl = document.getElementById('vehicleCommandsModal');
+      const modal = window.bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+  }
+
+  addAuditEntry(accion, recurso, detalle) {
+    try {
+      const raw = localStorage.getItem('local_audit_entries') || '[]';
+      const list = JSON.parse(raw);
+      list.unshift({
+        id_auditoria: Date.now(),
+        fecha_hora: new Date().toISOString(),
+        username_actor: this.currentUser?.username || 'admin',
+        rol_actor: this.currentUser?.rol || 'ADMINISTRADOR',
+        accion,
+        recurso,
+        resultado: 'EXITO',
+        detalle,
+      });
+      localStorage.setItem('local_audit_entries', JSON.stringify(list.slice(0, 50)));
+    } catch {}
+  }
+
+  getLocalAuditEntries() {
+    try {
+      const raw = localStorage.getItem('local_audit_entries') || '[]';
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
   async handleCreateUnit(e) {
     e.preventDefault();
     const nombre = document.getElementById('unitName').value.trim();
@@ -656,7 +820,9 @@ export class AdminModule {
     tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-3">Cargando bitácora...</td></tr>';
 
     try {
-      const logs = await this.api.getAuditLogs(50);
+      const serverLogs = await this.api.getAuditLogs(50).catch(() => []);
+      const localLogs = this.getLocalAuditEntries();
+      const logs = [...localLogs, ...(Array.isArray(serverLogs) ? serverLogs : [])];
       if (!logs.length) {
         tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">Sin registros de auditoría.</td></tr>';
         return;
@@ -815,6 +981,7 @@ export class AdminModule {
     const nameInput = document.getElementById('demoCustomName');
     const descInput = document.getElementById('demoCustomDesc');
     const submitBtn = document.querySelector('#saveDemoForm button[type="submit"]');
+    const deleteBtn = document.getElementById('deleteDemoBtn');
     const container = document.getElementById('demoStepsContainer');
 
     if (!targetSelect || !container) return;
@@ -824,6 +991,7 @@ export class AdminModule {
     this.pendingDeletedMovementIds = [];
 
     if (mode === 'new') {
+      if (deleteBtn) deleteBtn.classList.add('d-none');
       if (nameInput) {
         nameInput.value = '';
         nameInput.removeAttribute('readonly');
@@ -836,7 +1004,8 @@ export class AdminModule {
       container.innerHTML = '';
       this.addDemoStepRow({ isNew: true });
     } else {
-      // Modo: Demo existente para agregar o quitar movimientos
+      // Modo: Demo existente para renombrar, agregar/quitar movimientos o eliminar
+      if (deleteBtn) deleteBtn.classList.remove('d-none');
       const demoId = Number(mode);
       const demos = (this.vehicleDemosMap && this.vehicleDemosMap[vId]) || [];
       const currentDemo = demos.find((d) => (d.id_demo || d.id) === demoId);
@@ -870,6 +1039,29 @@ export class AdminModule {
         this.addDemoStepRow({ isNew: true });
         console.warn('Error cargando movimientos de demo:', err);
       }
+    }
+  }
+
+  async handleDeleteDemo() {
+    const vSelect = document.getElementById('demoVehicleSelect');
+    const targetSelect = document.getElementById('demoTargetSelect');
+    const vId = (vSelect && vSelect.value) ? vSelect.value : this.api.getVehicleId();
+    const demoId = targetSelect ? targetSelect.value : null;
+
+    if (!demoId || demoId === 'new') {
+      this.notify('Por favor selecciona una DEMO existente para eliminar.', 'warning');
+      return;
+    }
+
+    const confirmDelete = window.confirm(`¿Estás segura de eliminar la DEMO #${demoId} por completo de Amazon RDS?\n\nEsta operación ejecutará el procedimiento sp_eliminar_demo y removerá la rutina del catálogo.`);
+    if (!confirmDelete) return;
+
+    try {
+      await this.api.deleteDemo(vId, demoId);
+      this.notify(`¡DEMO #${demoId} eliminada exitosamente de Amazon RDS!`, 'success');
+      await this.loadDemoEditor();
+    } catch (err) {
+      this.notify(`Error al eliminar la DEMO: ${err.message}`, 'error', 4500);
     }
   }
 

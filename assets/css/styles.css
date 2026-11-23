@@ -879,6 +879,143 @@ body {
 .utility-command[aria-pressed="true"] .switch-track { background-position: 0 100%; }
 .utility-command[aria-pressed="true"] { filter: brightness(1.2); }
 
+/* ==========================================================================
+   NUEVO LAYOUT DE CONTROL: STICKS DESACOPLADOS Y BOTONES DE HORQUILLAS
+   ========================================================================== */
+
+/* Badges de etiquetas de los sticks */
+.stick-label-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--cyan);
+  background: #091321;
+  border: 1px solid #2b697c;
+  border-radius: 4px;
+  padding: 1px 8px;
+  pointer-events: none;
+  text-shadow: 0 0 5px rgba(34, 227, 237, 0.6);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Barra de actuadores (Horquillas + Luces + Sonido) */
+.actuator-controls-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Botones dedicados de Horquillas */
+.fork-buttons-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(6px, 1.2vw, 12px);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.fork-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 1vw, 8px);
+  min-height: clamp(38px, 5.5vh, 48px);
+  padding: 6px clamp(6px, 1vw, 14px);
+  font-family: var(--mono);
+  font-size: clamp(9px, 1.1vw, 11px);
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border: 2px solid #2b697c;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #13243a, #0b1523);
+  box-shadow: 0 3px 0 #050a12, 0 0 10px rgba(34, 227, 237, 0.12);
+  cursor: pointer;
+  transition: transform 0.12s, filter 0.12s, box-shadow 0.12s;
+  user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fork-btn.fork-up {
+  border-color: #38ef7d;
+  color: #38ef7d;
+  box-shadow: 0 3px 0 #050a12, 0 0 10px rgba(56, 239, 125, 0.2);
+}
+
+.fork-btn.fork-down {
+  border-color: #ff9f43;
+  color: #ff9f43;
+  box-shadow: 0 3px 0 #050a12, 0 0 10px rgba(255, 159, 67, 0.2);
+}
+
+.fork-btn:hover:not(:disabled) {
+  filter: brightness(1.25);
+  transform: translateY(-1px);
+}
+
+.fork-btn:active:not(:disabled),
+.fork-btn.is-active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #050a12, 0 0 14px currentColor;
+  filter: brightness(1.35);
+}
+
+.fork-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: saturate(0.3);
+  box-shadow: none;
+}
+
+.fork-btn-icon {
+  font-size: clamp(11px, 1.4vw, 14px);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.fork-btn-label {
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .fork-buttons-container {
+    gap: 6px !important;
+  }
+  .fork-btn {
+    min-height: 38px !important;
+    padding: 4px 6px !important;
+    font-size: 9.5px !important;
+    gap: 4px !important;
+  }
+  .fork-btn-icon {
+    font-size: 11px !important;
+  }
+  .fork-btn-label {
+    font-size: 9px !important;
+    letter-spacing: 0.4px !important;
+  }
+}
+@media (max-width: 350px) {
+  .fork-btn {
+    font-size: 8.5px !important;
+    padding: 3px 4px !important;
+  }
+}
+
 .section-label, .metric-label { display: block; color: var(--cyan); font: 9px var(--mono); letter-spacing: 1.2px; text-transform: uppercase; }
 .command-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 9px; }
 .command-button {
@@ -2206,6 +2343,26 @@ main#main {
     min-height: 15px !important;
     font-size: 8.5px !important;
     margin-top: 1px !important;
+  }
+
+  /* Actuadores: Horquillas y Accesorios en Móvil */
+  .actuator-controls-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    width: 100% !important;
+  }
+  .fork-buttons-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .fork-btn {
+    min-height: 38px !important;
+    font-size: clamp(9.5px, 2.6vw, 11px) !important;
+    font-weight: 800 !important;
+    padding: 2px 6px !important;
   }
 
   /* Botones Luces y Sonido */
@@ -4104,6 +4261,7 @@ main#main {
   border-radius: 6px;
   background: rgba(13, 23, 37, 0.95);
   border: 1px solid var(--line);
+  padding: clamp(8px, 1.5vw, 16px);
 }
 .demo-editor-grid {
   display: grid;
@@ -4112,6 +4270,15 @@ main#main {
     "steps"
     "actions";
   gap: 12px;
+}
+@media (min-width: 992px) {
+  .demo-editor-grid {
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+    grid-template-areas:
+      "meta steps"
+      "actions steps";
+    gap: 14px 18px;
+  }
 }
 .demo-editor-meta-col {
   grid-area: meta;
@@ -4123,7 +4290,7 @@ main#main {
   grid-area: actions;
 }
 .demo-steps-scroll {
-  max-height: 240px;
+  max-height: 280px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
@@ -4138,11 +4305,79 @@ main#main {
 .demo-steps-scroll::-webkit-scrollbar-track {
   background: rgba(13, 23, 37, 0.8);
 }
+
+/* Responsividad adaptable para cada fila de movimiento */
+.demo-step-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: border-color 0.15s;
+}
+.demo-step-row .demo-step-badge {
+  min-width: 36px;
+  text-align: center;
+}
+.demo-step-row .step-command {
+  flex: 1 1 140px;
+}
 .demo-input-duration {
-  width: 130px;
+  width: 125px;
+  flex: 0 0 125px;
 }
 .demo-input-pause {
-  width: 120px;
+  width: 115px;
+  flex: 0 0 115px;
+}
+.demo-step-remove-btn {
+  white-space: nowrap;
+}
+
+/* Modo compacto móvil: 2 niveles fluidos para que duración y pausa nunca se achiquen */
+@media (max-width: 680px) {
+  .demo-step-row {
+    display: grid !important;
+    grid-template-columns: auto 1fr 1fr auto !important;
+    grid-template-areas:
+      "badge cmd cmd remove"
+      "dur dur pause pause" !important;
+    gap: 5px !important;
+    padding: 6px !important;
+  }
+  .demo-step-row .demo-step-badge {
+    grid-area: badge !important;
+    align-self: center !important;
+  }
+  .demo-step-row .step-command {
+    grid-area: cmd !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .demo-step-row .demo-step-remove-btn {
+    grid-area: remove !important;
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+  .demo-step-row .demo-input-duration {
+    grid-area: dur !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  .demo-step-row .demo-input-pause {
+    grid-area: pause !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  .demo-editor-save-wrap {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .demo-editor-save-wrap .btn {
+    width: 100% !important;
+    min-height: 38px !important;
+    font-size: 11px !important;
+  }
 }
 
 .admin-subtab-title {

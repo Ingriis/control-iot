@@ -7,6 +7,165 @@ const DIRECTIONS = {
   d: 'right', D: 'right',
 };
 
+export function initVerticalStick(element, knob, { onDirection, onRelease, canMove }) {
+  let pointerId = null;
+  let current = null;
+  const base = knob.closest('.joy-base');
+
+  const center = () => {
+    knob.style.transform = 'translate(-50%, -50%)';
+    if (base) base.dataset.direction = 'neutral';
+  };
+
+  const release = () => {
+    if (pointerId === null) return;
+    pointerId = null;
+    center();
+    if (current) onRelease();
+    current = null;
+  };
+
+  const update = (event) => {
+    const rect = element.getBoundingClientRect();
+    const maxOffset = Math.max(20, Math.min(44, Math.round(rect.height * 0.38)));
+    const deadzone = Math.max(8, Math.round(maxOffset * 0.30));
+
+    let y = event.clientY - (rect.top + rect.height / 2);
+    y = Math.max(-maxOffset, Math.min(maxOffset, y));
+
+    knob.style.transform = `translate(-50%, calc(-50% + ${y}px))`;
+    const name = Math.abs(y) < deadzone ? null : (y < 0 ? 'forward' : 'backward');
+    if (base) base.dataset.direction = name || 'neutral';
+
+    if (name && name !== current && canMove()) {
+      current = name;
+      onDirection(name);
+    } else if (!name && current) {
+      current = null;
+      onRelease();
+    }
+  };
+
+  element.addEventListener('pointerdown', (event) => {
+    if (!canMove()) return;
+    event.preventDefault();
+    pointerId = event.pointerId;
+    try { element.setPointerCapture(event.pointerId); } catch {}
+    update(event);
+  });
+  element.addEventListener('pointermove', (event) => { if (event.pointerId === pointerId) update(event); });
+  element.addEventListener('pointerup', (event) => { if (event.pointerId === pointerId) release(); });
+  element.addEventListener('pointercancel', (event) => { if (event.pointerId === pointerId) release(); });
+  element.addEventListener('lostpointercapture', () => { if (pointerId !== null) release(); });
+
+  const V_KEYS = { ArrowUp: 'forward', w: 'forward', W: 'forward', ArrowDown: 'backward', s: 'backward', S: 'backward' };
+
+  element.addEventListener('keydown', (event) => {
+    const name = V_KEYS[event.key];
+    if (!name || event.repeat || !canMove()) return;
+    event.preventDefault();
+    current = name;
+    if (base) base.dataset.direction = name;
+    const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().height * 0.38)));
+    knob.style.transform = `translate(-50%, calc(-50% + ${name === 'forward' ? -maxOffset : maxOffset}px))`;
+    onDirection(name);
+  });
+
+  element.addEventListener('keyup', (event) => {
+    if (V_KEYS[event.key] && current) {
+      event.preventDefault();
+      current = null;
+      center();
+      onRelease();
+    }
+  });
+
+  element.addEventListener('blur', () => { if (current) { current = null; center(); onRelease(); } });
+  return { reset: () => { current = null; pointerId = null; center(); } };
+}
+
+export function initHorizontalStick(element, knob, { onDirection, onRelease, canMove }) {
+  let pointerId = null;
+  let current = null;
+  const base = knob.closest('.joy-base');
+
+  const center = () => {
+    knob.style.transform = 'translate(-50%, -50%)';
+    knob.style.setProperty('--joy-tilt', '0deg');
+    if (base) base.dataset.direction = 'neutral';
+  };
+
+  const release = () => {
+    if (pointerId === null) return;
+    pointerId = null;
+    center();
+    if (current) onRelease();
+    current = null;
+  };
+
+  const update = (event) => {
+    const rect = element.getBoundingClientRect();
+    const maxOffset = Math.max(20, Math.min(44, Math.round(rect.width * 0.38)));
+    const deadzone = Math.max(8, Math.round(maxOffset * 0.30));
+
+    let x = event.clientX - (rect.left + rect.width / 2);
+    x = Math.max(-maxOffset, Math.min(maxOffset, x));
+
+    knob.style.transform = `translate(calc(-50% + ${x}px), -50%)`;
+    const tilt = Math.abs(x) < deadzone ? 0 : Math.round((-x / maxOffset) * 22);
+    knob.style.setProperty('--joy-tilt', `${tilt}deg`);
+
+    const name = Math.abs(x) < deadzone ? null : (x > 0 ? 'right' : 'left');
+    if (base) base.dataset.direction = name || 'neutral';
+
+    if (name && name !== current && canMove()) {
+      current = name;
+      onDirection(name);
+    } else if (!name && current) {
+      current = null;
+      onRelease();
+    }
+  };
+
+  element.addEventListener('pointerdown', (event) => {
+    if (!canMove()) return;
+    event.preventDefault();
+    pointerId = event.pointerId;
+    try { element.setPointerCapture(event.pointerId); } catch {}
+    update(event);
+  });
+  element.addEventListener('pointermove', (event) => { if (event.pointerId === pointerId) update(event); });
+  element.addEventListener('pointerup', (event) => { if (event.pointerId === pointerId) release(); });
+  element.addEventListener('pointercancel', (event) => { if (event.pointerId === pointerId) release(); });
+  element.addEventListener('lostpointercapture', () => { if (pointerId !== null) release(); });
+
+  const H_KEYS = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
+
+  element.addEventListener('keydown', (event) => {
+    const name = H_KEYS[event.key];
+    if (!name || event.repeat || !canMove()) return;
+    event.preventDefault();
+    current = name;
+    if (base) base.dataset.direction = name;
+    const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().width * 0.38)));
+    knob.style.transform = `translate(calc(-50% + ${name === 'right' ? maxOffset : -maxOffset}px), -50%)`;
+    knob.style.setProperty('--joy-tilt', name === 'left' ? '22deg' : '-22deg');
+    onDirection(name);
+  });
+
+  element.addEventListener('keyup', (event) => {
+    if (H_KEYS[event.key] && current) {
+      event.preventDefault();
+      current = null;
+      center();
+      onRelease();
+    }
+  });
+
+  element.addEventListener('blur', () => { if (current) { current = null; center(); onRelease(); } });
+  return { reset: () => { current = null; pointerId = null; center(); } };
+}
+
 export function initJoystick(element, knob, { onDirection, onRelease, canMove }) {
   let pointerId = null;
   let current = null;

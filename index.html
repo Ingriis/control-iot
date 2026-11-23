@@ -46,66 +46,86 @@
             <div class="card control-card h-100">
               <div class="direction-console">
                 <div class="primary-controls" aria-label="Controles principales">
-                  <div class="joystick-wrap">
+                  <!-- IZQUIERDA: Palanca de Tracción (Vertical: Adelante / Atrás) -->
+                  <div class="joystick-wrap drive-stick-wrap" title="Palanca de Tracción: Adelante / Atrás">
+                    <span class="stick-label-badge">TRACCIÓN</span>
                     <span class="direction-label north" aria-hidden="true">▲</span>
-                    <span class="direction-label east" aria-hidden="true">▶</span>
                     <span class="direction-label south" aria-hidden="true">▼</span>
+                    <div class="joystick drive-joystick" id="driveJoystick" role="group" aria-label="Palanca vertical de tracción: Arriba para avanzar, abajo para retroceder" tabindex="0">
+                      <div class="joy-base drive-joy-base" data-direction="neutral">
+                        <img class="joy-base-art" src="./assets/img/joystick-base.webp" alt="" />
+                        <div class="joy-neutral-sprite" aria-hidden="true"></div>
+                        <div class="joy-direction-sprite" aria-hidden="true"></div>
+                        <div class="joy-knob" id="driveJoyKnob"><img class="joy-handle" src="./assets/img/joystick-handle.webp" alt="" /></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CENTRO: Paro de Emergencia y Alimentación -->
+                  <div class="stop-panel">
+                    <div class="top-control-row">
+                      <div class="power-control">
+                        <button class="power-button" id="powerButton" type="button" aria-label="Interruptor encender o apagar el vehículo" aria-pressed="false" disabled>
+                          <span class="power-lamp" aria-hidden="true"></span>
+                          <span class="power-label"><span class="pwr-line">ENCENDER</span><span class="pwr-sep">/</span><span class="pwr-line">APAGAR</span></span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="stop-control">
+                      <span class="stop-caption">PARO DE EMERGENCIA</span>
+                      <div class="stop-bezel">
+                        <img class="stop-panel-art" src="./assets/img/stop-button-pixel.webp" alt="" />
+                        <button class="stop-button" id="stopButton" type="button" aria-label="Solicitar detener el vehículo">DETENER</button>
+                      </div>
+                    </div>
+                    <div class="drive-status"><span class="status-indicator" id="driveIndicator"></span><span id="driveText" aria-live="polite">En espera</span></div>
+                  </div>
+
+                  <!-- DERECHA: Palanca de Dirección (Horizontal: Izquierda / Derecha) -->
+                  <div class="joystick-wrap steer-stick-wrap" title="Palanca de Dirección: Giro Izquierda / Derecha">
+                    <span class="stick-label-badge">DIRECCIÓN</span>
                     <span class="direction-label west" aria-hidden="true">◀</span>
-                    <div class="joystick" id="joystick" role="group" aria-label="Joystick: usa flechas del teclado o arrastra con el mouse o el dedo" tabindex="0">
-                      <div class="joy-base" data-direction="neutral">
+                    <span class="direction-label east" aria-hidden="true">▶</span>
+                    <div class="joystick steer-joystick" id="steerJoystick" role="group" aria-label="Palanca horizontal de dirección: Izquierda o Derecha para girar" tabindex="0">
+                      <div class="joy-base steer-joy-base" data-direction="neutral">
                         <img class="joy-base-art" src="./assets/img/joystick-base.webp" alt="" />
                         <div class="joy-neutral-sprite" aria-hidden="true"></div>
                         <div class="joy-direction-sprite" aria-hidden="true"></div>
-                        <div class="joy-knob" id="joyKnob"><img class="joy-handle" src="./assets/img/joystick-handle.webp" alt="" /></div>
+                        <div class="joy-knob" id="steerJoyKnob"><img class="joy-handle" src="./assets/img/joystick-handle.webp" alt="" /></div>
                       </div>
                     </div>
                   </div>
-                <div class="stop-panel">
-                  <div class="top-control-row">
-                    <div class="power-control">
-                      <button class="power-button" id="powerButton" type="button" aria-label="Interruptor encender o apagar el vehículo" aria-pressed="false" disabled>
-                        <span class="power-lamp" aria-hidden="true"></span>
-                        <span class="power-label"><span class="pwr-line">ENCENDER</span><span class="pwr-sep">/</span><span class="pwr-line">APAGAR</span></span>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="stop-control">
-                    <span class="stop-caption">PARO DE EMERGENCIA</span>
-                    <div class="stop-bezel">
-                      <img class="stop-panel-art" src="./assets/img/stop-button-pixel.webp" alt="" />
-                      <button class="stop-button" id="stopButton" type="button" aria-label="Solicitar detener el vehículo">DETENER</button>
-                    </div>
-                  </div>
-                  <div class="drive-status"><span class="status-indicator" id="driveIndicator"></span><span id="driveText" aria-live="polite">En espera</span></div>
                 </div>
-                <section class="fork-control">
-                  <div class="fork-joystick-wrap">
-                    <span class="fork-direction-label fork-up" aria-hidden="true">▲</span>
-                    <span class="fork-direction-label fork-down" aria-hidden="true">▼</span>
-                    <div class="fork-joystick" id="forkJoystick" role="group" aria-label="Joystick vertical de horquillas. Arriba para subir, abajo para bajar." aria-disabled="true" tabindex="0">
-                      <div class="joy-base fork-joy-base" data-direction="neutral">
-                        <img class="joy-base-art" src="./assets/img/joystick-base.webp" alt="" />
-                        <div class="joy-neutral-sprite" aria-hidden="true"></div>
-                        <div class="joy-direction-sprite" aria-hidden="true"></div>
-                        <div class="joy-knob" id="forkJoyKnob"><img class="joy-handle" src="./assets/img/joystick-handle.webp" alt="" /></div>
-                      </div>
-                    </div>
+
+                <!-- Barra de Accesorios y Actuadores: Horquillas + Luces + Sonido -->
+                <div class="actuator-controls-bar" aria-label="Control de Horquillas y Accesorios">
+                  <!-- Botones de Horquillas Dedicados -->
+                  <div class="fork-buttons-container" aria-label="Control de Horquillas">
+                    <button class="fork-btn fork-up" id="forkUpBtn" type="button" aria-label="Subir horquillas" disabled>
+                      <span class="fork-btn-icon">▲</span>
+                      <span class="fork-btn-label">SUBIR HORQUILLAS</span>
+                    </button>
+                    <button class="fork-btn fork-down" id="forkDownBtn" type="button" aria-label="Bajar horquillas" disabled>
+                      <span class="fork-btn-icon">▼</span>
+                      <span class="fork-btn-label">BAJAR HORQUILLAS</span>
+                    </button>
                   </div>
-                  <span class="visually-hidden" aria-live="polite" id="forkJoystickStatus"></span>
-                </section>
-              </div>
-                <div class="utility-command-buttons" aria-label="Luces y sonido">
-                  <button class="utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces" aria-pressed="true" disabled>
-                    <span class="pixel-icon bulb-pixel-icon" aria-hidden="true"></span>
-                    <span>LUCES</span>
-                    <span class="switch-track" aria-hidden="true"></span>
-                  </button>
-                  <button class="utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido" aria-pressed="true" disabled>
-                    <span class="pixel-icon speaker-pixel-icon" aria-hidden="true"></span>
-                    <span>SONIDO</span>
-                    <span class="switch-track" aria-hidden="true"></span>
-                  </button>
+
+                  <!-- Botones de Luces y Sonido -->
+                  <div class="utility-command-buttons" aria-label="Luces y sonido">
+                    <button class="utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces" aria-pressed="true" disabled>
+                      <span class="pixel-icon bulb-pixel-icon" aria-hidden="true"></span>
+                      <span>LUCES</span>
+                      <span class="switch-track" aria-hidden="true"></span>
+                    </button>
+                    <button class="utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido" aria-pressed="true" disabled>
+                      <span class="pixel-icon speaker-pixel-icon" aria-hidden="true"></span>
+                      <span>SONIDO</span>
+                      <span class="switch-track" aria-hidden="true"></span>
+                    </button>
+                  </div>
                 </div>
+                <span class="visually-hidden" aria-live="polite" id="forkJoystickStatus"></span>
               </div>
               <div class="visually-hidden" aria-hidden="true" id="commandButtons"></div>
               <div class="demo-side-panel">
@@ -396,10 +416,13 @@
                     <div id="demoStepsContainer" class="demo-steps-scroll mb-1"></div>
                   </div>
 
-                  <!-- Botón de Guardado Persistente -->
-                  <div class="demo-editor-save-wrap">
-                    <button type="submit" class="btn btn-sm btn-cyan w-100 demo-save-btn">
+                  <!-- Botones de Guardado y Eliminación -->
+                  <div class="demo-editor-save-wrap d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-cyan flex-grow-1 demo-save-btn" id="demoSaveBtn">
                       Guardar DEMO en Amazon RDS
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger d-none px-3" id="deleteDemoBtn" title="Eliminar demo por completo de RDS">
+                      🗑️ Eliminar DEMO
                     </button>
                   </div>
                 </div>
@@ -518,6 +541,41 @@
           <div class="modal-footer border-secondary">
             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
             <button type="button" class="btn btn-cyan btn-sm" onclick="window.adminModule.handleSaveAssignment()">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Permisos de Movimientos y Comandos por Vehículo (Administrador) -->
+    <div class="modal fade" id="vehicleCommandsModal" tabindex="-1" aria-labelledby="vehicleCommandsModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content bg-dark border-secondary text-white">
+          <div class="modal-header border-secondary">
+            <div>
+              <h5 class="modal-title text-cyan mb-0" id="vehicleCommandsModalTitle">🎮 Permisos de Movimiento y Comandos</h5>
+              <small class="text-muted" id="vehicleCommandsSubtitle">Vehículo #1</small>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="vehicleCommandsUnitId">
+            <div class="alert alert-dark border-secondary py-2 px-3 small text-muted mb-3">
+              <span class="text-info fw-bold">⚙️ Control Administrativo:</span> Activa o desactiva movimientos de esta unidad física. Si deshabilitas un comando, se bloqueará en el panel de control del vehículo y quedará registrado en auditoría.
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+              <span class="small text-uppercase fw-bold text-cyan">Movimientos Disponibles</span>
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="window.adminModule.toggleAllCommands(true)">Habilitar Todos</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="window.adminModule.toggleAllCommands(false)">Deshabilitar Todos</button>
+              </div>
+            </div>
+            <div id="vehicleCommandsList" class="list-group list-group-flush border border-secondary rounded p-2 bg-dark">
+              <!-- Se llena dinámicamente con los switches de cada comando -->
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-cyan btn-sm" onclick="window.adminModule.saveVehicleCommands()">💾 Guardar Permisos</button>
           </div>
         </div>
       </div>
