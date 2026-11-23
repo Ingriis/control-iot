@@ -245,16 +245,18 @@ function updateControls() {
   const forkUpBtn = $('forkUpBtn');
   const forkDownBtn = $('forkDownBtn');
   if (forkUpBtn) {
-    forkUpBtn.disabled = forkUpDisabled;
+    forkUpBtn.classList.toggle('is-disabled', forkUpDisabled);
+    forkUpBtn.setAttribute('aria-disabled', String(forkUpDisabled));
     forkUpBtn.title = disabledList.includes(names.forkUp)
       ? 'SUBIR HORQUILLAS deshabilitado por el Administrador.'
-      : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : '');
+      : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : 'Mantén presionado para subir horquillas [Q]');
   }
   if (forkDownBtn) {
-    forkDownBtn.disabled = forkDownDisabled;
+    forkDownBtn.classList.toggle('is-disabled', forkDownDisabled);
+    forkDownBtn.setAttribute('aria-disabled', String(forkDownDisabled));
     forkDownBtn.title = disabledList.includes(names.forkDown)
       ? 'BAJAR HORQUILLAS deshabilitado por el Administrador.'
-      : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : '');
+      : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : 'Mantén presionado para bajar horquillas [E]');
   }
 
   if (disabledList.includes(names.forkUp) || disabledList.includes(names.forkDown)) {
@@ -908,8 +910,28 @@ async function boot() {
 
     const start = (e) => {
       e?.preventDefault();
-      if (!isPoweredOn() || !apiReady || demoRunning || commandPending) return;
+      if (!isPoweredOn()) {
+        playBip(260, 0.08);
+        triggerHaptic('tap');
+        setAction('Vehículo apagado', 'Presiona ENCENDER / APAGAR para habilitar las horquillas.');
+        const pwr = $('powerButton');
+        if (pwr) {
+          pwr.classList.add('pulse-hint');
+          setTimeout(() => pwr.classList.remove('pulse-hint'), 1200);
+        }
+        if ($('forkJoystickStatus')) $('forkJoystickStatus').textContent = 'Enciende el vehículo para usar las horquillas';
+        return;
+      }
+      const vId = config.vehicleId || '1';
+      const disabled = getDisabledCommandsForVehicle(vId);
       const cmdName = direction === 'up' ? names.forkUp : names.forkDown;
+      if (disabled.includes(cmdName)) {
+        playBip(220, 0.1);
+        triggerHaptic('stop');
+        setAction('Movimiento bloqueado', `${cmdName.replace('_', ' ')} deshabilitado para Unidad #${vId} por el Administrador.`);
+        return;
+      }
+      if (!apiReady || demoRunning || commandPending) return;
       if (!activeCommandByName(cmdName)) {
         handleForkDirection(direction);
         return;
@@ -996,10 +1018,19 @@ async function boot() {
       toggleUtility('SONIDO', 'soundButton');
     } else if (event.key === 'q' || event.key === 'Q') {
       event.preventDefault();
+      $('forkUpBtn')?.classList.add('is-active');
       handleForkDirection('up');
     } else if (event.key === 'e' || event.key === 'E') {
       event.preventDefault();
+      $('forkDownBtn')?.classList.add('is-active');
       handleForkDirection('down');
+    }
+  });
+  window.addEventListener('keyup', (event) => {
+    if (event.key === 'q' || event.key === 'Q') {
+      $('forkUpBtn')?.classList.remove('is-active');
+    } else if (event.key === 'e' || event.key === 'E') {
+      $('forkDownBtn')?.classList.remove('is-active');
     }
   });
   connectSocket();
