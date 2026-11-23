@@ -763,12 +763,38 @@ async function renewWhileHeld(generation, direction) {
   }
 }
 
+let estimatedForkLevel = 0;
+
+function updateForkLevelUI() {
+  const badge = $('forkLevelBadge');
+  const fill = $('forkLevelFill');
+  const disp = $('forkLevelDisplay');
+  if (badge) badge.textContent = `${estimatedForkLevel}%`;
+  if (fill) fill.style.width = `${estimatedForkLevel}%`;
+  if (disp) {
+    let desc = 'Suelo (0%)';
+    if (estimatedForkLevel === 20) desc = 'Elevación baja (20%)';
+    else if (estimatedForkLevel === 40) desc = 'Palet bajo (40%)';
+    else if (estimatedForkLevel === 60) desc = 'Media altura (60%)';
+    else if (estimatedForkLevel === 80) desc = 'Estante alto (80%)';
+    else if (estimatedForkLevel === 100) desc = 'Elevación máxima (100%)';
+    disp.title = `Nivel estimado: ${desc}`;
+    disp.setAttribute('aria-valuenow', String(estimatedForkLevel));
+  }
+}
+
 function handleForkDirection(direction) {
   if (direction === 'up' || direction === 'down') {
     triggerHaptic('direction');
     playForkSound(direction === 'up');
     document.querySelector('.stop-bezel')?.classList.remove('is-latched');
     $('driveIndicator')?.classList.remove('is-emergency');
+    if (direction === 'up') {
+      estimatedForkLevel = Math.min(100, estimatedForkLevel + 20);
+    } else {
+      estimatedForkLevel = Math.max(0, estimatedForkLevel - 20);
+    }
+    updateForkLevelUI();
   }
   const commandName = direction === 'up' ? names.forkUp : names.forkDown;
   const command = activeCommandByName(commandName);
@@ -784,9 +810,9 @@ function handleForkDirection(direction) {
     }
     return;
   }
-  $('forkJoystickStatus').textContent = direction === 'up' ? 'Subiendo horquillas…' : 'Bajando horquillas…';
+  $('forkJoystickStatus').textContent = direction === 'up' ? `Subiendo horquillas (${estimatedForkLevel}%)…` : `Bajando horquillas (${estimatedForkLevel}%)…`;
   sendCommand(command).then((sent) => {
-    if (sent) $('forkJoystickStatus').textContent = `${direction === 'up' ? 'Subir' : 'Bajar'} solicitado`;
+    if (sent) $('forkJoystickStatus').textContent = `${direction === 'up' ? 'Subir' : 'Bajar'} solicitado (${estimatedForkLevel}%)`;
     else $('forkJoystickStatus').textContent = 'Comando no enviado';
   });
 }
@@ -968,6 +994,13 @@ async function boot() {
 
   setupForkButton('forkUpBtn', 'up');
   setupForkButton('forkDownBtn', 'down');
+  $('forkLevelDisplay')?.addEventListener('click', () => {
+    estimatedForkLevel = 0;
+    updateForkLevelUI();
+    triggerHaptic('tap');
+    playBip(440, 0.05);
+    setAction('Calibración de Horquillas', 'Nivel de elevación restablecido a 0% (Suelo).');
+  });
   $('powerButton').addEventListener('click', togglePower);
   $('stopButton').addEventListener('click', () => {
     const bezel = document.querySelector('.stop-bezel');

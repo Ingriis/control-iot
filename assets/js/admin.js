@@ -1097,7 +1097,11 @@ export class AdminModule {
     ).join('');
 
     row.innerHTML = `
-      <span class="badge ${isNew ? 'bg-primary' : 'bg-secondary'} demo-step-badge">#${stepIndex}${isNew && movementId ? '' : (isNew && container.children.length > 0 && document.getElementById('demoTargetSelect')?.value !== 'new' ? ' (Nuevo)' : '')}</span>
+      <span class="badge ${isNew ? 'bg-primary' : 'bg-secondary'} demo-step-badge">#${stepIndex}</span>
+      <div class="btn-group btn-group-sm demo-step-reorder" role="group" aria-label="Reordenar">
+        <button type="button" class="btn btn-outline-secondary demo-step-up-btn py-0 px-1" title="Subir orden">▲</button>
+        <button type="button" class="btn btn-outline-secondary demo-step-down-btn py-0 px-1" title="Bajar orden">▼</button>
+      </div>
       <select class="form-select form-select-sm step-command" required>
         ${optionsHtml}
       </select>
@@ -1109,8 +1113,30 @@ export class AdminModule {
         <input type="number" class="form-control step-pause" value="${pause}" min="0" max="5000" step="100" title="Pausa (ms)">
         <span class="input-group-text">pausa</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" title="Quitar movimiento">✕ Quitar</button>
+      <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" title="Quitar movimiento">✕</button>
     `;
+
+    const upBtn = row.querySelector('.demo-step-up-btn');
+    if (upBtn) {
+      upBtn.addEventListener('click', () => {
+        const prev = row.previousElementSibling;
+        if (prev) {
+          container.insertBefore(row, prev);
+          this.updateDemoStepsSummary();
+        }
+      });
+    }
+
+    const downBtn = row.querySelector('.demo-step-down-btn');
+    if (downBtn) {
+      downBtn.addEventListener('click', () => {
+        const next = row.nextElementSibling;
+        if (next) {
+          container.insertBefore(next, row);
+          this.updateDemoStepsSummary();
+        }
+      });
+    }
 
     const removeBtn = row.querySelector('.demo-step-remove-btn');
     if (removeBtn) {
@@ -1120,15 +1146,41 @@ export class AdminModule {
           this.pendingDeletedMovementIds.push(movementId);
         }
         row.remove();
-        // Renumerar badges
-        const badges = container.querySelectorAll('.demo-step-badge');
-        badges.forEach((b, idx) => {
-          b.textContent = `#${idx + 1}`;
-        });
+        this.updateDemoStepsSummary();
       });
     }
 
+    row.querySelectorAll('.step-duration, .step-pause').forEach((input) => {
+      input.addEventListener('input', () => this.updateDemoStepsSummary());
+    });
+
     container.appendChild(row);
+    this.updateDemoStepsSummary();
+  }
+
+  updateDemoStepsSummary() {
+    const container = document.getElementById('demoStepsContainer');
+    if (!container) return;
+    const rows = container.querySelectorAll('.demo-step-row');
+    let totalMs = 0;
+    rows.forEach((r, idx) => {
+      const badge = r.querySelector('.demo-step-badge');
+      if (badge) badge.textContent = `#${idx + 1}`;
+      const dur = Number(r.querySelector('.step-duration')?.value || 0);
+      const pause = Number(r.querySelector('.step-pause')?.value || 0);
+      totalMs += (dur + pause);
+
+      const up = r.querySelector('.demo-step-up-btn');
+      const down = r.querySelector('.demo-step-down-btn');
+      if (up) up.disabled = (idx === 0);
+      if (down) down.disabled = (idx === rows.length - 1);
+    });
+
+    const totalBadge = document.getElementById('demoTotalTimeBadge');
+    if (totalBadge) {
+      const sec = (totalMs / 1000).toFixed(1);
+      totalBadge.textContent = `⏱️ ${rows.length} paso${rows.length === 1 ? '' : 's'} · ${sec}s`;
+    }
   }
 
   async handleSaveCustomDemo(e) {

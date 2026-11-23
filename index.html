@@ -99,12 +99,21 @@
 
                 <!-- Barra de Accesorios y Actuadores: Horquillas + Luces + Sonido -->
                 <div class="actuator-controls-bar" aria-label="Control de Horquillas y Accesorios">
-                  <!-- Botones de Horquillas Dedicados -->
+                  <!-- Botones de Horquillas Dedicados con Indicador de Nivel Hidráulico -->
                   <div class="fork-buttons-container" aria-label="Control de Horquillas">
                     <button class="fork-btn fork-up" id="forkUpBtn" type="button" aria-label="Subir horquillas">
                       <span class="fork-btn-icon">▲</span>
                       <span class="fork-btn-label">SUBIR HORQUILLAS</span>
                     </button>
+                    <div class="fork-level-display" id="forkLevelDisplay" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="Nivel estimado: Suelo (0%)">
+                      <div class="fork-level-header">
+                        <span class="fork-level-label">NIVEL</span>
+                        <span class="fork-level-badge" id="forkLevelBadge">0%</span>
+                      </div>
+                      <div class="fork-level-bar" aria-hidden="true">
+                        <div class="fork-level-fill" id="forkLevelFill" style="width: 0%;"></div>
+                      </div>
+                    </div>
                     <button class="fork-btn fork-down" id="forkDownBtn" type="button" aria-label="Bajar horquillas">
                       <span class="fork-btn-icon">▼</span>
                       <span class="fork-btn-label">BAJAR HORQUILLAS</span>
@@ -410,7 +419,10 @@
                   <!-- Pasos y Secuencia -->
                   <div class="demo-editor-steps-col">
                     <div class="d-flex justify-content-between align-items-center mb-1 demo-steps-header">
-                      <label class="form-label small fw-bold mb-0">Pasos de la Secuencia:</label>
+                      <div class="d-flex align-items-center gap-2">
+                        <label class="form-label small fw-bold mb-0">Pasos de la Secuencia:</label>
+                        <span class="badge bg-dark border border-info text-info demo-total-time-badge" id="demoTotalTimeBadge" title="Duración estimada total de la secuencia">⏱️ 0 pasos · 0.0s</span>
+                      </div>
                       <button type="button" class="btn btn-sm btn-outline-cyan py-0 px-2" id="addDemoStepBtn">+ Agregar Paso</button>
                     </div>
                     <div id="demoStepsContainer" class="demo-steps-scroll mb-1"></div>
