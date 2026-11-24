@@ -5499,3 +5499,96 @@ main#main {
   display: none !important;
   visibility: hidden !important;
 }
+
+/* El editor móvil usa el panel como único scroll. La lista de pasos no debe
+   conservar el max-height de escritorio cuando su overflow pasa a visible. */
+@media (max-width: 767px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) {
+    flex: 1 1 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-form,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-steps-col {
+    min-width: 0 !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-scroll {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .step-command {
+    min-width: min(100px, 100%) !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1099px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1023px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) {
+    flex: 1 1 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-form,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+  }
+
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid {
+    grid-template-rows: auto auto !important;
+  }
+}
