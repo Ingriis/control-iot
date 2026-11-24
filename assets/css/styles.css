@@ -6068,3 +6068,34 @@ main#main {
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text { height: 22px !important; min-height: 22px !important; font-size: 8px !important; }
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap .demo-save-btn { min-width: 0 !important; width: min(100%, 220px) !important; }
 }
+/* El scroll queda limitado exclusivamente a la lista de movimientos. */
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoStepsContainer {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--cyan) rgba(13, 23, 37, 0.8) !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoStepsContainer > .demo-step-row {
+  flex: 0 0 auto !important;
+  min-height: 34px !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 767px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoStepsContainer > .demo-step-row {
+    min-height: 54px !important;
+  }
+}
