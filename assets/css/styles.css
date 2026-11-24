@@ -774,8 +774,8 @@ body {
   pointer-events: none;
   text-shadow: 0 0 8px #b9ff35cc, 0 0 16px #b9ff3566;
 }
-.fork-up   { top: 3px; }
-.fork-down { bottom: 3px; }
+.fork-direction-label.fork-up   { top: 3px; }
+.fork-direction-label.fork-down { bottom: 3px; }
 .fork-hint { z-index: 2; align-self: center; color: #b8c9db; font-size: 8px; text-align: center; }
 .fork-joystick.is-disabled { cursor: not-allowed; opacity: .5; }
 
@@ -783,7 +783,6 @@ body {
 .demo-console-title { grid-column: 1 / -1; }
 .demo-control-panel .demo-select { grid-column: 1; }
 .demo-control-panel .action-button { grid-column: 2; }
-.utility-command-buttons { grid-column: 1 / -1; grid-row: 3; }
 
 .demo-control-panel {
   display: grid;
@@ -846,7 +845,7 @@ body {
 .action-button:active:not(:disabled) { transform: translateY(2px); filter: brightness(.92); }
 .action-button:disabled { opacity: .42; cursor: not-allowed; filter: saturate(.6); }
 
-.utility-command-buttons { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.utility-command-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; box-sizing: border-box; }
 .utility-command {
   display: flex;
   min-width: 0;
@@ -904,43 +903,31 @@ body {
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
 }
 
-/* Barra de actuadores (Horquillas + Luces + Sonido) */
+/* Barra de actuadores: Grid Unificado 2x2 (Horquillas Fila 1 + Luces y Sonido Fila 2) */
 .actuator-controls-bar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(6px, 1vh, 10px);
   width: 100%;
-  max-width: 540px;
+  max-width: 520px;
   margin: 6px auto 0 auto;
   box-sizing: border-box;
 }
 
-/* Botones dedicados de Horquillas */
-.fork-buttons-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(6px, 1.2vw, 10px);
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-.fork-btn {
+/* Botones unificados de la cabina */
+.actuator-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-width: 0;
-  gap: clamp(6px, 1vw, 10px);
-  min-height: clamp(38px, 5.5vh, 46px);
-  padding: 6px clamp(8px, 1.2vw, 16px);
+  min-height: clamp(36px, 5vh, 44px);
+  height: clamp(36px, 5vh, 44px);
+  padding: 4px clamp(8px, 1.2vw, 14px);
   font-family: var(--mono);
-  font-size: clamp(10px, 1.15vw, 12px);
+  font-size: clamp(9.5px, 1.1vw, 11.5px);
   font-weight: 800;
-  letter-spacing: 0.9px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   border: 2px solid #2b697c;
   border-radius: 6px;
@@ -954,50 +941,81 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   box-sizing: border-box;
+  position: static;
+  transform: none;
 }
 
-.fork-btn.fork-up {
+.actuator-btn.fork-up-btn {
   border-color: #38ef7d;
   color: #38ef7d;
   box-shadow: 0 3px 0 #050a12, 0 0 10px rgba(56, 239, 125, 0.2);
 }
 
-.fork-btn.fork-down {
+.actuator-btn.fork-down-btn {
   border-color: #ff9f43;
   color: #ff9f43;
   box-shadow: 0 3px 0 #050a12, 0 0 10px rgba(255, 159, 67, 0.2);
 }
 
-.fork-btn:hover:not(:disabled):not(.is-disabled) {
+.actuator-btn.light-command {
+  border-color: #ffe532;
+  color: #ffe532;
+  box-shadow: 0 3px 0 #050a12, 0 0 10px rgba(255, 229, 50, 0.2);
+}
+
+.actuator-btn.sound-command {
+  border-color: #00f1e8;
+  color: #00f1e8;
+  box-shadow: 0 3px 0 #050a12, 0 0 10px rgba(0, 241, 232, 0.2);
+}
+
+.actuator-btn:hover:not(:disabled):not(.is-disabled) {
   filter: brightness(1.25);
   transform: translateY(-1px);
 }
 
-.fork-btn:active:not(:disabled):not(.is-disabled),
-.fork-btn.is-active:not(:disabled):not(.is-disabled) {
+.actuator-btn:active:not(:disabled):not(.is-disabled),
+.actuator-btn.is-active:not(:disabled):not(.is-disabled) {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 #050a12, 0 0 16px currentColor;
+  box-shadow: 0 1px 0 #050a12, 0 0 14px currentColor;
   filter: brightness(1.4);
 }
 
-.fork-btn:disabled,
-.fork-btn.is-disabled {
+.actuator-btn:disabled,
+.actuator-btn.is-disabled {
   opacity: 0.42;
   cursor: not-allowed;
   filter: saturate(0.35);
   box-shadow: none;
 }
 
-.fork-btn-icon {
-  font-size: clamp(11px, 1.4vw, 14px);
+.actuator-btn .fork-btn-icon {
+  font-size: clamp(11px, 1.3vw, 13px);
   line-height: 1;
   flex-shrink: 0;
+  margin-right: 4px;
 }
 
-.fork-btn-label {
+.actuator-btn .fork-btn-label,
+.actuator-btn .utility-label {
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actuator-btn .pixel-icon {
+  width: clamp(18px, 2.6vh, 22px);
+  height: clamp(18px, 2.6vh, 22px);
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.actuator-btn .switch-track {
+  width: clamp(22px, 3vh, 28px);
+  height: clamp(11px, 1.5vh, 14px);
+  flex-shrink: 0;
+  margin-left: 6px;
 }
 
 @media (max-width: 480px) {
@@ -1424,8 +1442,8 @@ main#main {
 .south { bottom: 2px; left: 50%; transform: translateX(-50%); }
 .east  { right: 2px; top: 50%; transform: translateY(-50%); }
 .west  { left: 2px; top: 50%; transform: translateY(-50%); }
-.fork-up   { top: 2px; left: 50%; transform: translateX(-50%); }
-.fork-down { bottom: 2px; left: 50%; transform: translateX(-50%); }
+.fork-direction-label.fork-up   { top: 2px; left: 50%; transform: translateX(-50%); }
+.fork-direction-label.fork-down { bottom: 2px; left: 50%; transform: translateX(-50%); }
 
 /* 4. Panel central: Paro, Semáforo, Encendido y Crucero */
 .primary-controls > .stop-panel {
@@ -2354,12 +2372,10 @@ main#main {
     margin-top: 1px !important;
   }
 
-  /* Actuadores: Horquillas y Accesorios en Móvil */
+  /* Actuadores: Grid Unificado 2x2 en Móvil */
   .actuator-controls-bar {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 6px !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2367,16 +2383,7 @@ main#main {
     padding-bottom: max(2px, env(safe-area-inset-bottom)) !important;
     box-sizing: border-box !important;
   }
-  .fork-buttons-container {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .fork-btn {
+  .actuator-btn {
     width: 100% !important;
     min-width: 0 !important;
     min-height: 38px !important;
@@ -2386,35 +2393,12 @@ main#main {
     padding: 2px 4px !important;
     border-radius: 5px !important;
     box-sizing: border-box !important;
-    position: relative !important;
   }
-
-  /* Botones Luces y Sonido en Móvil */
-  .utility-command-buttons {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .utility-command {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 38px !important;
-    height: 38px !important;
-    font-size: clamp(10.5px, 2.7vw, 12px) !important;
-    font-weight: 800 !important;
-    padding: 2px 6px !important;
-    border-radius: 5px !important;
-    box-sizing: border-box !important;
-  }
-  .utility-command .pixel-icon {
+  .actuator-btn .pixel-icon {
     width: 20px !important;
     height: 20px !important;
   }
-  .utility-command .switch-track {
+  .actuator-btn .switch-track {
     width: 28px !important;
     height: 14px !important;
   }
@@ -3164,7 +3148,7 @@ main#main {
 }
 
 /* 10. Dispositivos móviles en orientación horizontal (Cabina Arcade Gamepad ergonómica) */
-@media (orientation: landscape) and (max-height: 600px) {
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1023px) {
   .app-shell {
     padding-top: max(2px, env(safe-area-inset-top));
     padding-bottom: clamp(34px, 7.5vh, 42px) !important;
@@ -3386,29 +3370,20 @@ main#main {
     height: 5px !important;
   }
 
-  /* Barra unificada compacta en landscape (Horquillas + Luces + Sonido) */
+  /* Barra unificada compacta en landscape (Grid 4 botones en fila horizontal) */
   .actuator-controls-bar {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
     width: 100% !important;
     max-width: 580px !important;
     margin: 1px auto 0 auto !important;
     padding-bottom: max(1px, env(safe-area-inset-bottom)) !important;
     box-sizing: border-box !important;
   }
-  .fork-buttons-container {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 4px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .fork-btn {
+  .actuator-btn {
     width: 100% !important;
     min-width: 0 !important;
     min-height: clamp(22px, 4.8vh, 28px) !important;
@@ -3420,41 +3395,12 @@ main#main {
     border-radius: 4px !important;
     border-width: 1.5px !important;
     box-sizing: border-box !important;
-    position: relative !important;
   }
-  .fork-btn::before {
-    content: '' !important;
-    position: absolute !important;
-    inset: -6px -4px !important;
-    touch-action: manipulation !important;
-  }
-  .utility-command-buttons {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 4px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .utility-command {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: clamp(22px, 4.8vh, 28px) !important;
-    height: clamp(22px, 4.8vh, 28px) !important;
-    padding: 1px 4px !important;
-    font-size: clamp(8px, 1vw, 9.5px) !important;
-    font-weight: 800 !important;
-    gap: 4px !important;
-    border-radius: 4px !important;
-    border-width: 1.5px !important;
-    box-sizing: border-box !important;
-  }
-  .utility-command .pixel-icon {
+  .actuator-btn .pixel-icon {
     width: clamp(14px, 3vh, 18px) !important;
     height: clamp(14px, 3vh, 18px) !important;
   }
-  .utility-command .switch-track {
+  .actuator-btn .switch-track {
     width: clamp(20px, 3.8vh, 24px) !important;
     height: clamp(9px, 1.8vh, 12px) !important;
   }
@@ -4812,45 +4758,15 @@ main#main {
    ============================================================================= */
 @media (min-width: 768px) and (max-width: 1023px) {
   .actuator-controls-bar {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
     width: 100% !important;
     max-width: 520px !important;
     margin: 6px auto 0 auto !important;
     box-sizing: border-box !important;
   }
-  .fork-buttons-container {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .fork-btn {
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    padding: 4px 10px !important;
-    font-size: 10.5px !important;
-    border-radius: 5px !important;
-    box-sizing: border-box !important;
-  }
-  .utility-command-buttons {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .utility-command {
+  .actuator-btn {
     width: 100% !important;
     min-width: 0 !important;
     height: 40px !important;
@@ -4868,7 +4784,7 @@ main#main {
 /* =============================================================================
    12. ARQUITECTURA DE RESPONSIVIDAD: PC / ESCRITORIO (>= 1024px) - FASE 3
    ============================================================================= */
-@media (min-width: 1024px) and (min-height: 601px) {
+@media (min-width: 1024px) {
   :root {
     --app-shell-max-w: 1260px;
     --app-shell-radius: 16px;
@@ -4981,9 +4897,9 @@ main#main {
 
   #controlView .primary-controls > .joystick-wrap,
   #controlView .primary-controls > .fork-control {
-    flex: 0 0 165px !important;
-    width: 165px !important;
-    height: 165px !important;
+    flex: 0 1 clamp(115px, 21vh, 165px) !important;
+    width: clamp(115px, 21vh, 165px) !important;
+    height: clamp(115px, 21vh, 165px) !important;
     max-width: 165px !important;
     max-height: 165px !important;
     aspect-ratio: 1 !important;
@@ -4991,8 +4907,8 @@ main#main {
   }
   #controlView .joy-base,
   #controlView .fork-joy-base {
-    width: 135px !important;
-    height: 135px !important;
+    width: clamp(95px, 17vh, 135px) !important;
+    height: clamp(95px, 17vh, 135px) !important;
     max-width: 135px !important;
     max-height: 135px !important;
     filter: drop-shadow(0 0 12px rgba(185, 255, 53, 0.35)) !important;
@@ -5103,8 +5019,8 @@ main#main {
 
   /* Paro de Emergencia prominente estilo seta industrial */
   #controlView .stop-bezel {
-    width: 105px !important;
-    height: 105px !important;
+    width: clamp(75px, 13vh, 105px) !important;
+    height: clamp(75px, 13vh, 105px) !important;
   }
   #controlView .stop-button {
     font-size: 14.5px !important;
@@ -5119,80 +5035,54 @@ main#main {
     gap: 6px !important;
   }
 
-  /* Barra Unificada de Actuadores y Accesorios en PC (Horquillas + Luces + Sonido) */
+  /* Barra Unificada de Actuadores y Accesorios en PC (Grid 2x2: Horquillas Arriba + Luces y Sonido Abajo) */
   #controlView .actuator-controls-bar {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(4px, 0.8vh, 8px) clamp(8px, 1.2vw, 12px) !important;
     width: 100% !important;
-    max-width: 540px !important;
-    margin: 6px auto 0 auto !important;
+    max-width: 520px !important;
+    margin: 4px auto 0 auto !important;
     flex: 0 0 auto !important;
     box-sizing: border-box !important;
   }
 
-  #controlView .fork-buttons-container {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-
-  #controlView .fork-btn {
+  #controlView .actuator-btn {
     width: 100% !important;
     min-width: 0 !important;
-    min-height: 42px !important;
-    height: 42px !important;
-    padding: 6px 14px !important;
-    font-size: 11.5px !important;
+    min-height: clamp(34px, 4.6vh, 42px) !important;
+    height: clamp(34px, 4.6vh, 42px) !important;
+    padding: 4px clamp(6px, 1vw, 12px) !important;
+    font-size: clamp(9.5px, 1.05vw, 11.5px) !important;
     font-weight: 800 !important;
     letter-spacing: 0.8px !important;
     border-radius: 6px !important;
     border-width: 2px !important;
-    box-shadow: 0 4px 0 #050a12, 0 0 14px rgba(34, 227, 237, 0.16) !important;
     box-sizing: border-box !important;
   }
 
-  #controlView .fork-btn.fork-up {
+  #controlView .actuator-btn.fork-up-btn {
     border-color: #38ef7d !important;
     color: #38ef7d !important;
     box-shadow: 0 4px 0 #050a12, 0 0 12px rgba(56, 239, 125, 0.25) !important;
   }
 
-  #controlView .fork-btn.fork-down {
+  #controlView .actuator-btn.fork-down-btn {
     border-color: #ff9f43 !important;
     color: #ff9f43 !important;
     box-shadow: 0 4px 0 #050a12, 0 0 12px rgba(255, 159, 67, 0.25) !important;
   }
 
-  #controlView .utility-command-buttons {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
+  #controlView .actuator-btn.light-command {
+    border-color: #ffe532 !important;
+    color: #ffe532 !important;
+    box-shadow: 0 4px 0 #050a12, 0 0 12px rgba(255, 229, 50, 0.25) !important;
   }
 
-  #controlView .utility-command {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 42px !important;
-    height: 42px !important;
-    padding: 6px 16px !important;
-    font-size: 11.5px !important;
-    font-weight: 800 !important;
-    gap: 8px !important;
-    border-radius: 6px !important;
-    border-width: 2px !important;
-    box-shadow: 0 4px 0 #050a12, 0 0 14px currentColor !important;
-    box-sizing: border-box !important;
+  #controlView .actuator-btn.sound-command {
+    border-color: #00f1e8 !important;
+    color: #00f1e8 !important;
+    box-shadow: 0 4px 0 #050a12, 0 0 12px rgba(0, 241, 232, 0.25) !important;
   }
 
   /* Panel DEMO Lateral */
@@ -5240,11 +5130,11 @@ main#main {
   #controlView .direction-label.west::after  { content: ' A'; font-size: 9px; opacity: 0.85; }
   #controlView .fork-direction-label.fork-up::after   { content: ' Q'; font-size: 9px; opacity: 0.85; }
   #controlView .fork-direction-label.fork-down::after { content: ' E'; font-size: 9px; opacity: 0.85; }
-  #controlView .fork-btn.fork-up .fork-btn-label::after   { content: ' [Q]'; font-size: 9.5px; opacity: 0.8; margin-left: 2px; }
-  #controlView .fork-btn.fork-down .fork-btn-label::after { content: ' [E]'; font-size: 9.5px; opacity: 0.8; margin-left: 2px; }
+  #controlView .actuator-btn.fork-up-btn .fork-btn-label::after   { content: ' [Q]'; font-size: 9.5px; opacity: 0.8; margin-left: 2px; }
+  #controlView .actuator-btn.fork-down-btn .fork-btn-label::after { content: ' [E]'; font-size: 9.5px; opacity: 0.8; margin-left: 2px; }
   #controlView .stop-caption::after { content: ' · [ESPACIO]'; font-size: 8px; color: var(--red); margin-left: 3px; }
-  #controlView .light-command span:first-of-type + span::after { content: ' [L]'; font-size: 9.5px; opacity: 0.8; }
-  #controlView .sound-command span:first-of-type + span::after { content: ' [K]'; font-size: 9.5px; opacity: 0.8; }
+  #controlView .actuator-btn.light-command .utility-label::after  { content: ' [L]'; font-size: 9.5px; opacity: 0.8; margin-left: 2px; }
+  #controlView .actuator-btn.sound-command .utility-label::after  { content: ' [K]'; font-size: 9.5px; opacity: 0.8; margin-left: 2px; }
 
   /* -------------------------------------------------------------
      MÓDULO 2: MONITOREO EN PC (Centro de Telemetría Dual - Cero Scroll)

@@ -14,7 +14,7 @@
     <link rel="preload" as="image" href="./assets/img/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v66-responsive-grid-perfect" />
+    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v68-definitive-2x2-grid" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -97,33 +97,29 @@
                   </div>
                 </div>
 
-                <!-- Barra de Accesorios y Actuadores: Horquillas + Luces + Sonido -->
+                <!-- Barra de Accesorios y Actuadores: Horquillas + Luces + Sonido (Grid Unificado 2x2) -->
                 <div class="actuator-controls-bar" aria-label="Control de Horquillas y Accesorios">
-                  <!-- Botones de Horquillas Dedicados -->
-                  <div class="fork-buttons-container" aria-label="Control de Horquillas">
-                    <button class="fork-btn fork-up" id="forkUpBtn" type="button" aria-label="Subir horquillas">
-                      <span class="fork-btn-icon">▲</span>
-                      <span class="fork-btn-label">SUBIR HORQUILLAS</span>
-                    </button>
-                    <button class="fork-btn fork-down" id="forkDownBtn" type="button" aria-label="Bajar horquillas">
-                      <span class="fork-btn-icon">▼</span>
-                      <span class="fork-btn-label">BAJAR HORQUILLAS</span>
-                    </button>
-                  </div>
+                  <!-- Fila 1: Horquillas -->
+                  <button class="actuator-btn fork-btn fork-up-btn" id="forkUpBtn" type="button" aria-label="Subir horquillas">
+                    <span class="fork-btn-icon">▲</span>
+                    <span class="fork-btn-label">SUBIR HORQUILLAS</span>
+                  </button>
+                  <button class="actuator-btn fork-btn fork-down-btn" id="forkDownBtn" type="button" aria-label="Bajar horquillas">
+                    <span class="fork-btn-icon">▼</span>
+                    <span class="fork-btn-label">BAJAR HORQUILLAS</span>
+                  </button>
 
-                  <!-- Botones de Luces y Sonido -->
-                  <div class="utility-command-buttons" aria-label="Luces y sonido">
-                    <button class="utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces" aria-pressed="true" disabled>
-                      <span class="pixel-icon bulb-pixel-icon" aria-hidden="true"></span>
-                      <span>LUCES</span>
-                      <span class="switch-track" aria-hidden="true"></span>
-                    </button>
-                    <button class="utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido" aria-pressed="true" disabled>
-                      <span class="pixel-icon speaker-pixel-icon" aria-hidden="true"></span>
-                      <span>SONIDO</span>
-                      <span class="switch-track" aria-hidden="true"></span>
-                    </button>
-                  </div>
+                  <!-- Fila 2: Luces y Sonido -->
+                  <button class="actuator-btn utility-command light-command" id="lightsButton" type="button" aria-label="Interruptor de luces" aria-pressed="true" disabled>
+                    <span class="pixel-icon bulb-pixel-icon" aria-hidden="true"></span>
+                    <span class="utility-label">LUCES</span>
+                    <span class="switch-track" aria-hidden="true"></span>
+                  </button>
+                  <button class="actuator-btn utility-command sound-command" id="soundButton" type="button" aria-label="Interruptor de sonido" aria-pressed="true" disabled>
+                    <span class="pixel-icon speaker-pixel-icon" aria-hidden="true"></span>
+                    <span class="utility-label">SONIDO</span>
+                    <span class="switch-track" aria-hidden="true"></span>
+                  </button>
                 </div>
                 <span class="visually-hidden" aria-live="polite" id="forkJoystickStatus"></span>
               </div>
@@ -744,6 +740,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./assets/js/app.js?v=20261124-v66-responsive-grid-perfect"></script>
+    <script type="module" src="./assets/js/app.js?v=20261124-v68-definitive-2x2-grid"></script>
   </body>
 </html>
