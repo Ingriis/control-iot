@@ -5924,3 +5924,147 @@ main#main {
     min-width: 0 !important;
   }
 }
+/* Editor demos: metadatos en dos columnas y acciones destacadas al final. */
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  grid-template-areas: "meta" "steps" "actions" !important;
+  gap: 8px !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px 16px !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col > .mb-2 {
+  align-self: stretch !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-steps-col {
+  min-height: 0 !important;
+  border: 1px solid rgba(34, 227, 237, 0.24) !important;
+  border-radius: 8px !important;
+  background: rgba(7, 17, 29, 0.55) !important;
+  padding: 8px 10px !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header {
+  margin-bottom: 7px !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-scroll {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(6, minmax(34px, 1fr)) !important;
+  grid-auto-flow: column !important;
+  gap: 5px 8px !important;
+  overflow: hidden !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+  display: grid !important;
+  grid-template-columns: auto auto minmax(70px, 1fr) minmax(76px, 0.4fr) minmax(94px, 0.45fr) auto !important;
+  grid-template-rows: minmax(26px, 1fr) !important;
+  grid-template-areas: "badge reorder command duration pause remove" !important;
+  align-items: center !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 3px 5px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .step-command {
+  grid-area: command !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  font-size: clamp(9px, 0.85vw, 12px) !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-badge { grid-area: badge !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-reorder { grid-area: reorder !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-remove-btn {
+  grid-area: remove !important;
+  min-height: 28px !important;
+  height: 28px !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-input-duration {
+  grid-area: duration !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-input-pause {
+  grid-area: pause !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .form-control,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text {
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 2px 5px !important;
+  font-size: clamp(9px, 0.75vw, 11px) !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text small { display: none !important; }
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap {
+  grid-area: actions !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(34, 227, 237, 0.22) !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap .demo-save-btn {
+  flex: 0 0 auto !important;
+  min-width: 190px !important;
+  min-height: 42px !important;
+  padding: 7px 18px !important;
+  border: 1px solid rgba(34, 227, 237, 0.8) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #10b9c8, #087a9e) !important;
+  box-shadow: 0 5px 18px rgba(0, 205, 220, 0.25) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.2px !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap .demo-save-btn:hover {
+  filter: brightness(1.12) !important;
+  transform: translateY(-1px) !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap #deleteDemoBtn {
+  flex: 0 0 auto !important;
+  min-height: 38px !important;
+}
+
+@media (max-width: 767px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid {
+    grid-template-areas: "meta" "steps" "actions" !important;
+    gap: 5px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col { gap: 5px 8px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-steps-col { padding: 6px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-scroll {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: minmax(54px, 1fr) !important;
+    grid-auto-flow: row !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+    grid-template-columns: 24px 32px minmax(0, 1fr) 22px !important;
+    grid-template-rows: 24px 22px !important;
+    grid-template-areas: "badge reorder command remove" "duration duration pause pause" !important;
+    gap: 2px 3px !important;
+    padding: 2px 3px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .step-command { height: 24px !important; min-height: 24px !important; font-size: 9px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .form-control,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text { height: 22px !important; min-height: 22px !important; font-size: 8px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap .demo-save-btn { min-width: 0 !important; width: min(100%, 220px) !important; }
+}
