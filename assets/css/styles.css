@@ -6998,7 +6998,7 @@ main#main {
 }
 
 /* Editor de demos en teléfono vertical: controles completos y lista de pasos desplazable. */
-@media (orientation: portrait) and (max-width: 600px) {
+@media (orientation: portrait) and (max-width: 600px), (orientation: portrait) and (pointer: coarse) {
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) {
     flex:1 1 0 !important;
     height:100% !important;
