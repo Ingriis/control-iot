@@ -479,7 +479,10 @@ export class AdminModule {
     // Cargar datos según la sección
     if (subtabId === 'dashboard') this.loadDashboardMetrics();
     else if (subtabId === 'models') this.loadModels();
-    else if (subtabId === 'units') this.loadUnits();
+    else if (subtabId === 'units') {
+      this.loadModels();
+      this.loadUnits();
+    }
     else if (subtabId === 'clients') this.loadClients();
     else if (subtabId === 'audit') this.loadAuditLogs();
     else if (subtabId === 'myVehicles') this.loadMyVehicles();
@@ -577,6 +580,32 @@ export class AdminModule {
   // ---------------------------------------------------------------------------
   // Catálogo de Modelos
   // ---------------------------------------------------------------------------
+  updateUnitModelOptions(models) {
+    const select = document.getElementById('unitModelSelect');
+    if (!select) return;
+
+    const previousValue = select.value;
+    const activeModels = (models || []).filter((model) => model.activo);
+    select.replaceChildren();
+
+    if (!activeModels.length) {
+      const option = new Option('Primero registra un modelo activo', '');
+      option.disabled = true;
+      option.selected = true;
+      select.add(option);
+      select.disabled = true;
+      return;
+    }
+
+    select.disabled = false;
+    activeModels.forEach((model) => {
+      select.add(new Option(`${model.nombre} (#${model.id_modelo})`, model.id_modelo));
+    });
+    if (activeModels.some((model) => String(model.id_modelo) === previousValue)) {
+      select.value = previousValue;
+    }
+  }
+
   async loadModels() {
     const tableBody = document.getElementById('modelsTableBody');
     if (!tableBody) return;
@@ -585,6 +614,7 @@ export class AdminModule {
     try {
       const models = await this.api.getModels();
       this.modelsById = new Map((models || []).map((model) => [String(model.id_modelo), model]));
+      this.updateUnitModelOptions(models);
       if (!models.length) {
         tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin modelos registrados.</td></tr>';
         return;
