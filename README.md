@@ -61,7 +61,7 @@ flowchart TD
 
 ### Funcionamiento actualizado de los módulos
 
-- **Control manual:** los joysticks de avance/retroceso y dirección funcionan de forma independiente. La interfaz conserva la animación mientras se mantiene pulsado el control y detiene la acción al soltarlo. Las horquillas, luces y sonido mantienen sus controles separados.
+- **Control manual:** los joysticks de avance/retroceso y dirección funcionan de forma independiente. En computadora, las flechas o `WASD` manejan las palancas sin tener que enfocarlas; mantener una tecla de avance junto con una de dirección produce un giro combinado. La interfaz conserva la animación mientras se mantiene pulsado el control y detiene la acción al soltarlo. Las horquillas, luces y sonido mantienen sus controles separados.
 - **Comandos combinados para demos:** el editor incluye `AVANZAR + IZQUIERDA`, `AVANZAR + DERECHA`, `RETROCEDER + IZQUIERDA` y `RETROCEDER + DERECHA`. Se guardan como comandos propios del vehículo para que la demo ejecute la combinación seleccionada.
 - **Editor de demos:** permite crear demos y modificar las existentes. Se pueden cambiar el comando, la duración, la pausa y el orden de cada paso, además de agregar o quitar pasos. Los movimientos manuales no se incorporan a la secuencia de una demo.
 - **Duraciones:** los pasos de movimiento aceptan de `200` a `10000 ms`, en incrementos de `100 ms`. El comando `DETENER` también acepta `0 ms`. La pausa entre pasos acepta de `0` a `5000 ms`.

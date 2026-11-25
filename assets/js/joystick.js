@@ -7,7 +7,7 @@ const DIRECTIONS = {
   d: 'right', D: 'right',
 };
 
-export function initVerticalStick(element, knob, { onDirection, onRelease, canMove }) {
+export function initVerticalStick(element, knob, { onDirection, onRelease, canMove, keyboard = true }) {
   let pointerId = null;
   let current = null;
   const base = knob.closest('.joy-base');
@@ -15,6 +15,16 @@ export function initVerticalStick(element, knob, { onDirection, onRelease, canMo
   const center = () => {
     knob.style.transform = 'translate(-50%, -50%)';
     if (base) base.dataset.direction = 'neutral';
+  };
+
+  const setKeyboardDirection = (name) => {
+    if (!name) {
+      center();
+      return;
+    }
+    if (base) base.dataset.direction = name;
+    const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().height * 0.38)));
+    knob.style.transform = `translate(-50%, calc(-50% + ${name === 'forward' ? -maxOffset : maxOffset}px))`;
   };
 
   const release = () => {
@@ -63,39 +73,38 @@ export function initVerticalStick(element, knob, { onDirection, onRelease, canMo
   element.addEventListener('pointercancel', (event) => { if (event.pointerId === pointerId) release(); });
   element.addEventListener('lostpointercapture', () => { if (pointerId !== null) release(); });
 
-  const V_KEYS = { ArrowUp: 'forward', w: 'forward', W: 'forward', ArrowDown: 'backward', s: 'backward', S: 'backward' };
-
-  element.addEventListener('keydown', (event) => {
-    const name = V_KEYS[event.key];
-    if (!name || event.repeat) return;
-    event.preventDefault();
-    if (!canMove(name)) {
-      if (current) onRelease();
-      current = null;
-      center();
-      return;
-    }
-    current = name;
-    if (base) base.dataset.direction = name;
-    const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().height * 0.38)));
-    knob.style.transform = `translate(-50%, calc(-50% + ${name === 'forward' ? -maxOffset : maxOffset}px))`;
-    onDirection(name);
-  });
-
-  element.addEventListener('keyup', (event) => {
-    if (V_KEYS[event.key] && current) {
+  if (keyboard) {
+    const V_KEYS = { ArrowUp: 'forward', w: 'forward', W: 'forward', ArrowDown: 'backward', s: 'backward', S: 'backward' };
+    element.addEventListener('keydown', (event) => {
+      const name = V_KEYS[event.key];
+      if (!name || event.repeat) return;
       event.preventDefault();
-      current = null;
-      center();
-      onRelease();
-    }
-  });
+      if (!canMove(name)) {
+        if (current) onRelease();
+        current = null;
+        center();
+        return;
+      }
+      current = name;
+      setKeyboardDirection(name);
+      onDirection(name);
+    });
+
+    element.addEventListener('keyup', (event) => {
+      if (V_KEYS[event.key] && current) {
+        event.preventDefault();
+        current = null;
+        center();
+        onRelease();
+      }
+    });
+  }
 
   element.addEventListener('blur', () => { if (current) { current = null; center(); onRelease(); } });
-  return { reset: () => { current = null; pointerId = null; center(); } };
+  return { reset: () => { current = null; pointerId = null; center(); }, setKeyboardDirection };
 }
 
-export function initHorizontalStick(element, knob, { onDirection, onRelease, canMove }) {
+export function initHorizontalStick(element, knob, { onDirection, onRelease, canMove, keyboard = true }) {
   let pointerId = null;
   let current = null;
   const base = knob.closest('.joy-base');
@@ -104,6 +113,17 @@ export function initHorizontalStick(element, knob, { onDirection, onRelease, can
     knob.style.transform = 'translate(-50%, -50%)';
     knob.style.setProperty('--joy-tilt', '0deg');
     if (base) base.dataset.direction = 'neutral';
+  };
+
+  const setKeyboardDirection = (name) => {
+    if (!name) {
+      center();
+      return;
+    }
+    if (base) base.dataset.direction = name;
+    const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().width * 0.38)));
+    knob.style.transform = `translate(calc(-50% + ${name === 'right' ? maxOffset : -maxOffset}px), -50%)`;
+    knob.style.setProperty('--joy-tilt', name === 'left' ? '22deg' : '-22deg');
   };
 
   const release = () => {
@@ -155,37 +175,35 @@ export function initHorizontalStick(element, knob, { onDirection, onRelease, can
   element.addEventListener('pointercancel', (event) => { if (event.pointerId === pointerId) release(); });
   element.addEventListener('lostpointercapture', () => { if (pointerId !== null) release(); });
 
-  const H_KEYS = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
-
-  element.addEventListener('keydown', (event) => {
-    const name = H_KEYS[event.key];
-    if (!name || event.repeat) return;
-    event.preventDefault();
-    if (!canMove(name)) {
-      if (current) onRelease();
-      current = null;
-      center();
-      return;
-    }
-    current = name;
-    if (base) base.dataset.direction = name;
-    const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().width * 0.38)));
-    knob.style.transform = `translate(calc(-50% + ${name === 'right' ? maxOffset : -maxOffset}px), -50%)`;
-    knob.style.setProperty('--joy-tilt', name === 'left' ? '22deg' : '-22deg');
-    onDirection(name);
-  });
-
-  element.addEventListener('keyup', (event) => {
-    if (H_KEYS[event.key] && current) {
+  if (keyboard) {
+    const H_KEYS = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
+    element.addEventListener('keydown', (event) => {
+      const name = H_KEYS[event.key];
+      if (!name || event.repeat) return;
       event.preventDefault();
-      current = null;
-      center();
-      onRelease();
-    }
-  });
+      if (!canMove(name)) {
+        if (current) onRelease();
+        current = null;
+        center();
+        return;
+      }
+      current = name;
+      setKeyboardDirection(name);
+      onDirection(name);
+    });
+
+    element.addEventListener('keyup', (event) => {
+      if (H_KEYS[event.key] && current) {
+        event.preventDefault();
+        current = null;
+        center();
+        onRelease();
+      }
+    });
+  }
 
   element.addEventListener('blur', () => { if (current) { current = null; center(); onRelease(); } });
-  return { reset: () => { current = null; pointerId = null; center(); } };
+  return { reset: () => { current = null; pointerId = null; center(); }, setKeyboardDirection };
 }
 
 export function initJoystick(element, knob, { onDirection, onRelease, canMove }) {
