@@ -481,11 +481,14 @@ export class AdminModule {
 
     try {
       const res = await this.api.login(userField.value.trim(), passField.value);
-      if (res && res.access_token) {
-        setAuthToken(res.access_token);
-        sessionStorage.setItem('iot_token', res.access_token);
-        localStorage.setItem('iot_token', res.access_token);
+      if (!res?.access_token || !res?.user) {
+        const error = new Error('Usuario o contraseña incorrectos. Revisa tus datos e inténtalo de nuevo.');
+        error.status = 401;
+        throw error;
       }
+      setAuthToken(res.access_token);
+      sessionStorage.setItem('iot_token', res.access_token);
+      localStorage.setItem('iot_token', res.access_token);
       this.setCurrentUser(res.user);
 
       // Cerrar modal bootstrap si existe
@@ -496,9 +499,17 @@ export class AdminModule {
       }
     } catch (err) {
       if (alertBox) {
-        alertBox.textContent = err.message || 'Error al iniciar sesión.';
+        const authRejected = [400, 401, 403, 422].includes(err.status);
+        alertBox.textContent = authRejected
+          ? 'Usuario o contraseña incorrectos. Revisa tus datos e inténtalo de nuevo.'
+          : (err.message || 'No se pudo iniciar sesión. Inténtalo de nuevo.');
         alertBox.classList.remove('d-none');
       }
+      const modalEl = document.getElementById('loginModal');
+      if (modalEl && !modalEl.classList.contains('show') && window.bootstrap) {
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+      }
+      if (alertBox) window.setTimeout(() => alertBox.focus({ preventScroll: true }), 120);
     }
   }
 
