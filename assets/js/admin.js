@@ -1287,6 +1287,24 @@ export class AdminModule {
             const selected = String(id) === currentVId ? 'selected' : '';
             return `<option value="${id}" ${selected}>#${id} - ${name} (${model})${owner}</option>`;
           }).join('');
+
+          if (role === 'ADMINISTRADOR') {
+            const activeVehicles = vehicles.filter((vehicle) => Number(vehicle.activo) !== 0);
+            const setups = await Promise.allSettled(activeVehicles.map(async (vehicle) => {
+              const vehicleId = vehicle.id_vehiculo;
+              const commands = await this.api.getCommands(vehicleId);
+              return this.ensureDemoComboCommands(vehicleId, commands);
+            }));
+            const createdCount = setups.reduce((sum, setup) =>
+              sum + (setup.status === 'fulfilled' ? setup.value.created : 0), 0);
+            const failures = setups.filter((setup) => setup.status === 'rejected');
+            if (createdCount) {
+              this.notify(`Se añadieron los cuatro giros combinados a ${createdCount} vehículo(s). Los compradores ya podrán usarlos en sus demos.`, 'success', 5000);
+            }
+            if (failures.length) {
+              this.notify(`No se pudieron preparar los giros combinados en ${failures.length} vehículo(s). Revisa si los códigos 14–17 ya están ocupados.`, 'warning', 6000);
+            }
+          }
         }
       } catch (err) {
         console.error('Error cargando vehículos para demo:', err);
