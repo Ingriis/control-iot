@@ -747,10 +747,10 @@ export class AdminModule {
             <td>
               <div class="d-flex gap-1 flex-wrap">
                 <button class="btn btn-sm btn-outline-cyan" onclick="window.adminModule.openAssignModal(${u.id_vehiculo}, '${safeName}', ${u.propietario_id || 'null'}, '${u.estado_comercial}')" title="Editar nombre y asignación">
-                  ✏️ Editar
+                  Editar
                 </button>
                 <button class="btn btn-sm btn-outline-warning" onclick="window.adminModule.openVehicleCommandsModal(${u.id_vehiculo}, '${safeName}')" title="Configurar o quitar movimientos y comandos">
-                  🎮 Comandos
+                  Comandos
                 </button>
               </div>
             </td>
