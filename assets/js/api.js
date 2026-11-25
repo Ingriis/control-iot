@@ -121,6 +121,10 @@ export function createApi(config) {
       '/vehicles/' + encodeURIComponent(vId) + '/commands/' + encodeURIComponent(commandId) + '/update',
       { method: 'POST', body: JSON.stringify(payload) },
     ),
+    setCommandEnabled: (vId, commandId, activo) => request(
+      `/vehicles/${encodeURIComponent(vId)}/commands/${encodeURIComponent(commandId)}/enabled`,
+      { method: 'POST', body: JSON.stringify({ activo }) },
+    ),
     getDemos: (vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/demos`),
     getVehicleState: (signal, vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/state`, { signal }),
     getMovementHistory: (signal, vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/history`, { signal }),

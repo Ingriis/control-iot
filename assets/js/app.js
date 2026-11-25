@@ -3,7 +3,7 @@ import { loadConfig, validateConfig } from './config.js';
 import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js?v=20261125-global-keyboard-controls';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
-import { AdminModule } from './admin.js?v=20261125-demo-active-toggle';
+import { AdminModule } from './admin.js?v=20261125-user-command-toggle';
 import {
   triggerHaptic,
   playBip,
@@ -240,8 +240,8 @@ function updateControls() {
     const south = wrap?.querySelector('.direction-label.south');
     north?.classList.toggle('is-disabled', forwardDisabledByAdmin);
     south?.classList.toggle('is-disabled', backwardDisabledByAdmin);
-    if (north) north.title = forwardDisabledByAdmin ? 'Avanzar desactivado por el administrador' : 'Avanzar';
-    if (south) south.title = backwardDisabledByAdmin ? 'Retroceder desactivado por el administrador' : 'Retroceder';
+    if (north) north.title = forwardDisabledByAdmin ? 'Avanzar desactivado para esta unidad' : 'Avanzar';
+    if (south) south.title = backwardDisabledByAdmin ? 'Retroceder desactivado para esta unidad' : 'Retroceder';
     // Mantén la palanca visualmente en la dirección elegida mientras se confirma
     // cada renovación del movimiento sostenido.
     if (driveDisabled && !commandPending) driveJoystick?.reset();
@@ -256,8 +256,8 @@ function updateControls() {
     const east = wrap?.querySelector('.direction-label.east');
     west?.classList.toggle('is-disabled', leftDisabledByAdmin);
     east?.classList.toggle('is-disabled', rightDisabledByAdmin);
-    if (west) west.title = leftDisabledByAdmin ? 'Girar a la izquierda desactivado por el administrador' : 'Girar a la izquierda';
-    if (east) east.title = rightDisabledByAdmin ? 'Girar a la derecha desactivado por el administrador' : 'Girar a la derecha';
+    if (west) west.title = leftDisabledByAdmin ? 'Girar a la izquierda desactivado para esta unidad' : 'Girar a la izquierda';
+    if (east) east.title = rightDisabledByAdmin ? 'Girar a la derecha desactivado para esta unidad' : 'Girar a la derecha';
     // Una solicitud pendiente no significa que el usuario haya soltado la palanca.
     if (steerDisabled && !commandPending) steerJoystick?.reset();
   }
@@ -280,7 +280,7 @@ function updateControls() {
     forkUpBtn.classList.toggle('is-disabled', forkUpDisabled);
     forkUpBtn.setAttribute('aria-disabled', String(forkUpDisabled));
     forkUpBtn.title = disabledList.includes(names.forkUp)
-      ? 'SUBIR HORQUILLAS deshabilitado por el Administrador.'
+      ? 'SUBIR HORQUILLAS está desactivado para esta unidad.'
       : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : 'Mantén presionado para subir horquillas [Q]');
   }
   if (forkDownBtn) {
@@ -288,12 +288,12 @@ function updateControls() {
     forkDownBtn.classList.toggle('is-disabled', forkDownDisabled);
     forkDownBtn.setAttribute('aria-disabled', String(forkDownDisabled));
     forkDownBtn.title = disabledList.includes(names.forkDown)
-      ? 'BAJAR HORQUILLAS deshabilitado por el Administrador.'
+      ? 'BAJAR HORQUILLAS está desactivado para esta unidad.'
       : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : 'Mantén presionado para bajar horquillas [E]');
   }
 
   if (disabledList.includes(names.forkUp) || disabledList.includes(names.forkDown)) {
-    if ($('forkJoystickStatus')) $('forkJoystickStatus').textContent = 'Horquillas deshabilitadas por Administrador';
+    if ($('forkJoystickStatus')) $('forkJoystickStatus').textContent = 'Horquillas desactivadas para esta unidad';
   }
 
   $('powerButton').disabled = !guestCanControl || !apiReady || !powerCmd || demoRunning || commandPending;
@@ -305,13 +305,13 @@ function updateControls() {
   const lightsDisabledByAdmin = disabledList.includes('LUCES');
   $('lightsButton').disabled = !guestCanControl || !powered || !apiReady || !activeCommandByName('LUCES') || demoRunning || commandPending;
   $('lightsButton').title = lightsDisabledByAdmin
-    ? 'LUCES deshabilitadas para esta unidad por el Administrador.'
+    ? 'LUCES desactivadas para esta unidad.'
     : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar las luces.' : '');
 
   const soundDisabledByAdmin = disabledList.includes('SONIDO');
   $('soundButton').disabled = !guestCanControl || !powered || !apiReady || !activeCommandByName('SONIDO') || demoRunning || commandPending;
   $('soundButton').title = soundDisabledByAdmin
-    ? 'SONIDO deshabilitado para esta unidad por el Administrador.'
+    ? 'SONIDO desactivado para esta unidad.'
     : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar el sonido.' : '');
 
   $('runDemoButton').disabled = !guestCanControl || !powered || !apiReady || !demos.length || ! $('demoSelect').value || demoRunning || commandPending;
@@ -1033,8 +1033,8 @@ function handleForkDirection(direction) {
     const vId = config.vehicleId || '1';
     const disabled = getDisabledCommandsForVehicle(vId);
     if (disabled.includes(commandName)) {
-      setAction('Movimiento bloqueado', `Las horquillas están deshabilitadas para la unidad #${vId} por el Administrador.`);
-      $('forkJoystickStatus').textContent = 'Horquillas deshabilitadas por Administrador';
+      setAction('Movimiento bloqueado', `Las horquillas están desactivadas para la unidad #${vId}.`);
+      $('forkJoystickStatus').textContent = 'Horquillas desactivadas para esta unidad';
     } else {
       setAction('Comando no disponible', `El catálogo no contiene ${commandName} activo.`);
       $('forkJoystickStatus').textContent = 'Comando de horquillas no disponible';
@@ -1198,7 +1198,7 @@ async function boot() {
       if (disabled.includes(cmdName)) {
         playBip(220, 0.1);
         triggerHaptic('stop');
-        setAction('Movimiento bloqueado', `${cmdName.replace('_', ' ')} deshabilitado para Unidad #${vId} por el Administrador.`);
+        setAction('Movimiento bloqueado', `${cmdName.replace('_', ' ')} está desactivado para la unidad #${vId}.`);
         return;
       }
       if (!apiReady || demoRunning || commandPending) return;

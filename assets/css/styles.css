@@ -28,6 +28,42 @@
   --table-font-size: clamp(9px, 0.95vw, 12.5px);
 }
 
+/* Estado de demo: visible, adaptable y separado de los campos del formulario. */
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoActiveField:not(.d-none) {
+  grid-column: 1 / -1 !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(0, 220, 240, .35) !important;
+  border-radius: 8px !important;
+  background: rgba(0, 220, 240, .06) !important;
+  box-sizing: border-box !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoActiveField .form-check {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoActiveField #demoActive {
+  flex: 0 0 auto !important;
+  width: 2.5em !important;
+  height: 1.25em !important;
+  margin: 0 !important;
+}
+
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoActiveField .form-check-label {
+  min-width: 0 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.35 !important;
+}
+
 * { box-sizing: border-box; }
 button, input, select, textarea { font-family: var(--sans); }
 

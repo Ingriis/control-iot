@@ -850,6 +850,25 @@ export class AdminModule {
   // Gestión de Movimientos y Comandos por Unidad (Administrador)
   // ---------------------------------------------------------------------------
   async openVehicleCommandsModal(vehicleId, unitName) {
+    const role = (this.currentUser?.rol || '').toUpperCase();
+    if (role !== 'ADMINISTRADOR' && role !== 'USUARIO') {
+      this.notify('Inicia sesión para configurar los comandos de un vehículo.', 'warning');
+      return;
+    }
+
+    if (role === 'USUARIO') {
+      try {
+        const myVehicles = await this.api.getMyVehicles();
+        if (!myVehicles.some((vehicle) => String(vehicle.id_vehiculo) === String(vehicleId))) {
+          this.notify('Solo puedes cambiar los comandos de vehículos asignados a tu cuenta.', 'error');
+          return;
+        }
+      } catch (err) {
+        this.notify(`No se pudo verificar tu vehículo: ${err.message}`, 'error', 5000);
+        return;
+      }
+    }
+
     const unitIdInput = document.getElementById('vehicleCommandsUnitId');
     const subtitle = document.getElementById('vehicleCommandsSubtitle');
     const listContainer = document.getElementById('vehicleCommandsList');
@@ -857,6 +876,17 @@ export class AdminModule {
 
     unitIdInput.value = vehicleId;
     if (subtitle) subtitle.textContent = `Unidad #${vehicleId} · ${unitName || 'Vehículo'}`;
+    document.getElementById('vehicleCommandsHelpTitle').textContent = role === 'USUARIO' ? '⚙️ Tu vehículo:' : '⚙️ Control administrativo:';
+    const help = document.querySelector('#vehicleCommandsModal .modal-body .alert');
+    if (help) help.lastChild.textContent = role === 'USUARIO'
+      ? ' Puedes habilitar o deshabilitar individualmente los comandos de tu vehículo. El cambio se aplica al mismo vehículo para todos sus controles.'
+      : ' Activa o desactiva movimientos de esta unidad física. Si deshabilitas un comando, se bloqueará en el panel de control del vehículo y quedará registrado en auditoría.';
+    document.querySelectorAll('#vehicleCommandsModal .command-bulk-toggle').forEach((button) => {
+      button.classList.toggle('d-none', role !== 'ADMINISTRADOR');
+    });
+    const saveButton = document.getElementById('saveVehicleCommandsBtn');
+    if (saveButton) saveButton.textContent = role === 'USUARIO' ? '💾 Guardar mis cambios' : '💾 Guardar';
+    this.vehicleCommandsRole = role;
 
     let apiCommands;
     try {
@@ -975,12 +1005,26 @@ export class AdminModule {
   }
 
   async saveVehicleCommands() {
-    if ((this.currentUser?.rol || '').toUpperCase() !== 'ADMINISTRADOR') {
-      this.notify('Solo un administrador puede cambiar los permisos de comandos.', 'error');
+    const role = (this.currentUser?.rol || '').toUpperCase();
+    if (role !== 'ADMINISTRADOR' && role !== 'USUARIO') {
+      this.notify('Inicia sesión para cambiar los comandos del vehículo.', 'error');
       return;
     }
     const unitId = document.getElementById('vehicleCommandsUnitId')?.value;
     if (!unitId) return;
+
+    if (role === 'USUARIO') {
+      try {
+        const myVehicles = await this.api.getMyVehicles();
+        if (!myVehicles.some((vehicle) => String(vehicle.id_vehiculo) === String(unitId))) {
+          this.notify('Solo puedes cambiar comandos de vehículos asignados a tu cuenta.', 'error');
+          return;
+        }
+      } catch (err) {
+        this.notify(`No se pudo verificar tu vehículo: ${err.message}`, 'error', 5000);
+        return;
+      }
+    }
 
     const listContainer = document.getElementById('vehicleCommandsList');
     const switches = listContainer ? listContainer.querySelectorAll('.cmd-switch') : [];
@@ -1003,20 +1047,24 @@ export class AdminModule {
     }
     try {
       for (const { sw, command } of changedSwitches) {
-        await this.api.updateCommand(unitId, command.id_comando, {
-          nombre: command.nombre,
-          codigo: Number(command.codigo),
-          descripcion: command.descripcion || '',
-          activo: sw.checked,
-        });
+        if (role === 'USUARIO') {
+          await this.api.setCommandEnabled(unitId, command.id_comando, sw.checked);
+        } else {
+          await this.api.updateCommand(unitId, command.id_comando, {
+            nombre: command.nombre,
+            codigo: Number(command.codigo),
+            descripcion: command.descripcion || '',
+            activo: sw.checked,
+          });
+        }
         command.activo = sw.checked;
       }
 
       const detalle = disabledList.length
         ? `Comandos deshabilitados: ${disabledList.join(', ')}`
         : 'Todos los movimientos disponibles están habilitados';
-      this.addAuditEntry('CONFIGURAR_MOVIMIENTOS', `vehiculos/${unitId}`, detalle);
-      this.notify(`Permisos guardados en la API para el vehículo #${unitId}.`, 'success');
+      if (role === 'ADMINISTRADOR') this.addAuditEntry('CONFIGURAR_MOVIMIENTOS', `vehiculos/${unitId}`, detalle);
+      this.notify(`${role === 'USUARIO' ? 'Tus cambios' : 'Permisos'} guardados para el vehículo #${unitId}.`, 'success');
       window.dispatchEvent(new CustomEvent('vehicle-commands-updated', {
         detail: { vehicleId: unitId, disabled: disabledList }
       }));
@@ -1221,7 +1269,10 @@ export class AdminModule {
             <p class="small">${v.descripcion || 'Sin descripción'}</p>
             <div class="d-flex justify-content-between align-items-center mt-auto">
               <span class="badge ${v.conectado ? 'bg-success' : 'bg-secondary'}">${v.conectado ? 'EN LÍNEA' : 'DESCONECTADO'}</span>
-              <button class="btn btn-sm btn-outline-info" onclick="window.adminModule.selectVehicleToOperate(${v.id_vehiculo})">Operar en Control</button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.adminModule.openVehicleCommandsModal(${v.id_vehiculo})">Comandos</button>
+                <button class="btn btn-sm btn-outline-info" onclick="window.adminModule.selectVehicleToOperate(${v.id_vehiculo})">Operar en Control</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1426,7 +1477,8 @@ export class AdminModule {
     const nameInput = document.getElementById('demoCustomName');
     const descInput = document.getElementById('demoCustomDesc');
     const activeInput = document.getElementById('demoActive');
-    const activeField = document.getElementById('demoActiveField');
+    const activeLabel = document.getElementById('demoActiveLabel');
+    const activeHelp = document.getElementById('demoActiveHelp');
     const submitBtn = document.querySelector('#saveDemoForm button[type="submit"]');
     const deleteBtn = document.getElementById('deleteDemoBtn');
     const container = document.getElementById('demoStepsContainer');
@@ -1454,7 +1506,8 @@ export class AdminModule {
         activeInput.checked = true;
         activeInput.disabled = true;
       }
-      activeField?.classList.add('d-none');
+      if (activeLabel) activeLabel.textContent = 'Las demos nuevas se crean activas';
+      if (activeHelp) activeHelp.textContent = 'Selecciona una demo existente para cambiar su estado.';
       if (submitBtn) submitBtn.innerHTML = '💾 Guardar DEMO';
       container.innerHTML = '';
       this.addDemoStepRow({ isNew: true });
@@ -1476,9 +1529,12 @@ export class AdminModule {
           activeInput.checked = currentDemo.activo === true || currentDemo.activo === 'true' || Number(currentDemo.activo) === 1;
           activeInput.disabled = false;
         }
-        activeField?.classList.remove('d-none');
+        if (activeLabel) activeLabel.textContent = 'DEMO activa y disponible para ejecutar';
+        if (activeHelp) activeHelp.textContent = 'Desmarca esta opción y guarda para impedir que la demo se ejecute.';
       } else {
-        activeField?.classList.add('d-none');
+        if (activeInput) activeInput.disabled = true;
+        if (activeLabel) activeLabel.textContent = 'Selecciona una demo existente para cambiar su estado';
+        if (activeHelp) activeHelp.textContent = 'El estado de la demo seleccionada no está disponible.';
       }
       if (submitBtn) submitBtn.innerHTML = `💾 Guardar Cambios en DEMO #${demoId}`;
 
