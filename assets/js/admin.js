@@ -184,10 +184,8 @@ export class AdminModule {
       });
     }
 
-    document.getElementById('demoWizardNextDetails')?.addEventListener('click', () => this.continueDemoWizardToDetails());
-    document.getElementById('demoWizardBackVehicle')?.addEventListener('click', () => this.showDemoEditorStage(1));
-    document.getElementById('demoWizardNextSteps')?.addEventListener('click', () => this.continueDemoWizardToSteps());
-    document.getElementById('demoWizardBackDetails')?.addEventListener('click', () => this.showDemoEditorStage(2));
+    document.getElementById('demoWizardNextDetails')?.addEventListener('click', () => this.continueDemoWizardToSteps());
+    document.getElementById('demoWizardBackDetails')?.addEventListener('click', () => this.showDemoEditorStage(1));
 
     const demoTargetSelect = document.getElementById('demoTargetSelect');
     if (demoTargetSelect) {
@@ -970,6 +968,12 @@ export class AdminModule {
       const active = Number(panel.dataset.demoWizardStage) === nextStage;
       panel.classList.toggle('d-none', !active);
       panel.setAttribute('aria-hidden', String(!active));
+      panel.querySelectorAll('[required]').forEach((field) => {
+        field.dataset.wizardRequired = 'true';
+      });
+      panel.querySelectorAll('[data-wizard-required="true"]').forEach((field) => {
+        field.required = active;
+      });
     });
     document.querySelectorAll('[data-demo-wizard-progress]').forEach((item) => {
       const itemStage = Number(item.dataset.demoWizardProgress);
@@ -989,8 +993,13 @@ export class AdminModule {
   }
 
   continueDemoWizardToSteps() {
+    const vehicleSelect = document.getElementById('demoVehicleSelect');
     const targetSelect = document.getElementById('demoTargetSelect');
     const nameInput = document.getElementById('demoCustomName');
+    if (!vehicleSelect?.value) {
+      vehicleSelect?.reportValidity();
+      return;
+    }
     if (!targetSelect?.value) {
       targetSelect?.reportValidity();
       return;

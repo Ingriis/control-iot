@@ -14,7 +14,7 @@
     <link rel="preload" as="image" href="./assets/img/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v80-demo-wizard-compact" />
+    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v81-combined-demo-screen" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -379,34 +379,23 @@
                 <div class="demo-editor-grid">
                   <div class="demo-editor-wizard">
                     <div class="demo-wizard-progress" aria-label="Pasos del editor de demos">
-                      <div class="demo-wizard-progress-step is-current" data-demo-wizard-progress="1"><span>1</span> Vehículo</div>
-                      <div class="demo-wizard-progress-step" data-demo-wizard-progress="2"><span>2</span> Datos de la demo</div>
-                      <div class="demo-wizard-progress-step" data-demo-wizard-progress="3"><span>3</span> Secuencia</div>
+                      <div class="demo-wizard-progress-step is-current" data-demo-wizard-progress="1"><span>1</span> Vehículo y datos</div>
+                      <div class="demo-wizard-progress-step" data-demo-wizard-progress="3"><span>2</span> Secuencia</div>
                     </div>
 
                     <section class="demo-wizard-stage demo-wizard-vehicle-stage" data-demo-wizard-stage="1" aria-labelledby="demoWizardVehicleTitle">
                       <div class="demo-wizard-stage-content">
-                        <span class="demo-wizard-kicker">PASO 1 DE 3</span>
-                        <h5 id="demoWizardVehicleTitle">¿Qué vehículo ejecutará esta demo?</h5>
-                        <p>Elige primero la unidad física. Sus demos guardadas aparecerán en el siguiente paso.</p>
-                        <div class="demo-wizard-field">
-                          <label class="form-label" for="demoVehicleSelect">Vehículo destino</label>
-                          <select class="form-select form-select-lg bg-dark border-info text-white" id="demoVehicleSelect" required>
-                            <option value="">Cargando unidades disponibles...</option>
-                          </select>
-                          <small class="text-muted" id="demoVehicleHelp">Unidad física que ejecutará la secuencia.</small>
-                        </div>
-                      </div>
-                      <div class="demo-wizard-actions justify-content-end">
-                        <button type="button" class="btn btn-cyan" id="demoWizardNextDetails" disabled>Continuar a los datos <span aria-hidden="true">→</span></button>
-                      </div>
-                    </section>
-
-                    <section class="demo-wizard-stage d-none" data-demo-wizard-stage="2" aria-labelledby="demoWizardDetailsTitle" aria-hidden="true">
-                      <div class="demo-wizard-stage-content">
-                        <span class="demo-wizard-kicker">PASO 2 DE 3</span>
-                        <h5 id="demoWizardDetailsTitle">Datos de la demo</h5>
+                        <span class="demo-wizard-kicker">PASO 1 DE 2</span>
+                        <h5 id="demoWizardVehicleTitle">Configura tu demo</h5>
+                        <p>Selecciona el vehículo y completa los datos antes de definir sus pasos.</p>
                         <div class="demo-wizard-details-grid">
+                          <div class="demo-wizard-field">
+                            <label class="form-label" for="demoVehicleSelect">Vehículo destino</label>
+                            <select class="form-select form-select-lg bg-dark border-info text-white" id="demoVehicleSelect" required>
+                              <option value="">Cargando unidades disponibles...</option>
+                            </select>
+                            <small class="text-muted" id="demoVehicleHelp">Unidad física que ejecutará la secuencia.</small>
+                          </div>
                           <div class="demo-wizard-field">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                               <label class="form-label mb-0" for="demoTargetSelect">DEMO a diseñar o editar</label>
@@ -427,9 +416,8 @@
                           </div>
                         </div>
                       </div>
-                      <div class="demo-wizard-actions justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary" id="demoWizardBackVehicle">← Vehículo</button>
-                        <button type="button" class="btn btn-cyan" id="demoWizardNextSteps">Ir a los pasos <span aria-hidden="true">→</span></button>
+                      <div class="demo-wizard-actions justify-content-end">
+                        <button type="button" class="btn btn-cyan" id="demoWizardNextDetails" disabled>Continuar a los pasos <span aria-hidden="true">→</span></button>
                       </div>
                     </section>
 
@@ -438,7 +426,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-1 demo-steps-header">
                           <div class="d-flex align-items-center gap-2 flex-wrap">
                             <div>
-                              <span class="demo-wizard-kicker">PASO 3 DE 3</span>
+                              <span class="demo-wizard-kicker">PASO 2 DE 2</span>
                               <h5 class="mb-0" id="demoWizardStepsTitle">Pasos de la secuencia</h5>
                             </div>
                             <span class="badge bg-dark border border-info text-info demo-total-time-badge" id="demoTotalTimeBadge" title="Duración estimada total de la secuencia">⏱️ 0 pasos · 0.0s</span>
@@ -775,6 +763,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./assets/js/app.js?v=20261124-v77-demo-events-filter"></script>
+    <script type="module" src="./assets/js/app.js?v=20261124-v78-demo-wizard-flow"></script>
   </body>
 </html>
