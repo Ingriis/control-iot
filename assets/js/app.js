@@ -38,6 +38,8 @@ let lastDirection = 'neutral';
 let apiGeneration = 0;
 let holdGeneration = 0;
 let heldDirection = null;
+let heldDriveDirection = null;
+let heldSteerDirection = null;
 let driveJoystick;
 let steerJoystick;
 let joystick;
@@ -211,7 +213,7 @@ function updateControls() {
   const powerCmd = getPowerCommand(powered);
 
   // Cada dirección se bloquea y se marca por separado dentro de cada palanca.
-  const controlsUnavailable = !guestCanControl || !powered || !apiReady || demoRunning || commandPending;
+  const controlsUnavailable = !guestCanControl || !powered || !apiReady || demoRunning;
   const forwardDisabledByAdmin = disabledList.includes(names.forward);
   const backwardDisabledByAdmin = disabledList.includes(names.backward);
   const leftDisabledByAdmin = disabledList.includes(names.left);
@@ -737,6 +739,8 @@ async function shutdownGuestVehicle() {
   const wasPoweredOn = isPoweredOn();
   holdGeneration += 1;
   heldDirection = null;
+  heldDriveDirection = null;
+  heldSteerDirection = null;
   lastDirection = 'neutral';
   driveJoystick?.reset();
   steerJoystick?.reset();
@@ -812,34 +816,106 @@ async function togglePower() {
   updateControls();
 }
 
-function handleDirection(name) {
-  if (name === lastDirection && heldDirection === name) return;
-  lastDirection = name;
+function resolveHeldMovement() {
+  if (heldDriveDirection === 'forward') {
+    if (heldSteerDirection) {
+      if (!activeCommandByName(names.forward)) {
+        return { name: null, reason: 'Para girar, AVANZAR y la dirección elegida deben estar habilitados por el administrador.' };
+      }
+      // El ESP asigna GIRAR_IZQUIERDA/DERECHA a las dos salidas físicas
+      // simultáneas: dirección y avance.
+      return { name: heldSteerDirection };
+    }
+    return { name: 'forward' };
+  }
+
+  if (heldDriveDirection === 'backward') {
+    if (heldSteerDirection) {
+      return { name: null, reason: 'El firmware actual solo combina el giro con AVANZAR.' };
+    }
+    return { name: 'backward' };
+  }
+
+  return heldSteerDirection
+    ? { name: null, reason: 'Mantén también la palanca de tracción hacia AVANZAR para girar.' }
+    : { name: null, reason: null };
+}
+
+function applyHeldMovement() {
+  const previous = heldDirection;
+  const { name, reason } = resolveHeldMovement();
+  if (name === previous) {
+    if (reason) {
+      setAction('Movimiento combinado no disponible', reason);
+      $('driveText').textContent = reason;
+      $('driveIndicator')?.classList.remove('active');
+    } else if (!name && !heldDriveDirection && !heldSteerDirection) {
+      $('driveText').textContent = 'En espera';
+    }
+    return;
+  }
+
   heldDirection = name;
+  lastDirection = name || 'neutral';
   const generation = ++holdGeneration;
-  if (name !== 'neutral') {
+
+  if (name) {
     triggerHaptic('direction');
     document.querySelector('.stop-bezel')?.classList.remove('is-latched');
     $('driveIndicator')?.classList.remove('is-emergency');
     if (name === 'backward') startReverseBeep();
     else stopReverseBeep();
-  } else {
-    stopReverseBeep();
-  }
-  // A direction change cancels the old pulse; the next request waits for it to settle.
-  activeMovementController?.abort();
-  const command = activeCommandByName(names[name]);
-  if (!command) {
-    const vId = config.vehicleId || '1';
-    const disabled = getDisabledCommandsForVehicle(vId);
-    if (disabled.includes(names[name])) {
-      setAction('Movimiento bloqueado', `El movimiento ${names[name]} fue deshabilitado para la unidad #${vId} por el Administrador.`);
-    } else {
-      setAction('Comando no disponible', `El catálogo no contiene ${names[name]} activo.`);
+
+    const command = activeCommandByName(names[name]);
+    if (!command) {
+      const vId = config.vehicleId || '1';
+      setAction('Movimiento bloqueado', `${names[name]} está deshabilitado o no disponible para la unidad #${vId}.`);
+      heldDirection = null;
+      lastDirection = 'neutral';
+      if (previous) {
+        const stopCommand = activeCommandByName(names.stop);
+        if (stopCommand) sendCommand(stopCommand, { priorityStop: true });
+      }
+      return;
     }
+    renewWhileHeld(generation, name);
     return;
   }
-  if (command) renewWhileHeld(generation, name);
+
+  stopReverseBeep();
+  if (previous) {
+    const stopCommand = activeCommandByName(names.stop);
+    if (stopCommand) sendCommand(stopCommand, { priorityStop: true });
+    else setAction('DETENER no disponible', 'No se encontró un comando DETENER activo en el catálogo.');
+  }
+  if (reason) {
+    setAction('Movimiento combinado no disponible', reason);
+    $('driveText').textContent = reason;
+    $('driveIndicator')?.classList.remove('active');
+  } else if (!heldDriveDirection && !heldSteerDirection) {
+    $('driveText').textContent = 'En espera';
+  }
+}
+
+function handleAxisDirection(axis, direction) {
+  if (axis === 'drive') {
+    if (heldDriveDirection === direction) return;
+    heldDriveDirection = direction;
+  } else {
+    if (heldSteerDirection === direction) return;
+    heldSteerDirection = direction;
+  }
+  applyHeldMovement();
+}
+
+function releaseAxis(axis) {
+  if (axis === 'drive') heldDriveDirection = null;
+  else heldSteerDirection = null;
+  applyHeldMovement();
+}
+
+function handleDirection(name) {
+  handleAxisDirection(name === 'forward' || name === 'backward' ? 'drive' : 'steer', name);
 }
 
 const HOLD_RENEWAL_MS = 600;
@@ -896,9 +972,11 @@ function requestStop(isEmergencyButton = false) {
     $('driveText').textContent = '¡PARO DE EMERGENCIA!';
     $('driveIndicator').className = 'status-indicator is-emergency';
   }
-  if (lastDirection === 'neutral' && !heldDirection && !demoRunning && !commandPending && !isEmergencyButton) return;
+  if (lastDirection === 'neutral' && !heldDirection && !heldDriveDirection && !heldSteerDirection && !demoRunning && !commandPending && !isEmergencyButton) return;
   holdGeneration += 1;
   heldDirection = null;
+  heldDriveDirection = null;
+  heldSteerDirection = null;
   lastDirection = 'neutral';
   driveJoystick?.reset();
   steerJoystick?.reset();
@@ -971,11 +1049,11 @@ async function boot() {
   const driveEl = $('driveJoystick');
   if (driveEl) {
     driveJoystick = initVerticalStick(driveEl, $('driveJoyKnob'), {
-      onDirection: handleDirection,
-      onRelease: requestStop,
+      onDirection: (direction) => handleAxisDirection('drive', direction),
+      onRelease: () => releaseAxis('drive'),
       canMove: (direction) => canUseControl() && isPoweredOn() && apiReady
         && Boolean(activeCommandByName(direction === 'forward' ? names.forward : names.backward))
-        && !demoRunning && !commandPending,
+        && !demoRunning,
     });
   }
 
@@ -983,11 +1061,11 @@ async function boot() {
   const steerEl = $('steerJoystick');
   if (steerEl) {
     steerJoystick = initHorizontalStick(steerEl, $('steerJoyKnob'), {
-      onDirection: handleDirection,
-      onRelease: requestStop,
+      onDirection: (direction) => handleAxisDirection('steer', direction),
+      onRelease: () => releaseAxis('steer'),
       canMove: (direction) => canUseControl() && isPoweredOn() && apiReady
         && Boolean(activeCommandByName(direction === 'left' ? names.left : names.right))
-        && !demoRunning && !commandPending,
+        && !demoRunning,
     });
   }
 
