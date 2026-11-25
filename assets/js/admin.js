@@ -187,25 +187,38 @@ export class AdminModule {
     document.getElementById('demoWizardNextDetails')?.addEventListener('click', () => this.continueDemoWizardToSteps());
     document.getElementById('demoWizardBackDetails')?.addEventListener('click', () => this.showDemoEditorStage(1));
 
-    const demoDescription = document.getElementById('demoCustomDesc');
+    const demoTextFields = [
+      { element: document.getElementById('demoCustomName'), label: 'Nombre de la demo', title: 'Editar nombre', placeholder: 'Ej. Recorrido Almacén A' },
+      { element: document.getElementById('demoCustomDesc'), label: 'Descripción de la demo', title: 'Editar descripción', placeholder: 'Ej. Recorrido por el almacén' },
+    ].filter((field) => field.element);
     const demoDescriptionModalEl = document.getElementById('demoDescriptionModal');
     const demoDescriptionEditor = document.getElementById('demoDescriptionModalInput');
+    const demoTextEditorLabel = document.getElementById('demoTextEditorLabel');
+    const demoTextEditorTitle = document.getElementById('demoDescriptionModalTitle');
     const rotatePromptEl = document.getElementById('demoRotatePromptModal');
-    if (demoDescription && demoDescriptionModalEl && demoDescriptionEditor && rotatePromptEl) {
+    if (demoTextFields.length && demoDescriptionModalEl && demoDescriptionEditor && rotatePromptEl) {
       const demoDescriptionModal = window.bootstrap.Modal.getOrCreateInstance(demoDescriptionModalEl);
       const rotatePrompt = window.bootstrap.Modal.getOrCreateInstance(rotatePromptEl);
       let waitingForPortrait = false;
+      let activeDemoTextField = null;
       let keyboardBaselineHeight = 0;
       let mobileKeyboardVisible = false;
       const isSmallLandscape = () => window.matchMedia('(orientation: landscape) and (max-height: 600px) and (pointer: coarse)').matches;
+      const openTextEditor = (field) => {
+        activeDemoTextField = field;
+        demoDescriptionEditor.value = field.element.value;
+        demoDescriptionEditor.placeholder = field.placeholder;
+        if (demoTextEditorLabel) demoTextEditorLabel.textContent = field.label;
+        if (demoTextEditorTitle) demoTextEditorTitle.textContent = field.title;
+        demoDescriptionModal.show();
+      };
       const openDescriptionWhenPortrait = () => {
         if (waitingForPortrait && !isSmallLandscape()) rotatePrompt.hide();
       };
       rotatePromptEl.addEventListener('hidden.bs.modal', () => {
         if (waitingForPortrait && !isSmallLandscape()) {
           waitingForPortrait = false;
-          demoDescriptionEditor.value = demoDescription.value;
-          demoDescriptionModal.show();
+          openTextEditor(activeDemoTextField);
         }
       });
       window.addEventListener('orientationchange', openDescriptionWhenPortrait);
@@ -218,24 +231,27 @@ export class AdminModule {
           mobileKeyboardVisible = true;
         } else if (mobileKeyboardVisible && currentHeight > keyboardBaselineHeight * 0.84) {
           mobileKeyboardVisible = false;
-          applyDemoDescription();
+          applyDemoTextField();
         }
       };
       visualViewport?.addEventListener('resize', handleKeyboardViewportChange);
-      const applyDemoDescription = () => {
-        demoDescription.value = demoDescriptionEditor.value.trim();
-        demoDescription.dispatchEvent(new Event('input', { bubbles: true }));
+      const applyDemoTextField = () => {
+        if (!activeDemoTextField) return;
+        activeDemoTextField.element.value = demoDescriptionEditor.value.trim();
+        activeDemoTextField.element.dispatchEvent(new Event('input', { bubbles: true }));
         demoDescriptionEditor.blur();
         demoDescriptionModal.hide();
       };
-      demoDescription.addEventListener('click', () => {
-        if (isSmallLandscape()) {
-          waitingForPortrait = true;
-          rotatePrompt.show();
-          return;
-        }
-        demoDescriptionEditor.value = demoDescription.value;
-        demoDescriptionModal.show();
+      demoTextFields.forEach((field) => {
+        field.element.addEventListener('click', () => {
+          activeDemoTextField = field;
+          if (isSmallLandscape()) {
+            waitingForPortrait = true;
+            rotatePrompt.show();
+            return;
+          }
+          openTextEditor(field);
+        });
       });
       document.getElementById('demoRotatePromptCancel')?.addEventListener('click', () => {
         waitingForPortrait = false;
@@ -246,16 +262,17 @@ export class AdminModule {
         demoDescriptionEditor.focus();
       });
       demoDescriptionEditor.addEventListener('input', () => {
-        demoDescription.value = demoDescriptionEditor.value;
-        demoDescription.dispatchEvent(new Event('input', { bubbles: true }));
+        if (!activeDemoTextField) return;
+        activeDemoTextField.element.value = demoDescriptionEditor.value;
+        activeDemoTextField.element.dispatchEvent(new Event('input', { bubbles: true }));
       });
       demoDescriptionEditor.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.isComposing) {
           event.preventDefault();
-          applyDemoDescription();
+          applyDemoTextField();
         }
       });
-      document.getElementById('demoDescriptionModalApply')?.addEventListener('click', applyDemoDescription);
+      document.getElementById('demoDescriptionModalApply')?.addEventListener('click', applyDemoTextField);
     }
 
     const demoTargetSelect = document.getElementById('demoTargetSelect');
@@ -1075,7 +1092,11 @@ export class AdminModule {
       targetSelect?.reportValidity();
       return;
     }
-    if (!nameInput?.reportValidity()) return;
+    if (!nameInput?.value.trim()) {
+      this.notify('Escribe el nombre de la demo para continuar.', 'warning');
+      nameInput?.click();
+      return;
+    }
     this.showDemoEditorStage(3);
   }
 
@@ -1133,11 +1154,9 @@ export class AdminModule {
       if (deleteBtn) deleteBtn.classList.add('d-none');
       if (nameInput) {
         nameInput.value = '';
-        nameInput.removeAttribute('readonly');
       }
       if (descInput) {
         descInput.value = '';
-        descInput.removeAttribute('readonly');
       }
       if (submitBtn) submitBtn.innerHTML = '💾 Guardar DEMO';
       container.innerHTML = '';
