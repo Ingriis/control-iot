@@ -40,6 +40,7 @@ let holdGeneration = 0;
 let heldDirection = null;
 let heldDriveDirection = null;
 let heldSteerDirection = null;
+let controlStateQueue = Promise.resolve();
 let driveJoystick;
 let steerJoystick;
 let joystick;
@@ -407,6 +408,7 @@ async function refreshCommands({ quiet = false } = {}) {
     setIndicator('apiIndicator', 'available', 'Disponible · catálogo responde');
     renderCommands();
     updateControls();
+    if (heldDriveDirection || heldSteerDirection) applyHeldMovement();
     showAlert('configAlert', activeCommandByName('DETENER') ? '' : 'El catálogo no reporta DETENER activo. El panel no enviará una parada inventada.');
     return true;
   } catch (error) {
@@ -746,6 +748,8 @@ async function shutdownGuestVehicle() {
   steerJoystick?.reset();
   joystick?.reset();
 
+  await publishControlState({ forward: false, backward: false, left: false, right: false });
+
   const stopCommand = activeCommandByName('DETENER');
   if (stopCommand) {
     await sendCommand(stopCommand, { priorityStop: true });
@@ -816,84 +820,107 @@ async function togglePower() {
   updateControls();
 }
 
-function resolveHeldMovement() {
-  if (heldDriveDirection === 'forward') {
-    if (heldSteerDirection) {
-      if (!activeCommandByName(names.forward)) {
-        return { name: null, reason: 'Para girar, AVANZAR y la dirección elegida deben estar habilitados por el administrador.' };
+function buildControlState() {
+  let state = {
+    forward: heldDriveDirection === 'forward',
+    backward: heldDriveDirection === 'backward',
+    left: Boolean(heldDriveDirection && heldSteerDirection === 'left'),
+    right: Boolean(heldDriveDirection && heldSteerDirection === 'right'),
+  };
+  let reason = heldSteerDirection && !heldDriveDirection
+    ? 'Mantén también la palanca de tracción para girar.'
+    : '';
+
+  const commandBySignal = {
+    forward: names.forward,
+    backward: names.backward,
+    left: names.left,
+    right: names.right,
+  };
+  for (const signal of Object.keys(state)) {
+    if (state[signal] && !activeCommandByName(commandBySignal[signal])) {
+      state[signal] = false;
+      reason = `${commandBySignal[signal]} está deshabilitado o no disponible.`;
+    }
+  }
+
+  // Sin tracción activa, nunca dejamos una salida de dirección encendida sola.
+  if (!state.forward && !state.backward) {
+    state.left = false;
+    state.right = false;
+  }
+  return { state, reason };
+}
+
+function controlStateKey(state) {
+  return `${Number(state.forward)}${Number(state.backward)}${Number(state.left)}${Number(state.right)}`;
+}
+
+function publishControlState(state) {
+  const payload = { ...state, lease_ms: 1600 };
+  const request = controlStateQueue
+    .catch(() => false)
+    .then(async () => {
+      try {
+        await api.setControlState(payload);
+        return true;
+      } catch (error) {
+        setAction('Error al actualizar señales', error.message);
+        showAlert('errorAlert', error.message);
+        return false;
       }
-      // El ESP asigna GIRAR_IZQUIERDA/DERECHA a las dos salidas físicas
-      // simultáneas: dirección y avance.
-      return { name: heldSteerDirection };
-    }
-    return { name: 'forward' };
-  }
-
-  if (heldDriveDirection === 'backward') {
-    if (heldSteerDirection) {
-      return { name: null, reason: 'El firmware actual solo combina el giro con AVANZAR.' };
-    }
-    return { name: 'backward' };
-  }
-
-  return heldSteerDirection
-    ? { name: null, reason: 'Mantén también la palanca de tracción hacia AVANZAR para girar.' }
-    : { name: null, reason: null };
+    });
+  controlStateQueue = request;
+  return request;
 }
 
 function applyHeldMovement() {
   const previous = heldDirection;
-  const { name, reason } = resolveHeldMovement();
-  if (name === previous) {
+  const { state, reason } = buildControlState();
+  const next = controlStateKey(state);
+  const hasSignals = Object.values(state).some(Boolean);
+  if (next === previous) {
     if (reason) {
       setAction('Movimiento combinado no disponible', reason);
       $('driveText').textContent = reason;
       $('driveIndicator')?.classList.remove('active');
-    } else if (!name && !heldDriveDirection && !heldSteerDirection) {
+    } else if (!hasSignals && !heldDriveDirection && !heldSteerDirection) {
       $('driveText').textContent = 'En espera';
     }
     return;
   }
 
-  heldDirection = name;
-  lastDirection = name || 'neutral';
+  heldDirection = hasSignals ? next : null;
+  lastDirection = state.backward ? 'backward' : (state.forward ? 'forward' : 'neutral');
   const generation = ++holdGeneration;
 
-  if (name) {
+  if (hasSignals) {
     triggerHaptic('direction');
     document.querySelector('.stop-bezel')?.classList.remove('is-latched');
     $('driveIndicator')?.classList.remove('is-emergency');
-    if (name === 'backward') startReverseBeep();
+    if (state.backward) startReverseBeep();
     else stopReverseBeep();
-
-    const command = activeCommandByName(names[name]);
-    if (!command) {
-      const vId = config.vehicleId || '1';
-      setAction('Movimiento bloqueado', `${names[name]} está deshabilitado o no disponible para la unidad #${vId}.`);
-      heldDirection = null;
-      lastDirection = 'neutral';
-      if (previous) {
-        const stopCommand = activeCommandByName(names.stop);
-        if (stopCommand) sendCommand(stopCommand, { priorityStop: true });
-      }
-      return;
-    }
-    renewWhileHeld(generation, name);
+    $('driveText').textContent = [
+      state.forward && 'AVANZAR',
+      state.backward && 'RETROCEDER',
+      state.left && 'IZQUIERDA',
+      state.right && 'DERECHA',
+    ].filter(Boolean).join(' + ');
+    $('driveIndicator')?.classList.add('active');
+    void publishControlState(state);
+    renewControlStateWhileHeld(generation);
     return;
   }
 
   stopReverseBeep();
-  if (previous) {
-    const stopCommand = activeCommandByName(names.stop);
-    if (stopCommand) sendCommand(stopCommand, { priorityStop: true });
-    else setAction('DETENER no disponible', 'No se encontró un comando DETENER activo en el catálogo.');
-  }
+  if (previous) void publishControlState({ forward: false, backward: false, left: false, right: false });
   if (reason) {
     setAction('Movimiento combinado no disponible', reason);
     $('driveText').textContent = reason;
     $('driveIndicator')?.classList.remove('active');
   } else if (!heldDriveDirection && !heldSteerDirection) {
     $('driveText').textContent = 'En espera';
+    $('driveIndicator')?.classList.remove('active');
   }
 }
 
@@ -921,16 +948,13 @@ function handleDirection(name) {
 const HOLD_RENEWAL_MS = 600;
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-async function renewWhileHeld(generation, direction) {
-  while (generation === holdGeneration && heldDirection === direction) {
-    while (commandPending && generation === holdGeneration) await wait(50);
-    if (generation !== holdGeneration || heldDirection !== direction) break;
-    const command = activeCommandByName(names[direction]);
-    if (!command || !apiReady || demoRunning) break;
-    // Await each request before starting the next so renewals cannot overlap.
-    await sendCommand(command);
-    if (generation !== holdGeneration || heldDirection !== direction) break;
+async function renewControlStateWhileHeld(generation) {
+  while (generation === holdGeneration && heldDirection && apiReady && !demoRunning) {
     await wait(HOLD_RENEWAL_MS);
+    if (generation !== holdGeneration || !heldDirection) break;
+    const { state } = buildControlState();
+    if (!Object.values(state).some(Boolean)) break;
+    await publishControlState(state);
   }
 }
 
@@ -982,11 +1006,13 @@ function requestStop(isEmergencyButton = false) {
   steerJoystick?.reset();
   joystick?.reset();
   const command = activeCommandByName('DETENER');
-  if (!command) {
-    setAction('DETENER no disponible', 'No se encontró un comando DETENER activo en el catálogo.');
-    return;
-  }
-  sendCommand(command, { priorityStop: true });
+  const shouldSendStopCommand = Boolean(command && (isEmergencyButton || demoRunning));
+  void publishControlState({ forward: false, backward: false, left: false, right: false }).then((sent) => {
+    if (shouldSendStopCommand || !sent) {
+      if (command) sendCommand(command, { priorityStop: true });
+      else if (!sent) setAction('No se pudo detener', 'No hay respuesta del control de señales ni un comando DETENER activo.');
+    }
+  });
 }
 
 function enableFloatingSwitcherDrag() {
