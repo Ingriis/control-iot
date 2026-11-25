@@ -599,7 +599,9 @@ function parseSocketMessage(raw) {
     if (!isDemoEvent) scheduleMonitorHistorySync();
     const command = commands.find((item) => Number(item.codigo) === Number(message.codigo));
     const label = command?.nombre || `código ${message.codigo ?? 'desconocido'}`;
-    if (demoEventsVisible) {
+    // La lista de ejecución representa exclusivamente los eventos emitidos por
+    // la DEMO activa; los movimientos manuales solo actualizan el monitor.
+    if (demoEventsVisible && isDemoEvent) {
       const host = $('demoMovementList');
       host.querySelector('.demo-progress-empty')?.remove();
       const item = document.createElement('li');
