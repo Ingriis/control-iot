@@ -673,6 +673,9 @@ export class AdminModule {
 
   async handleCreateModel(e) {
     e.preventDefault();
+    const submitButton = e.submitter || e.target.querySelector('[type="submit"]');
+    if (submitButton?.disabled) return;
+    if (submitButton) submitButton.disabled = true;
     const nombre = document.getElementById('modelName').value.trim();
     const categoria = document.getElementById('modelCategory').value;
     const descripcion = document.getElementById('modelDesc').value.trim();
@@ -690,12 +693,15 @@ export class AdminModule {
         codigo_modelo = `${baseCode.slice(0, 50 - suffixText.length)}${suffixText}`;
       }
       await this.api.createModel({ nombre, codigo_modelo, categoria, descripcion });
-      this.notify('Modelo comercial creado con éxito en Amazon RDS.', 'success');
-      this.loadModels();
-      this.loadDashboardMetrics();
       e.target.reset();
+      window.bootstrap.Modal.getInstance(document.getElementById('newModelModal'))?.hide();
+      await this.loadModels();
+      this.loadDashboardMetrics();
+      this.notify(`Modelo “${nombre}” guardado correctamente.`, 'success', 5000);
     } catch (err) {
       this.notify(`Error al crear modelo: ${err.message}`, 'error', 4500);
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
   }
 
