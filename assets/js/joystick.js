@@ -47,7 +47,6 @@ export function initVerticalStick(element, knob, { onDirection, onRelease, canMo
   };
 
   element.addEventListener('pointerdown', (event) => {
-    if (!canMove()) return;
     event.preventDefault();
     pointerId = event.pointerId;
     try { element.setPointerCapture(event.pointerId); } catch {}
@@ -128,7 +127,6 @@ export function initHorizontalStick(element, knob, { onDirection, onRelease, can
   };
 
   element.addEventListener('pointerdown', (event) => {
-    if (!canMove()) return;
     event.preventDefault();
     pointerId = event.pointerId;
     try { element.setPointerCapture(event.pointerId); } catch {}
@@ -213,7 +211,6 @@ export function initJoystick(element, knob, { onDirection, onRelease, canMove })
   };
 
   element.addEventListener('pointerdown', (event) => {
-    if (!canMove()) return;
     event.preventDefault();
     pointerId = event.pointerId;
     try { element.setPointerCapture(event.pointerId); } catch {}
@@ -287,7 +284,6 @@ export function initVerticalJoystick(element, knob, { onDirection, onNeutral, ca
   };
 
   element.addEventListener('pointerdown', (event) => {
-    if (!canMove()) return;
     event.preventDefault();
     pointerId = event.pointerId;
     try { element.setPointerCapture(event.pointerId); } catch {}
