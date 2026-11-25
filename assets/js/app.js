@@ -181,6 +181,7 @@ function renderCommands() {
   const special = new Set([
     ...Object.values(names),
     'LUCES', 'SONIDO',
+    'AVANZAR_IZQUIERDA', 'AVANZAR_DERECHA', 'RETROCEDER_IZQUIERDA', 'RETROCEDER_DERECHA',
     'ENCENDER_AUTO', 'ENCENDER', 'APAGAR', 'APAGAR_AUTO', 'ENCENDER_APAGAR', 'POWER',
     'CAMBIAR_VELOCIDAD', 'ACTIVAR_CRUCERO'
   ]);
