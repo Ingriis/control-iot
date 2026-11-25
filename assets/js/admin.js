@@ -498,11 +498,12 @@ export class AdminModule {
         if (modal) modal.hide();
       }
     } catch (err) {
+      const authRejected = [400, 401, 403, 422].includes(err.status);
+      const message = authRejected
+        ? 'Usuario o contraseña incorrectos. Revisa tus datos e inténtalo de nuevo.'
+        : (err.message || 'No se pudo iniciar sesión. Inténtalo de nuevo.');
       if (alertBox) {
-        const authRejected = [400, 401, 403, 422].includes(err.status);
-        alertBox.textContent = authRejected
-          ? 'Usuario o contraseña incorrectos. Revisa tus datos e inténtalo de nuevo.'
-          : (err.message || 'No se pudo iniciar sesión. Inténtalo de nuevo.');
+        alertBox.textContent = message;
         alertBox.classList.remove('d-none');
       }
       const modalEl = document.getElementById('loginModal');
@@ -510,6 +511,7 @@ export class AdminModule {
         window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
       }
       if (alertBox) window.setTimeout(() => alertBox.focus({ preventScroll: true }), 120);
+      this.notify(message, 'error', 6500);
     }
   }
 
