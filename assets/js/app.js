@@ -214,8 +214,10 @@ function updateControls() {
   const driveAvailable = Boolean(activeCommandByName('AVANZAR') || activeCommandByName('RETROCEDER'));
   const steerAvailable = Boolean(activeCommandByName('GIRAR_IZQUIERDA') || activeCommandByName('GIRAR_DERECHA'));
 
-  const driveDisabled = !powered || !apiReady || !driveAvailable || demoRunning || commandPending;
-  const steerDisabled = !powered || !apiReady || !steerAvailable || demoRunning || commandPending;
+  // Un movimiento pendiente no debe reiniciar la palanca: el dedo sigue sostenido
+  // mientras renewWhileHeld espera la respuesta antes de renovar el pulso.
+  const driveDisabled = !powered || !apiReady || !driveAvailable || demoRunning;
+  const steerDisabled = !powered || !apiReady || !steerAvailable || demoRunning;
 
   const driveEl = $('driveJoystick');
   if (driveEl) {
@@ -877,7 +879,7 @@ async function boot() {
     driveJoystick = initVerticalStick(driveEl, $('driveJoyKnob'), {
       onDirection: handleDirection,
       onRelease: requestStop,
-      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('AVANZAR') || activeCommandByName('RETROCEDER')) && !demoRunning && !commandPending,
+      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('AVANZAR') || activeCommandByName('RETROCEDER')) && !demoRunning,
     });
   }
 
@@ -887,7 +889,7 @@ async function boot() {
     steerJoystick = initHorizontalStick(steerEl, $('steerJoyKnob'), {
       onDirection: handleDirection,
       onRelease: requestStop,
-      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('GIRAR_IZQUIERDA') || activeCommandByName('GIRAR_DERECHA')) && !demoRunning && !commandPending,
+      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('GIRAR_IZQUIERDA') || activeCommandByName('GIRAR_DERECHA')) && !demoRunning,
     });
   }
 
