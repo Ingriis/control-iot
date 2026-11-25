@@ -3,7 +3,7 @@ import { loadConfig, validateConfig } from './config.js';
 import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
-import { AdminModule } from './admin.js?v=20261125-guest-power-off';
+import { AdminModule } from './admin.js?v=20261125-shared-command-permissions';
 import {
   triggerHaptic,
   playBip,
@@ -135,12 +135,8 @@ function setEventStatus(status, detail) {
 }
 
 function getDisabledCommandsForVehicle(vehicleId) {
-  try {
-    const raw = localStorage.getItem(`vehicle_disabled_commands_${vehicleId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  if (String(vehicleId) !== String(config.vehicleId)) return [];
+  return commands.filter((command) => Number(command.activo) !== 1).map((command) => command.nombre);
 }
 
 function activeCommandByName(name) {
@@ -1151,8 +1147,7 @@ async function boot() {
   adminModule.init();
 
   window.addEventListener('vehicle-commands-updated', () => {
-    updateControls();
-    renderCommands();
+    refreshCommands({ quiet: true });
   });
 
   try {
@@ -1172,7 +1167,7 @@ async function boot() {
     refreshDatabaseHealth(),
   ]);
 
-  window.setInterval(() => refreshCommands({ quiet: true }), 60000);
+  window.setInterval(() => refreshCommands({ quiet: true }), 5000);
   window.setInterval(refreshDatabaseHealth, 30000);
 }
 

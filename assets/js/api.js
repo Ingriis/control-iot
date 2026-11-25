@@ -113,6 +113,10 @@ export function createApi(config) {
 
     // Control y Monitoreo (4.1 y 4.2)
     getCommands: (vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/commands`),
+    updateCommand: (vId, commandId, payload) => request(
+      '/vehicles/' + encodeURIComponent(vId) + '/commands/' + encodeURIComponent(commandId) + '/update',
+      { method: 'POST', body: JSON.stringify(payload) },
+    ),
     getDemos: (vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/demos`),
     getVehicleState: (signal, vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/state`, { signal }),
     getMovementHistory: (signal, vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/history`, { signal }),

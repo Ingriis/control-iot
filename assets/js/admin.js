@@ -826,16 +826,7 @@ export class AdminModule {
   // ---------------------------------------------------------------------------
   // Gestión de Movimientos y Comandos por Unidad (Administrador)
   // ---------------------------------------------------------------------------
-  getDisabledCommandsForVehicle(vehicleId) {
-    try {
-      const raw = localStorage.getItem(`vehicle_disabled_commands_${vehicleId}`);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  openVehicleCommandsModal(vehicleId, unitName) {
+  async openVehicleCommandsModal(vehicleId, unitName) {
     const unitIdInput = document.getElementById('vehicleCommandsUnitId');
     const subtitle = document.getElementById('vehicleCommandsSubtitle');
     const listContainer = document.getElementById('vehicleCommandsList');
@@ -844,7 +835,15 @@ export class AdminModule {
     unitIdInput.value = vehicleId;
     if (subtitle) subtitle.textContent = `Unidad #${vehicleId} · ${unitName || 'Vehículo'}`;
 
-    const disabled = this.getDisabledCommandsForVehicle(vehicleId);
+    let apiCommands;
+    try {
+      apiCommands = await this.api.getCommands(vehicleId);
+    } catch (err) {
+      listContainer.textContent = 'No se pudo cargar el catálogo de comandos.';
+      this.notify(`Error al cargar comandos: ${err.message}`, 'error', 5000);
+      return;
+    }
+    this.vehicleCommandRecords = new Map((apiCommands || []).map((command) => [command.nombre, command]));
 
     const commandsDef = [
       { id: 1, name: 'AVANZAR', icon: '⬆️', desc: 'Tracción frontal', category: 'Tracción' },
@@ -859,8 +858,13 @@ export class AdminModule {
       { id: 12, name: 'ACTIVAR_CRUCERO', icon: '⏱️', desc: 'Control de crucero automático', category: 'Ajuste' },
     ];
 
-    listContainer.innerHTML = commandsDef.map((cmd) => {
-      const isEnabled = !disabled.includes(cmd.name);
+    const availableCommands = commandsDef.filter((cmd) => this.vehicleCommandRecords.has(cmd.name));
+    if (!availableCommands.length) {
+      listContainer.textContent = 'Esta unidad no tiene movimientos configurados para administrar.';
+    } else {
+      listContainer.innerHTML = availableCommands.map((cmd) => {
+      const command = this.vehicleCommandRecords.get(cmd.name);
+      const isEnabled = Number(command.activo) === 1;
       return `
         <div class="d-flex justify-content-between align-items-center py-2 px-2 border-bottom border-secondary command-toggle-row">
           <div>
@@ -878,7 +882,8 @@ export class AdminModule {
           </div>
         </div>
       `;
-    }).join('');
+      }).join('');
+    }
 
     listContainer.querySelectorAll('.cmd-switch').forEach((sw) => {
       sw.addEventListener('change', (e) => {
@@ -912,41 +917,60 @@ export class AdminModule {
     });
   }
 
-  saveVehicleCommands() {
+  async saveVehicleCommands() {
+    if ((this.currentUser?.rol || '').toUpperCase() !== 'ADMINISTRADOR') {
+      this.notify('Solo un administrador puede cambiar los permisos de comandos.', 'error');
+      return;
+    }
     const unitId = document.getElementById('vehicleCommandsUnitId')?.value;
     if (!unitId) return;
 
     const listContainer = document.getElementById('vehicleCommandsList');
     const switches = listContainer ? listContainer.querySelectorAll('.cmd-switch') : [];
     const disabledList = [];
-    const enabledList = [];
+    const changedSwitches = [];
 
     switches.forEach((sw) => {
       const cmdName = sw.dataset.cmd;
-      if (sw.checked) {
-        enabledList.push(cmdName);
-      } else {
-        disabledList.push(cmdName);
+      const command = this.vehicleCommandRecords?.get(cmdName);
+      if (!sw.checked) disabledList.push(cmdName);
+      if (command && Number(command.activo) !== Number(sw.checked)) {
+        changedSwitches.push({ sw, command });
       }
     });
 
-    localStorage.setItem(`vehicle_disabled_commands_${unitId}`, JSON.stringify(disabledList));
+    const saveButton = document.querySelector('#vehicleCommandsModal .modal-footer .btn-cyan');
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.textContent = 'Guardando…';
+    }
+    try {
+      for (const { sw, command } of changedSwitches) {
+        await this.api.updateCommand(unitId, command.id_comando, {
+          nombre: command.nombre,
+          codigo: Number(command.codigo),
+          descripcion: command.descripcion || '',
+          activo: sw.checked,
+        });
+        command.activo = sw.checked;
+      }
 
-    const detalle = disabledList.length
-      ? `Comandos deshabilitados en control: ${disabledList.join(', ')}`
-      : 'Todos los movimientos habilitados en control';
-    this.addAuditEntry('CONFIGURAR_MOVIMIENTOS', `vehiculos/${unitId}`, detalle);
-
-    this.notify(`¡Permisos de movimientos actualizados para el Vehículo #${unitId}!`, 'success');
-
-    window.dispatchEvent(new CustomEvent('vehicle-commands-updated', {
-      detail: { vehicleId: unitId, disabled: disabledList }
-    }));
-
-    if (window.bootstrap) {
-      const modalEl = document.getElementById('vehicleCommandsModal');
-      const modal = window.bootstrap.Modal.getInstance(modalEl);
-      if (modal) modal.hide();
+      const detalle = disabledList.length
+        ? `Comandos deshabilitados: ${disabledList.join(', ')}`
+        : 'Todos los movimientos disponibles están habilitados';
+      this.addAuditEntry('CONFIGURAR_MOVIMIENTOS', `vehiculos/${unitId}`, detalle);
+      this.notify(`Permisos guardados en la API para el vehículo #${unitId}.`, 'success');
+      window.dispatchEvent(new CustomEvent('vehicle-commands-updated', {
+        detail: { vehicleId: unitId, disabled: disabledList }
+      }));
+      window.bootstrap?.Modal?.getInstance(document.getElementById('vehicleCommandsModal'))?.hide();
+    } catch (err) {
+      this.notify(`No se pudieron guardar todos los permisos: ${err.message}`, 'error', 6000);
+    } finally {
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = '💾 Guardar Permisos';
+      }
     }
   }
 
