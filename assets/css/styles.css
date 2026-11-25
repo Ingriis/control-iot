@@ -6772,3 +6772,53 @@ main#main {
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header > div:first-child { gap: 4px !important; }
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text { padding-inline: 4px !important; font-size: 9px !important; }
 }
+
+/* Demo editor: guided three-screen flow */
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card { display:flex !important; flex-direction:column !important; min-height:0 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-form,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-wizard { display:flex !important; flex:1 1 auto !important; flex-direction:column !important; min-height:0 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:10px !important; margin:0 0 18px !important; padding:0 0 12px !important; border-bottom:1px solid rgba(0,220,240,.24) !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step { display:flex !important; align-items:center !important; gap:8px !important; color:#8d9aaa !important; font-size:12px !important; font-weight:700 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step span { display:grid !important; place-items:center !important; width:28px !important; height:28px !important; flex:0 0 28px !important; border:1px solid #586575 !important; border-radius:50% !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step.is-current { color:#35e3ef !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step.is-current span,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step.is-complete span { background:#08baca !important; border-color:#08baca !important; color:#07121c !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage { display:flex !important; flex:1 1 auto !important; flex-direction:column !important; min-height:0 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage.d-none { display:none !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content { display:flex !important; flex:1 1 auto !important; flex-direction:column !important; justify-content:center !important; width:min(100%,900px) !important; margin:0 auto !important; padding:10px 0 22px !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-kicker { display:block !important; margin-bottom:6px !important; color:#34e4ef !important; font-size:10px !important; font-weight:800 !important; letter-spacing:.14em !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content h5 { margin:0 0 8px !important; color:#f0f5fb !important; font-size:clamp(20px,2.3vw,28px) !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content > p { margin:0 0 26px !important; color:#9caaba !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-field { min-width:0 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage .demo-wizard-field { width:min(100%,720px) !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-field .form-label { display:block !important; margin-bottom:7px !important; color:#e8eff6 !important; font-size:14px !important; font-weight:700 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage select { min-height:52px !important; font-size:16px !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-field small { display:block !important; margin-top:7px !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:22px !important; align-items:start !important; margin-top:18px !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid .demo-wizard-description { grid-column:1/-1 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid input,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid select { min-height:44px !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-actions { display:flex !important; align-items:center !important; gap:10px !important; padding-top:14px !important; border-top:1px solid rgba(255,255,255,.1) !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-actions .btn { min-height:40px !important; padding-inline:18px !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-editor-steps-col { display:flex !important; flex:1 1 auto !important; flex-direction:column !important; min-height:0 !important; padding:0 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-header { flex:0 0 auto !important; gap:10px !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-header-actions { flex-wrap:wrap !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-scroll { flex:1 1 auto !important; min-height:100px !important; max-height:none !important; overflow-y:auto !important; }
+@media(max-width:700px) {
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card { padding:12px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-title { font-size:17px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-desc { font-size:11px !important; margin-bottom:12px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress { gap:4px !important; margin-bottom:10px !important; padding-bottom:8px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step { flex-direction:column !important; gap:3px !important; text-align:center !important; font-size:10px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content { padding:8px 0 14px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content > p { margin-bottom:18px !important; font-size:12px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid { grid-template-columns:minmax(0,1fr) !important; gap:14px !important; margin-top:12px !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid .demo-wizard-description { grid-column:auto !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-header { align-items:flex-start !important; flex-direction:column !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-header-actions { width:100% !important; }
+}
+@media(max-width:420px) {
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-actions { justify-content:space-between !important; }
+ #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-actions .btn { min-height:38px !important; padding-inline:12px !important; font-size:12px !important; }
+}

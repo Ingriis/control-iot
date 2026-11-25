@@ -69,6 +69,7 @@ export class AdminModule {
     this.onVehicleChange = options.onVehicleChange || (() => {});
     this.onRoleChange = options.onRoleChange || (() => {});
     this.activeSubtab = 'dashboard';
+    this.demoEditorStage = 1;
   }
 
   notify(message, type = 'info', duration = 3500) {
@@ -177,8 +178,16 @@ export class AdminModule {
 
     const demoVehicleSelect = document.getElementById('demoVehicleSelect');
     if (demoVehicleSelect) {
-      demoVehicleSelect.addEventListener('change', () => this.loadDemosForSelectedVehicle());
+      demoVehicleSelect.addEventListener('change', () => {
+        this.updateDemoWizardVehicleNext();
+        this.loadDemosForSelectedVehicle();
+      });
     }
+
+    document.getElementById('demoWizardNextDetails')?.addEventListener('click', () => this.continueDemoWizardToDetails());
+    document.getElementById('demoWizardBackVehicle')?.addEventListener('click', () => this.showDemoEditorStage(1));
+    document.getElementById('demoWizardNextSteps')?.addEventListener('click', () => this.continueDemoWizardToSteps());
+    document.getElementById('demoWizardBackDetails')?.addEventListener('click', () => this.showDemoEditorStage(2));
 
     const demoTargetSelect = document.getElementById('demoTargetSelect');
     if (demoTargetSelect) {
@@ -900,6 +909,7 @@ export class AdminModule {
   // Editor de DEMOS (Creación y Modificación de Secuencias de Movimientos)
   // ---------------------------------------------------------------------------
   async loadDemoEditor() {
+    this.showDemoEditorStage(1);
     this.demoSteps = [];
     this.pendingDeletedMovementIds = [];
     const container = document.getElementById('demoStepsContainer');
@@ -941,8 +951,52 @@ export class AdminModule {
       }
     }
 
+    this.updateDemoWizardVehicleNext();
+
     // Cargar demos asociadas al vehículo activo
     await this.loadDemosForSelectedVehicle();
+  }
+
+  updateDemoWizardVehicleNext() {
+    const vehicleSelect = document.getElementById('demoVehicleSelect');
+    const nextButton = document.getElementById('demoWizardNextDetails');
+    if (nextButton) nextButton.disabled = !vehicleSelect?.value;
+  }
+
+  showDemoEditorStage(stage) {
+    const nextStage = Math.max(1, Math.min(3, Number(stage) || 1));
+    this.demoEditorStage = nextStage;
+    document.querySelectorAll('[data-demo-wizard-stage]').forEach((panel) => {
+      const active = Number(panel.dataset.demoWizardStage) === nextStage;
+      panel.classList.toggle('d-none', !active);
+      panel.setAttribute('aria-hidden', String(!active));
+    });
+    document.querySelectorAll('[data-demo-wizard-progress]').forEach((item) => {
+      const itemStage = Number(item.dataset.demoWizardProgress);
+      item.classList.toggle('is-current', itemStage === nextStage);
+      item.classList.toggle('is-complete', itemStage < nextStage);
+    });
+    this.updateDemoWizardVehicleNext();
+  }
+
+  continueDemoWizardToDetails() {
+    const vehicleSelect = document.getElementById('demoVehicleSelect');
+    if (!vehicleSelect?.value) {
+      vehicleSelect?.reportValidity();
+      return;
+    }
+    this.showDemoEditorStage(2);
+  }
+
+  continueDemoWizardToSteps() {
+    const targetSelect = document.getElementById('demoTargetSelect');
+    const nameInput = document.getElementById('demoCustomName');
+    if (!targetSelect?.value) {
+      targetSelect?.reportValidity();
+      return;
+    }
+    if (!nameInput?.reportValidity()) return;
+    this.showDemoEditorStage(3);
   }
 
   async loadDemosForSelectedVehicle() {
@@ -989,8 +1043,13 @@ export class AdminModule {
     const vId = vSelect ? vSelect.value : this.api.getVehicleId();
 
     this.pendingDeletedMovementIds = [];
+    const modeBadge = document.getElementById('demoModeBadge');
 
     if (mode === 'new') {
+      if (modeBadge) {
+        modeBadge.textContent = 'NUEVA DEMO';
+        modeBadge.className = 'badge bg-success text-dark fw-bold demo-mode-badge';
+      }
       if (deleteBtn) deleteBtn.classList.add('d-none');
       if (nameInput) {
         nameInput.value = '';
@@ -1000,13 +1059,17 @@ export class AdminModule {
         descInput.value = '';
         descInput.removeAttribute('readonly');
       }
-      if (submitBtn) submitBtn.textContent = 'Guardar Nueva DEMO en Amazon RDS';
+      if (submitBtn) submitBtn.innerHTML = '💾 Guardar DEMO';
       container.innerHTML = '';
       this.addDemoStepRow({ isNew: true });
     } else {
       // Modo: Demo existente para renombrar, agregar/quitar movimientos o eliminar
-      if (deleteBtn) deleteBtn.classList.remove('d-none');
       const demoId = Number(mode);
+      if (modeBadge) {
+        modeBadge.textContent = `EDITANDO DEMO #${demoId}`;
+        modeBadge.className = 'badge bg-info text-dark fw-bold demo-mode-badge';
+      }
+      if (deleteBtn) deleteBtn.classList.remove('d-none');
       const demos = (this.vehicleDemosMap && this.vehicleDemosMap[vId]) || [];
       const currentDemo = demos.find((d) => (d.id_demo || d.id) === demoId);
 
@@ -1014,7 +1077,7 @@ export class AdminModule {
         if (nameInput) nameInput.value = currentDemo.nombre;
         if (descInput) descInput.value = currentDemo.descripcion || '';
       }
-      if (submitBtn) submitBtn.textContent = `Guardar / Agregar Movimientos a DEMO #${demoId}`;
+      if (submitBtn) submitBtn.innerHTML = `💾 Guardar Cambios en DEMO #${demoId}`;
 
       container.innerHTML = '<div class="text-center py-2 text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Cargando movimientos de la DEMO...</div>';
 
@@ -1068,33 +1131,44 @@ export class AdminModule {
   addDemoStepRow(options = {}) {
     const container = document.getElementById('demoStepsContainer');
     if (!container) return;
-    const stepIndex = container.children.length + 1;
+
+    // Quitar estado vacío si existe
+    const emptyState = container.querySelector('.demo-empty-state');
+    if (emptyState) emptyState.remove();
+
+    const stepIndex = container.querySelectorAll('.demo-step-row').length + 1;
     const movementId = options.movementId || '';
     const commandId = options.commandId || 1;
     const duration = options.duration !== undefined ? options.duration : 1500;
     const pause = options.pause !== undefined ? options.pause : 300;
     const isNew = options.isNew !== undefined ? options.isNew : !movementId;
 
+    const commandsList = [
+      { id: 1, name: '⬆ AVANZAR', group: 'drive' },
+      { id: 2, name: '⬇ RETROCEDER', group: 'drive' },
+      { id: 3, name: '⬅ GIRAR IZQUIERDA', group: 'steer' },
+      { id: 4, name: '➡ GIRAR DERECHA', group: 'steer' },
+      { id: 5, name: '▲ SUBIR HORQUILLAS', group: 'forks' },
+      { id: 6, name: '▼ BAJAR HORQUILLAS', group: 'forks' },
+      { id: 8, name: '💡 LUCES', group: 'signal' },
+      { id: 11, name: '🔊 SONIDO', group: 'signal' },
+      { id: 9, name: '🛑 DETENER', group: 'stop' },
+    ];
+
+    const currentCmd = commandsList.find((c) => Number(c.id) === Number(commandId)) || commandsList[0];
+
     const row = document.createElement('div');
     row.className = 'demo-step-row d-flex gap-2 align-items-center mb-2 p-2 bg-dark rounded border border-secondary';
+    row.dataset.commandGroup = currentCmd.group;
     if (movementId) row.dataset.movementId = movementId;
     row.dataset.isNew = isNew ? 'true' : 'false';
-
-    const commandsList = [
-      { id: 1, name: 'AVANZAR' },
-      { id: 2, name: 'RETROCEDER' },
-      { id: 3, name: 'GIRAR IZQUIERDA' },
-      { id: 4, name: 'GIRAR DERECHA' },
-      { id: 5, name: 'SUBIR HORQUILLAS' },
-      { id: 6, name: 'BAJAR HORQUILLAS' },
-      { id: 8, name: 'LUCES' },
-      { id: 11, name: 'SONIDO' },
-      { id: 9, name: 'DETENER' },
-    ];
 
     const optionsHtml = commandsList.map((c) =>
       `<option value="${c.id}" ${Number(c.id) === Number(commandId) ? 'selected' : ''}>${c.name}</option>`
     ).join('');
+
+    const durSec = (duration / 1000).toFixed(1);
+    const pauseSec = (pause / 1000).toFixed(1);
 
     row.innerHTML = `
       <span class="badge ${isNew ? 'bg-primary' : 'bg-secondary'} demo-step-badge">#${stepIndex}</span>
@@ -1105,22 +1179,31 @@ export class AdminModule {
       <select class="form-select form-select-sm step-command" required>
         ${optionsHtml}
       </select>
-      <div class="input-group input-group-sm demo-input-duration">
-        <input type="number" class="form-control step-duration" value="${duration}" min="200" max="10000" step="100" title="Duración (ms)">
-        <span class="input-group-text">ms</span>
+      <div class="input-group input-group-sm demo-input-duration" title="Duración del movimiento">
+        <input type="number" class="form-control step-duration" value="${duration}" min="200" max="10000" step="100">
+        <span class="input-group-text step-dur-label">ms <small class="text-cyan ms-1 step-dur-sec">(${durSec}s)</small></span>
       </div>
-      <div class="input-group input-group-sm demo-input-pause">
-        <input type="number" class="form-control step-pause" value="${pause}" min="0" max="5000" step="100" title="Pausa (ms)">
-        <span class="input-group-text">pausa</span>
+      <div class="input-group input-group-sm demo-input-pause" title="Pausa después del movimiento">
+        <input type="number" class="form-control step-pause" value="${pause}" min="0" max="5000" step="100">
+        <span class="input-group-text step-pause-label">pausa <small class="text-muted ms-1 step-pause-sec">(${pauseSec}s)</small></span>
       </div>
       <button type="button" class="btn btn-sm btn-outline-danger demo-step-remove-btn" title="Quitar movimiento">✕</button>
     `;
+
+    const select = row.querySelector('.step-command');
+    if (select) {
+      select.addEventListener('change', (e) => {
+        const chosen = commandsList.find((c) => Number(c.id) === Number(e.target.value));
+        if (chosen) row.dataset.commandGroup = chosen.group;
+        this.updateDemoStepsSummary();
+      });
+    }
 
     const upBtn = row.querySelector('.demo-step-up-btn');
     if (upBtn) {
       upBtn.addEventListener('click', () => {
         const prev = row.previousElementSibling;
-        if (prev) {
+        if (prev && prev.classList.contains('demo-step-row')) {
           container.insertBefore(row, prev);
           this.updateDemoStepsSummary();
         }
@@ -1131,7 +1214,7 @@ export class AdminModule {
     if (downBtn) {
       downBtn.addEventListener('click', () => {
         const next = row.nextElementSibling;
-        if (next) {
+        if (next && next.classList.contains('demo-step-row')) {
           container.insertBefore(next, row);
           this.updateDemoStepsSummary();
         }
@@ -1162,6 +1245,26 @@ export class AdminModule {
     const container = document.getElementById('demoStepsContainer');
     if (!container) return;
     const rows = container.querySelectorAll('.demo-step-row');
+
+    if (!rows.length) {
+      let emptyState = container.querySelector('.demo-empty-state');
+      if (!emptyState) {
+        container.innerHTML = `
+          <div class="demo-empty-state text-center p-3 border border-secondary border-dashed rounded text-muted">
+            <div class="small mb-2">⚠️ No hay movimientos en esta secuencia.</div>
+            <button type="button" class="btn btn-sm btn-outline-cyan py-0 px-2" id="demoEmptyAddStepBtn">+ Agregar Primer Movimiento</button>
+          </div>
+        `;
+        const addBtn = container.querySelector('#demoEmptyAddStepBtn');
+        if (addBtn) addBtn.addEventListener('click', () => this.addDemoStepRow({ isNew: true }));
+      }
+      const totalBadge = document.getElementById('demoTotalTimeBadge');
+      if (totalBadge) totalBadge.textContent = '⏱️ 0 pasos · 0.0s';
+      const timelineBar = document.getElementById('demoTimelineBar');
+      if (timelineBar) timelineBar.innerHTML = '';
+      return;
+    }
+
     let totalMs = 0;
     rows.forEach((r, idx) => {
       const badge = r.querySelector('.demo-step-badge');
@@ -1169,6 +1272,13 @@ export class AdminModule {
       const dur = Number(r.querySelector('.step-duration')?.value || 0);
       const pause = Number(r.querySelector('.step-pause')?.value || 0);
       totalMs += (dur + pause);
+
+      const durSec = (dur / 1000).toFixed(1);
+      const pauseSec = (pause / 1000).toFixed(1);
+      const durSecEl = r.querySelector('.step-dur-sec');
+      if (durSecEl) durSecEl.textContent = `(${durSec}s)`;
+      const pauseSecEl = r.querySelector('.step-pause-sec');
+      if (pauseSecEl) pauseSecEl.textContent = `(${pauseSec}s)`;
 
       const up = r.querySelector('.demo-step-up-btn');
       const down = r.querySelector('.demo-step-down-btn');
@@ -1180,6 +1290,38 @@ export class AdminModule {
     if (totalBadge) {
       const sec = (totalMs / 1000).toFixed(1);
       totalBadge.textContent = `⏱️ ${rows.length} paso${rows.length === 1 ? '' : 's'} · ${sec}s`;
+    }
+
+    // Actualizar timeline visual proporcional
+    const timelineBar = document.getElementById('demoTimelineBar');
+    if (timelineBar) {
+      timelineBar.innerHTML = '';
+      if (totalMs > 0) {
+        const groupColors = {
+          drive: '#22e3ed',
+          steer: '#00d2d3',
+          forks: '#ff9f43',
+          signal: '#feca57',
+          stop: '#ff4757',
+        };
+        rows.forEach((r, idx) => {
+          const dur = Number(r.querySelector('.step-duration')?.value || 0);
+          const pause = Number(r.querySelector('.step-pause')?.value || 0);
+          const stepTotal = dur + pause;
+          const pct = Math.max(3, (stepTotal / totalMs) * 100);
+          const grp = r.dataset.commandGroup || 'drive';
+          const color = groupColors[grp] || '#22e3ed';
+
+          const seg = document.createElement('div');
+          seg.className = 'demo-timeline-segment';
+          seg.style.width = `${pct}%`;
+          seg.style.backgroundColor = color;
+          seg.style.height = '100%';
+          const cmdName = r.querySelector('.step-command option:checked')?.textContent || '';
+          seg.title = `Paso #${idx + 1}: ${cmdName} (${(stepTotal / 1000).toFixed(1)}s)`;
+          timelineBar.appendChild(seg);
+        });
+      }
     }
   }
 
@@ -1202,6 +1344,13 @@ export class AdminModule {
     if (!rows.length) {
       this.notify('Debe agregar al menos un paso a la secuencia DEMO.', 'warning');
       return;
+    }
+
+    const submitBtn = document.querySelector('#saveDemoForm button[type="submit"]');
+    const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Guardando en RDS...';
     }
 
     try {
@@ -1285,10 +1434,20 @@ export class AdminModule {
         this.notify(`¡DEMO #${demoId} actualizada en Amazon RDS! (${resumen})`, 'success');
       }
 
+      if (submitBtn) {
+        submitBtn.innerHTML = '✅ ¡Guardado con éxito!';
+        await new Promise((r) => setTimeout(r, 600));
+      }
+
       e.target.reset();
       await this.loadDemoEditor();
     } catch (err) {
       this.notify(`Error al guardar en la DEMO: ${err.message}`, 'error', 4500);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+      }
     }
   }
 
