@@ -208,6 +208,12 @@ export class AdminModule {
       });
       window.addEventListener('orientationchange', openDescriptionWhenPortrait);
       window.addEventListener('resize', openDescriptionWhenPortrait);
+      const applyDemoDescription = () => {
+        demoDescription.value = demoDescriptionEditor.value.trim();
+        demoDescription.dispatchEvent(new Event('input', { bubbles: true }));
+        demoDescriptionEditor.blur();
+        demoDescriptionModal.hide();
+      };
       demoDescription.addEventListener('click', () => {
         if (isSmallLandscape()) {
           waitingForPortrait = true;
@@ -221,11 +227,13 @@ export class AdminModule {
         waitingForPortrait = false;
       });
       demoDescriptionModalEl.addEventListener('shown.bs.modal', () => demoDescriptionEditor.focus());
-      document.getElementById('demoDescriptionModalApply')?.addEventListener('click', () => {
-        demoDescription.value = demoDescriptionEditor.value.trim();
-        demoDescription.dispatchEvent(new Event('input', { bubbles: true }));
-        demoDescriptionModal.hide();
+      demoDescriptionEditor.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.isComposing) {
+          event.preventDefault();
+          applyDemoDescription();
+        }
       });
+      document.getElementById('demoDescriptionModalApply')?.addEventListener('click', applyDemoDescription);
     }
 
     const demoTargetSelect = document.getElementById('demoTargetSelect');
