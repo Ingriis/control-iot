@@ -6631,3 +6631,144 @@ main#main {
     font-size: 9px !important;
   }
 }
+
+/* Reestructura el editor: datos completos arriba y pasos legibles en un panel desplazable. */
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card {
+  min-height: 0 !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  grid-template-areas: "meta" "steps" !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col {
+  display: grid !important;
+  grid-template-columns: minmax(165px, 1.15fr) minmax(205px, 1.45fr) minmax(145px, 1fr) minmax(190px, 1.3fr) !important;
+  align-items: end !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col > .mb-2 {
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col label {
+  display: block !important;
+  margin: 0 0 4px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col .form-control,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col .form-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-steps-col {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-area: steps !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 8px !important;
+  border: 1px solid rgba(34, 227, 237, .28) !important;
+  border-radius: 8px !important;
+  background: rgba(7, 17, 29, .55) !important;
+  overflow: hidden !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header {
+  flex-wrap: wrap !important;
+  flex: 0 0 auto !important;
+  gap: 6px !important;
+  margin: 0 0 7px !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-scroll {
+  display: flex !important;
+  flex: 1 1 0 !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 4px 0 0 !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+  display: grid !important;
+  flex: 0 0 auto !important;
+  grid-template-columns: 34px 50px minmax(180px, 1fr) minmax(125px, 155px) minmax(125px, 150px) 32px !important;
+  grid-template-rows: minmax(34px, auto) !important;
+  grid-template-areas: "badge reorder command duration pause remove" !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 46px !important;
+  height: auto !important;
+  padding: 5px 7px !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-badge { grid-area: badge !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-reorder { grid-area: reorder !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .step-command { grid-area: command !important; width: 100% !important; min-width: 0 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-input-duration { grid-area: duration !important; width: 100% !important; min-width: 0 !important; max-width: none !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-input-pause { grid-area: pause !important; width: 100% !important; min-width: 0 !important; max-width: none !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-remove-btn { grid-area: remove !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .step-command,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .form-control,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-remove-btn {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 3px 6px !important;
+  font-size: 11px !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text small { display: inline !important; }
+
+@media (max-width: 900px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px 10px !important;
+  }
+}
+@media (max-width: 680px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card { padding: 7px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid { gap: 7px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col { gap: 6px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col label { font-size: 10px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col .form-control,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col .form-select { height: 32px !important; min-height: 32px !important; font-size: 11px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-steps-col { padding: 6px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+    grid-template-columns: 30px 44px minmax(0, 1fr) 30px !important;
+    grid-template-rows: 30px 30px !important;
+    grid-template-areas: "badge reorder command remove" "duration duration pause pause" !important;
+    gap: 5px !important;
+    min-height: 72px !important;
+    padding: 5px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .step-command { height: 30px !important; min-height: 30px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-input-duration,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-input-pause { height: 30px !important; }
+}
+@media (max-width: 420px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-meta-col { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header { align-items: flex-start !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header > div:first-child { gap: 4px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text { padding-inline: 4px !important; font-size: 9px !important; }
+}
