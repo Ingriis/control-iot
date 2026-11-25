@@ -125,6 +125,10 @@ export function createApi(config) {
       body: JSON.stringify({ command_id: commandId }),
       signal,
     }),
+    setControlState: (payload, vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/control-state`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
     runDemo: (demoId, signal, vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/demos/${encodeURIComponent(demoId)}/run`, {
       method: 'POST',
       signal,
