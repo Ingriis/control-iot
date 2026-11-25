@@ -6996,3 +6996,100 @@ main#main {
     white-space:nowrap !important;
   }
 }
+
+/* Editor de demos en teléfono vertical: controles completos y lista de pasos desplazable. */
+@media (orientation: portrait) and (max-width: 600px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) {
+    flex:1 1 0 !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    overflow:hidden !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card {
+    display:flex !important;
+    flex:1 1 0 !important;
+    flex-direction:column !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    padding:6px !important;
+    overflow:hidden !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-title,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-desc { display:none !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-form,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-wizard { flex:1 1 0 !important; min-height:0 !important; overflow:hidden !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress {
+    flex:0 0 auto !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:4px !important;
+    margin:0 0 6px !important;
+    padding:0 0 5px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step { justify-content:center !important; gap:5px !important; font-size:10px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-progress-step span { width:20px !important; height:20px !important; flex-basis:20px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content {
+    justify-content:flex-start !important;
+    width:100% !important;
+    padding:2px 2px 6px !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content h5 { margin:0 0 5px !important; font-size:17px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-stage-content > p { margin:0 0 8px !important; font-size:11px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-kicker { margin:0 0 3px !important; font-size:8px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid {
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:6px !important;
+    margin-top:4px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid .demo-wizard-description { grid-column:auto !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-field .form-label { margin:0 0 2px !important; font-size:10px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-field small { margin-top:2px !important; font-size:9px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid input,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid select,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage select { height:36px !important; min-height:36px !important; padding:4px 8px !important; font-size:12px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoVehicleHelp { display:none !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-actions { flex:0 0 auto !important; padding-top:6px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-actions .btn { min-height:38px !important; padding:6px 12px !important; font-size:11px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-editor-steps-col { display:flex !important; flex:1 1 0 !important; flex-direction:column !important; min-height:0 !important; overflow:hidden !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-header {
+    display:flex !important;
+    flex:0 0 auto !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    flex-wrap:wrap !important;
+    gap:5px !important;
+    margin-bottom:5px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-header-actions { display:flex !important; flex-wrap:wrap !important; gap:4px !important; width:auto !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-header-actions .btn { min-height:34px !important; padding:4px 7px !important; font-size:10px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-timeline-wrap { display:none !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) [data-demo-wizard-stage="3"] .demo-steps-scroll,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) #demoStepsContainer {
+    display:flex !important;
+    flex:1 1 0 !important;
+    flex-direction:column !important;
+    min-height:0 !important;
+    height:auto !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row {
+    grid-template-columns:28px 38px minmax(0,1fr) 30px !important;
+    grid-template-rows:34px 34px !important;
+    grid-template-areas:"badge reorder command remove" "duration duration pause pause" !important;
+    min-height:74px !important;
+    padding:4px !important;
+    gap:4px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .step-command,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .form-control,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text,
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-remove-btn { height:32px !important; min-height:32px !important; font-size:10px !important; }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text small { display:none !important; }
+}
