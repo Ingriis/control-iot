@@ -14,19 +14,19 @@ const DEMO_COMBO_COMMANDS = [
 ];
 
 const DEMO_COMMAND_PRESENTATION = {
-  1: { name: '⬆ AVANZAR', group: 'drive' },
-  2: { name: '⬇ RETROCEDER', group: 'drive' },
-  3: { name: '⬅ GIRAR IZQUIERDA', group: 'steer' },
-  4: { name: '➡ GIRAR DERECHA', group: 'steer' },
-  5: { name: '▲ SUBIR HORQUILLAS', group: 'forks' },
-  6: { name: '▼ BAJAR HORQUILLAS', group: 'forks' },
-  8: { name: '💡 LUCES', group: 'signal' },
-  9: { name: '🛑 DETENER', group: 'stop' },
-  11: { name: '🔊 SONIDO', group: 'signal' },
-  14: { name: '↖ AVANZAR + IZQUIERDA', group: 'combo' },
-  15: { name: '↗ AVANZAR + DERECHA', group: 'combo' },
-  16: { name: '↙ RETROCEDER + IZQUIERDA', group: 'combo' },
-  17: { name: '↘ RETROCEDER + DERECHA', group: 'combo' },
+  AVANZAR: { codigo: 1, name: '⬆ AVANZAR', group: 'drive' },
+  RETROCEDER: { codigo: 2, name: '⬇ RETROCEDER', group: 'drive' },
+  GIRAR_IZQUIERDA: { codigo: 3, name: '⬅ GIRAR IZQUIERDA', group: 'steer' },
+  GIRAR_DERECHA: { codigo: 4, name: '➡ GIRAR DERECHA', group: 'steer' },
+  SUBIR_HORQUILLAS: { codigo: 5, name: '▲ SUBIR HORQUILLAS', group: 'forks' },
+  BAJAR_HORQUILLAS: { codigo: 6, name: '▼ BAJAR HORQUILLAS', group: 'forks' },
+  LUCES: { codigo: 8, name: '💡 LUCES', group: 'signal' },
+  DETENER: { codigo: 9, name: '🛑 DETENER', group: 'stop' },
+  SONIDO: { codigo: 11, name: '🔊 SONIDO', group: 'signal' },
+  AVANZAR_IZQUIERDA: { codigo: 14, name: '↖ AVANZAR + IZQUIERDA', group: 'combo' },
+  AVANZAR_DERECHA: { codigo: 15, name: '↗ AVANZAR + DERECHA', group: 'combo' },
+  RETROCEDER_IZQUIERDA: { codigo: 16, name: '↙ RETROCEDER + IZQUIERDA', group: 'combo' },
+  RETROCEDER_DERECHA: { codigo: 17, name: '↘ RETROCEDER + DERECHA', group: 'combo' },
 };
 
 /**
@@ -1526,27 +1526,24 @@ export class AdminModule {
 
     const stepIndex = container.querySelectorAll('.demo-step-row').length + 1;
     const movementId = options.movementId || '';
-    const firstForward = this.demoCommandRecords.find((command) => Number(command.codigo) === 1);
+    const firstForward = this.demoCommandRecords.find((command) =>
+      command.nombre === 'AVANZAR' && Number(command.codigo) === 1
+    );
     const commandId = options.commandId ?? Number(firstForward?.id_comando || 1);
     const duration = options.duration !== undefined ? options.duration : 1500;
     const pause = options.pause !== undefined ? options.pause : 300;
     const isNew = options.isNew !== undefined ? options.isNew : !movementId;
 
     const records = Array.isArray(this.demoCommandRecords) ? this.demoCommandRecords : [];
-    const commandsList = records.length
-      ? records.flatMap((record) => {
-        const presentation = DEMO_COMMAND_PRESENTATION[Number(record.codigo)];
-        const selected = Number(record.id_comando) === Number(commandId);
-        const active = record.activo === undefined || Number(record.activo) === 1;
-        return presentation && (active || selected)
-          ? [{ id: Number(record.id_comando), name: presentation.name, group: presentation.group }]
-          : [];
-      })
-      : Object.entries(DEMO_COMMAND_PRESENTATION).map(([code, presentation]) => ({
-        id: Number(code),
-        name: presentation.name,
-        group: presentation.group,
-      }));
+    const commandsList = records.flatMap((record) => {
+      const presentation = DEMO_COMMAND_PRESENTATION[record.nombre];
+      const selected = Number(record.id_comando) === Number(commandId);
+      const active = record.activo === undefined || Number(record.activo) === 1;
+      const validMapping = presentation && Number(record.codigo) === presentation.codigo;
+      return validMapping && (active || selected)
+        ? [{ id: Number(record.id_comando), name: presentation.name, group: presentation.group }]
+        : [];
+    });
 
     const currentCmd = commandsList.find((c) => Number(c.id) === Number(commandId)) || commandsList[0] || { group: 'drive' };
 
