@@ -1022,15 +1022,11 @@ export class AdminModule {
           <td><span class="badge ${c.activo ? 'bg-success' : 'bg-danger'}">${c.activo ? 'ACTIVO' : 'INACTIVO'}</span></td>
           <td class="text-nowrap">
             <button type="button" class="btn btn-sm btn-outline-info me-1" data-client-edit="${c.id_usuario}">Editar</button>
-            <button type="button" class="btn btn-sm ${c.activo ? 'btn-outline-warning' : 'btn-outline-success'}" data-client-toggle="${c.id_usuario}">${c.activo ? 'Retirar' : 'Reactivar'}</button>
           </td>
         </tr>
       `).join('');
       tableBody.querySelectorAll('[data-client-edit]').forEach((button) => {
         button.addEventListener('click', () => this.openEditClient(button.dataset.clientEdit));
-      });
-      tableBody.querySelectorAll('[data-client-toggle]').forEach((button) => {
-        button.addEventListener('click', () => this.toggleClientActive(button.dataset.clientToggle));
       });
     } catch (err) {
       tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Error: ${err.message}</td></tr>`;
@@ -1065,29 +1061,6 @@ export class AdminModule {
       this.loadDashboardMetrics();
     } catch (err) {
       this.notify(`No se pudo actualizar el cliente: ${err.message}`, 'error', 5000);
-    }
-  }
-
-  async toggleClientActive(clientId) {
-    const client = this.clientsById?.get(String(clientId));
-    if (!client) return;
-    const nextActive = !client.activo;
-    const action = nextActive ? 'reactivar' : 'retirar';
-    const unitCount = Number(client.total_unidades || 0);
-    const linkedUnits = unitCount ? ` Sus ${unitCount} unidad(es) vinculada(s) y registros se conservarán.` : '';
-    if (!window.confirm(`¿Quieres ${action} la cuenta de “${client.username}”?${linkedUnits}`)) return;
-
-    try {
-      await this.api.updateClient(clientId, {
-        nombre_completo: client.nombre_completo,
-        email: client.email,
-        activo: nextActive,
-      });
-      this.notify(nextActive ? 'Cuenta de cliente reactivada.' : 'Cuenta retirada; se conservaron sus unidades y registros.', 'success');
-      await this.loadClients();
-      this.loadDashboardMetrics();
-    } catch (err) {
-      this.notify(`No se pudo ${action} la cuenta: ${err.message}`, 'error', 5000);
     }
   }
 
