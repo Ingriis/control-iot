@@ -1849,7 +1849,7 @@ export class AdminModule {
       }
       if (remaining <= 0) {
         window.clearInterval(this.guestTimer);
-        this.notify('Tu tiempo de prueba ha finalizado. La unidad se ha detenido de forma segura.', 'warning', 6000);
+        this.notify('Terminó el tiempo de prueba; se detendrá y apagará la unidad.', 'warning', 6000);
         this.handleReleaseGuestSession();
       }
       remaining--;
@@ -1863,7 +1863,7 @@ export class AdminModule {
     window.clearInterval(this.guestTimer);
     const sessionToken = this.guestSession?.token_sesion;
     this.guestSession = null;
-    this.onGuestSessionChange(false);
+    await this.onGuestSessionChange(false);
     if (sessionToken) {
       try {
         await this.api.releaseGuestSession(sessionToken);

@@ -3,7 +3,7 @@ import { loadConfig, validateConfig } from './config.js';
 import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
-import { AdminModule } from './admin.js?v=20261124-v101-guest-access';
+import { AdminModule } from './admin.js?v=20261125-guest-power-off';
 import {
   triggerHaptic,
   playBip,
@@ -714,6 +714,46 @@ async function sendCommand(command, { priorityStop = false } = {}) {
   }
 }
 
+async function shutdownGuestVehicle() {
+  const wasPoweredOn = isPoweredOn();
+  holdGeneration += 1;
+  heldDirection = null;
+  lastDirection = 'neutral';
+  driveJoystick?.reset();
+  steerJoystick?.reset();
+  joystick?.reset();
+
+  const stopCommand = activeCommandByName('DETENER');
+  if (stopCommand) {
+    await sendCommand(stopCommand, { priorityStop: true });
+  }
+
+  if (!wasPoweredOn) return;
+
+  const powerOffCommand = getPowerCommand(true);
+  if (!powerOffCommand) {
+    setAction('No se pudo apagar', 'No hay un comando de apagado activo para esta unidad.');
+    showAlert('errorAlert', 'No hay un comando de apagado activo para esta unidad.');
+    return;
+  }
+
+  const sent = await sendCommand(powerOffCommand, { priorityStop: true });
+  if (!sent) {
+    setAction('No se pudo apagar', 'La API no confirmó el pulso de apagado.');
+    showAlert('errorAlert', 'La API no confirmó el pulso de apagado.');
+    return;
+  }
+
+  const button = $('powerButton');
+  button.setAttribute('aria-pressed', 'false');
+  button.setAttribute('aria-label', 'Interruptor encender o apagar; indicador visual apagado. El vehículo no informa el estado físico.');
+  releaseWakeLock();
+  playPowerSound(false);
+  $('driveText').textContent = 'Apagado';
+  $('driveIndicator').classList.remove('active', 'is-emergency');
+  updateControls();
+}
+
 async function toggleUtility(name, buttonId) {
   triggerHaptic('tap');
   const command = activeCommandByName(name);
@@ -1093,15 +1133,16 @@ async function boot() {
       updateControls();
       if (activeUserRole === 'INVITADO') showView('admin');
     },
-    onGuestSessionChange: (active) => {
+    onGuestSessionChange: async (active) => {
       guestSessionActive = Boolean(active);
       updateRoleNavigation();
       updateControls();
       if (!guestSessionActive) {
-        requestStop(true);
+        const shutdownPromise = shutdownGuestVehicle();
         if (activeUserRole === 'INVITADO' && !$('controlView').classList.contains('d-none')) {
           showView('admin', { skipSafetyStop: true });
         }
+        await shutdownPromise;
       }
     },
   });
