@@ -37,9 +37,15 @@ export function initVerticalStick(element, knob, { onDirection, onRelease, canMo
     const name = Math.abs(y) < deadzone ? null : (y < 0 ? 'forward' : 'backward');
     if (base) base.dataset.direction = name || 'neutral';
 
-    if (name && name !== current && canMove()) {
-      current = name;
-      onDirection(name);
+    if (name && name !== current) {
+      if (canMove(name)) {
+        current = name;
+        onDirection(name);
+      } else {
+        if (current) onRelease();
+        current = null;
+        center();
+      }
     } else if (!name && current) {
       current = null;
       onRelease();
@@ -61,8 +67,14 @@ export function initVerticalStick(element, knob, { onDirection, onRelease, canMo
 
   element.addEventListener('keydown', (event) => {
     const name = V_KEYS[event.key];
-    if (!name || event.repeat || !canMove()) return;
+    if (!name || event.repeat) return;
     event.preventDefault();
+    if (!canMove(name)) {
+      if (current) onRelease();
+      current = null;
+      center();
+      return;
+    }
     current = name;
     if (base) base.dataset.direction = name;
     const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().height * 0.38)));
@@ -117,9 +129,15 @@ export function initHorizontalStick(element, knob, { onDirection, onRelease, can
     const name = Math.abs(x) < deadzone ? null : (x > 0 ? 'right' : 'left');
     if (base) base.dataset.direction = name || 'neutral';
 
-    if (name && name !== current && canMove()) {
-      current = name;
-      onDirection(name);
+    if (name && name !== current) {
+      if (canMove(name)) {
+        current = name;
+        onDirection(name);
+      } else {
+        if (current) onRelease();
+        current = null;
+        center();
+      }
     } else if (!name && current) {
       current = null;
       onRelease();
@@ -141,8 +159,14 @@ export function initHorizontalStick(element, knob, { onDirection, onRelease, can
 
   element.addEventListener('keydown', (event) => {
     const name = H_KEYS[event.key];
-    if (!name || event.repeat || !canMove()) return;
+    if (!name || event.repeat) return;
     event.preventDefault();
+    if (!canMove(name)) {
+      if (current) onRelease();
+      current = null;
+      center();
+      return;
+    }
     current = name;
     if (base) base.dataset.direction = name;
     const maxOffset = Math.max(20, Math.min(44, Math.round(element.getBoundingClientRect().width * 0.38)));
@@ -201,9 +225,15 @@ export function initJoystick(element, knob, { onDirection, onRelease, canMove })
       ? (x > 0 ? 'right' : 'left')
       : (y > 0 ? 'backward' : 'forward');
     if (base) base.dataset.direction = name || 'neutral';
-    if (name && name !== current && canMove()) {
-      current = name;
-      onDirection(name);
+    if (name && name !== current) {
+      if (canMove(name)) {
+        current = name;
+        onDirection(name);
+      } else {
+        if (current) onRelease();
+        current = null;
+        center();
+      }
     } else if (!name && current) {
       current = null;
       onRelease();
@@ -222,8 +252,14 @@ export function initJoystick(element, knob, { onDirection, onRelease, canMove })
   element.addEventListener('lostpointercapture', () => { if (pointerId !== null) release(); });
   element.addEventListener('keydown', (event) => {
     const name = DIRECTIONS[event.key];
-    if (!name || event.repeat || !canMove()) return;
+    if (!name || event.repeat) return;
     event.preventDefault();
+    if (!canMove(name)) {
+      if (current) onRelease();
+      current = null;
+      center();
+      return;
+    }
     current = name;
     if (base) base.dataset.direction = name;
     knob.style.setProperty('--joy-tilt', name === 'left' ? '22deg' : name === 'right' ? '-22deg' : '0deg');

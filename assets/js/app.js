@@ -1,9 +1,9 @@
 import { createApi } from './api.js';
 import { loadConfig, validateConfig } from './config.js';
-import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js';
+import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js?v=20261125-direction-disabled';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
-import { AdminModule } from './admin.js?v=20261125-shared-command-permissions';
+import { AdminModule } from './admin.js?v=20261125-direction-disabled';
 import {
   triggerHaptic,
   playBip,
@@ -210,19 +210,26 @@ function updateControls() {
   const stopReady = Boolean(activeCommandByName('DETENER'));
   const powerCmd = getPowerCommand(powered);
 
-  // Estados de palancas desacopladas
-  const driveAvailable = Boolean(activeCommandByName('AVANZAR') || activeCommandByName('RETROCEDER'));
-  const steerAvailable = Boolean(activeCommandByName('GIRAR_IZQUIERDA') || activeCommandByName('GIRAR_DERECHA'));
-
-  // Un movimiento pendiente no debe reiniciar la palanca: el dedo sigue sostenido
-  // mientras renewWhileHeld espera la respuesta antes de renovar el pulso.
-  const driveDisabled = !guestCanControl || !powered || !apiReady || !driveAvailable || demoRunning;
-  const steerDisabled = !guestCanControl || !powered || !apiReady || !steerAvailable || demoRunning;
+  // Cada dirección se bloquea y se marca por separado dentro de cada palanca.
+  const controlsUnavailable = !guestCanControl || !powered || !apiReady || demoRunning || commandPending;
+  const forwardDisabled = controlsUnavailable || !activeCommandByName(names.forward);
+  const backwardDisabled = controlsUnavailable || !activeCommandByName(names.backward);
+  const leftDisabled = controlsUnavailable || !activeCommandByName(names.left);
+  const rightDisabled = controlsUnavailable || !activeCommandByName(names.right);
+  const driveDisabled = forwardDisabled && backwardDisabled;
+  const steerDisabled = leftDisabled && rightDisabled;
 
   const driveEl = $('driveJoystick');
   if (driveEl) {
     driveEl.setAttribute('aria-disabled', String(driveDisabled));
     driveEl.classList.toggle('is-disabled', driveDisabled);
+    const wrap = driveEl.closest('.joystick-wrap');
+    const north = wrap?.querySelector('.direction-label.north');
+    const south = wrap?.querySelector('.direction-label.south');
+    north?.classList.toggle('is-disabled', forwardDisabled);
+    south?.classList.toggle('is-disabled', backwardDisabled);
+    if (north) north.title = forwardDisabled ? 'Avanzar desactivado' : 'Avanzar';
+    if (south) south.title = backwardDisabled ? 'Retroceder desactivado' : 'Retroceder';
     if (driveDisabled) driveJoystick?.reset();
   }
 
@@ -230,6 +237,13 @@ function updateControls() {
   if (steerEl) {
     steerEl.setAttribute('aria-disabled', String(steerDisabled));
     steerEl.classList.toggle('is-disabled', steerDisabled);
+    const wrap = steerEl.closest('.joystick-wrap');
+    const west = wrap?.querySelector('.direction-label.west');
+    const east = wrap?.querySelector('.direction-label.east');
+    west?.classList.toggle('is-disabled', leftDisabled);
+    east?.classList.toggle('is-disabled', rightDisabled);
+    if (west) west.title = leftDisabled ? 'Girar a la izquierda desactivado' : 'Girar a la izquierda';
+    if (east) east.title = rightDisabled ? 'Girar a la derecha desactivado' : 'Girar a la derecha';
     if (steerDisabled) steerJoystick?.reset();
   }
 
@@ -247,6 +261,7 @@ function updateControls() {
   const forkUpBtn = $('forkUpBtn');
   const forkDownBtn = $('forkDownBtn');
   if (forkUpBtn) {
+    forkUpBtn.disabled = forkUpDisabled;
     forkUpBtn.classList.toggle('is-disabled', forkUpDisabled);
     forkUpBtn.setAttribute('aria-disabled', String(forkUpDisabled));
     forkUpBtn.title = disabledList.includes(names.forkUp)
@@ -254,6 +269,7 @@ function updateControls() {
       : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar horquillas.' : 'Mantén presionado para subir horquillas [Q]');
   }
   if (forkDownBtn) {
+    forkDownBtn.disabled = forkDownDisabled;
     forkDownBtn.classList.toggle('is-disabled', forkDownDisabled);
     forkDownBtn.setAttribute('aria-disabled', String(forkDownDisabled));
     forkDownBtn.title = disabledList.includes(names.forkDown)
@@ -950,7 +966,9 @@ async function boot() {
     driveJoystick = initVerticalStick(driveEl, $('driveJoyKnob'), {
       onDirection: handleDirection,
       onRelease: requestStop,
-      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('AVANZAR') || activeCommandByName('RETROCEDER')) && !demoRunning,
+      canMove: (direction) => canUseControl() && isPoweredOn() && apiReady
+        && Boolean(activeCommandByName(direction === 'forward' ? names.forward : names.backward))
+        && !demoRunning && !commandPending,
     });
   }
 
@@ -960,7 +978,9 @@ async function boot() {
     steerJoystick = initHorizontalStick(steerEl, $('steerJoyKnob'), {
       onDirection: handleDirection,
       onRelease: requestStop,
-      canMove: () => isPoweredOn() && apiReady && Boolean(activeCommandByName('GIRAR_IZQUIERDA') || activeCommandByName('GIRAR_DERECHA')) && !demoRunning,
+      canMove: (direction) => canUseControl() && isPoweredOn() && apiReady
+        && Boolean(activeCommandByName(direction === 'left' ? names.left : names.right))
+        && !demoRunning && !commandPending,
     });
   }
 

@@ -363,6 +363,29 @@ body {
 .south { bottom: 3px; left: 50%; transform: translateX(-50%); }
 .east  { right: 3px; top: 50%; transform: translateY(-50%); }
 .west  { left: 3px; top: 50%; transform: translateY(-50%); }
+.direction-label.is-disabled {
+  color: #758092;
+  opacity: .6;
+  background: rgba(255, 77, 109, .16);
+  border-radius: 50%;
+  outline: 1px solid rgba(255, 77, 109, .7);
+  text-shadow: none;
+}
+.direction-label.is-disabled::before {
+  content: '×';
+  position: absolute;
+  inset: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff4d6d;
+  font-size: 19px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 5px #080c19;
+  background: rgba(8, 12, 25, .68);
+  border-radius: 50%;
+}
 .joystick:active .joy-base { filter: drop-shadow(0 0 12px #22e3ed99); }
 .stop-panel {
   position: relative;
