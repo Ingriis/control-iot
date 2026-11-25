@@ -3,7 +3,7 @@ import { loadConfig, validateConfig } from './config.js';
 import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
-import { AdminModule } from './admin.js?v=20261124-v100-inventory-button-labels';
+import { AdminModule } from './admin.js?v=20261124-v101-guest-access';
 import {
   triggerHaptic,
   playBip,
@@ -19,8 +19,11 @@ const names = {
   forward: 'AVANZAR', backward: 'RETROCEDER', left: 'GIRAR_IZQUIERDA', right: 'GIRAR_DERECHA', stop: 'DETENER',
   forkUp: 'SUBIR_HORQUILLAS', forkDown: 'BAJAR_HORQUILLAS',
 };
+const canUseControl = () => activeUserRole !== 'INVITADO' || guestSessionActive;
 const config = validateConfig(loadConfig());
 let api = createApi(config);
+let activeUserRole = 'INVITADO';
+let guestSessionActive = false;
 let commands = [];
 let demos = [];
 let socket = null;
@@ -206,6 +209,7 @@ function updateControls() {
   const vId = config.vehicleId || '1';
   const disabledList = getDisabledCommandsForVehicle(vId);
 
+  const guestCanControl = activeUserRole !== 'INVITADO' || guestSessionActive;
   const powered = isPoweredOn();
   const stopReady = Boolean(activeCommandByName('DETENER'));
   const powerCmd = getPowerCommand(powered);
@@ -216,8 +220,8 @@ function updateControls() {
 
   // Un movimiento pendiente no debe reiniciar la palanca: el dedo sigue sostenido
   // mientras renewWhileHeld espera la respuesta antes de renovar el pulso.
-  const driveDisabled = !powered || !apiReady || !driveAvailable || demoRunning;
-  const steerDisabled = !powered || !apiReady || !steerAvailable || demoRunning;
+  const driveDisabled = !guestCanControl || !powered || !apiReady || !driveAvailable || demoRunning;
+  const steerDisabled = !guestCanControl || !powered || !apiReady || !steerAvailable || demoRunning;
 
   const driveEl = $('driveJoystick');
   if (driveEl) {
@@ -236,14 +240,14 @@ function updateControls() {
   // Compatibilidad con elemento antiguo si existiera
   const legacyJoy = $('joystick');
   if (legacyJoy) {
-    const joyDis = !powered || !apiReady || !directionsAvailable() || demoRunning || commandPending;
+    const joyDis = !guestCanControl || !powered || !apiReady || !directionsAvailable() || demoRunning || commandPending;
     legacyJoy.setAttribute('aria-disabled', String(joyDis));
     legacyJoy.classList.toggle('is-disabled', joyDis);
   }
 
   // Botones dedicados de Horquillas
-  const forkUpDisabled = !powered || !apiReady || !activeCommandByName(names.forkUp) || demoRunning || commandPending;
-  const forkDownDisabled = !powered || !apiReady || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
+  const forkUpDisabled = !guestCanControl || !powered || !apiReady || !activeCommandByName(names.forkUp) || demoRunning || commandPending;
+  const forkDownDisabled = !guestCanControl || !powered || !apiReady || !activeCommandByName(names.forkDown) || demoRunning || commandPending;
   const forkUpBtn = $('forkUpBtn');
   const forkDownBtn = $('forkDownBtn');
   if (forkUpBtn) {
@@ -265,29 +269,47 @@ function updateControls() {
     if ($('forkJoystickStatus')) $('forkJoystickStatus').textContent = 'Horquillas deshabilitadas por Administrador';
   }
 
-  $('powerButton').disabled = !apiReady || !powerCmd || demoRunning || commandPending;
+  $('powerButton').disabled = !guestCanControl || !apiReady || !powerCmd || demoRunning || commandPending;
   $('powerButton').title = powerCmd ? '' : 'El catálogo no contiene un comando de encendido/apagado activo.';
 
-  $('stopButton').disabled = !powered || !apiReady || !stopReady;
+  $('stopButton').disabled = !guestCanControl || !powered || !apiReady || !stopReady;
   $('stopButton').title = !powered ? 'Presiona ENCENDER/APAGAR para habilitar el vehículo.' : (stopReady ? '' : 'El catálogo no contiene un comando DETENER activo.');
 
   const lightsDisabledByAdmin = disabledList.includes('LUCES');
-  $('lightsButton').disabled = !powered || !apiReady || !activeCommandByName('LUCES') || demoRunning || commandPending;
+  $('lightsButton').disabled = !guestCanControl || !powered || !apiReady || !activeCommandByName('LUCES') || demoRunning || commandPending;
   $('lightsButton').title = lightsDisabledByAdmin
     ? 'LUCES deshabilitadas para esta unidad por el Administrador.'
     : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar las luces.' : '');
 
   const soundDisabledByAdmin = disabledList.includes('SONIDO');
-  $('soundButton').disabled = !powered || !apiReady || !activeCommandByName('SONIDO') || demoRunning || commandPending;
+  $('soundButton').disabled = !guestCanControl || !powered || !apiReady || !activeCommandByName('SONIDO') || demoRunning || commandPending;
   $('soundButton').title = soundDisabledByAdmin
     ? 'SONIDO deshabilitado para esta unidad por el Administrador.'
     : (!powered ? 'Presiona ENCENDER/APAGAR para habilitar el sonido.' : '');
 
-  $('runDemoButton').disabled = !powered || !apiReady || !demos.length || ! $('demoSelect').value || demoRunning || commandPending;
+  $('runDemoButton').disabled = !guestCanControl || !powered || !apiReady || !demos.length || ! $('demoSelect').value || demoRunning || commandPending;
   $('runDemoButton').title = !powered ? 'Presiona ENCENDER/APAGAR para ejecutar una DEMO.' : '';
-  $('demoSelect').disabled = !powered || !apiReady || demoRunning || commandPending || demos.length === 0;
-  for (const button of $('commandButtons').querySelectorAll('button')) button.disabled = !powered || demoRunning || commandPending || !apiReady;
+  $('demoSelect').disabled = !guestCanControl || !powered || !apiReady || demoRunning || commandPending || demos.length === 0;
+  for (const button of $('commandButtons').querySelectorAll('button')) button.disabled = !guestCanControl || !powered || demoRunning || commandPending || !apiReady;
   updateDemoDisplay();
+}
+
+function updateRoleNavigation() {
+  const isGuest = activeUserRole === 'INVITADO';
+  const controlTab = $('controlTab');
+  const monitorTab = $('monitorTab');
+  if (controlTab) {
+    controlTab.disabled = isGuest && !guestSessionActive;
+    controlTab.title = isGuest && !guestSessionActive
+      ? 'Inicia sesión o solicita una prueba para habilitar el control.'
+      : '';
+  }
+  if (monitorTab) {
+    monitorTab.classList.toggle('d-none', isGuest);
+    monitorTab.hidden = isGuest;
+    if (isGuest) monitorTab.setAttribute('aria-hidden', 'true');
+    else monitorTab.removeAttribute('aria-hidden');
+  }
 }
 
 function updateDemoDisplay() {
@@ -404,7 +426,17 @@ async function refreshDatabaseHealth() {
   }
 }
 
-function showView(view) {
+function showView(view, { skipSafetyStop = false } = {}) {
+  if (activeUserRole === 'INVITADO' && (view === 'monitor' || (view === 'control' && !guestSessionActive))) {
+    window.adminModule?.notify(
+      view === 'monitor'
+        ? 'El monitoreo está disponible al iniciar sesión.'
+        : 'Solicita una prueba o inicia sesión para usar el control.',
+      'info'
+    );
+    view = 'admin';
+  }
+
   triggerHaptic('tap');
   playBip(580, 0.035);
   const isControl = view === 'control';
@@ -414,7 +446,7 @@ function showView(view) {
   // Enclavamiento de Seguridad (Safety Interlock):
   // Si el operador sale de la vista CONTROL mientras el vehículo estaba en marcha,
   // detener el movimiento automáticamente para evitar operación desatendida.
-  if (!isControl && isPoweredOn() && !demoRunning) {
+  if (!skipSafetyStop && !isControl && isPoweredOn() && !demoRunning) {
     requestStop();
   }
 
@@ -638,7 +670,7 @@ function connectSocket() {
 }
 
 async function sendCommand(command, { priorityStop = false } = {}) {
-  if (!command || !apiReady) return false;
+  if (!command || !apiReady || (!canUseControl() && !priorityStop)) return false;
   if (demoRunning && !priorityStop) {
     setAction('No enviado', 'Espera a que termine la DEMO para enviar otro comando.');
     return false;
@@ -836,6 +868,7 @@ function enableFloatingSwitcherDrag() {
 }
 
 async function executeDemo() {
+  if (!canUseControl()) return;
   triggerHaptic('tap');
   playBip(720, 0.05);
   const demoId = $('demoSelect').value;
@@ -1055,7 +1088,21 @@ async function boot() {
       if (monitorVisible) loadMonitorData();
     },
     onRoleChange: (role) => {
-      // Ajuste visual según rol
+      activeUserRole = String(role || 'INVITADO').toUpperCase();
+      updateRoleNavigation();
+      updateControls();
+      if (activeUserRole === 'INVITADO') showView('admin');
+    },
+    onGuestSessionChange: (active) => {
+      guestSessionActive = Boolean(active);
+      updateRoleNavigation();
+      updateControls();
+      if (!guestSessionActive) {
+        requestStop(true);
+        if (activeUserRole === 'INVITADO' && !$('controlView').classList.contains('d-none')) {
+          showView('admin', { skipSafetyStop: true });
+        }
+      }
     },
   });
   window.adminModule = adminModule;

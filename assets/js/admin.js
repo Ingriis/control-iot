@@ -68,6 +68,7 @@ export class AdminModule {
     this.guestTimer = null;
     this.onVehicleChange = options.onVehicleChange || (() => {});
     this.onRoleChange = options.onRoleChange || (() => {});
+    this.onGuestSessionChange = options.onGuestSessionChange || (() => {});
     this.activeSubtab = 'dashboard';
     this.demoEditorStage = 1;
   }
@@ -1798,6 +1799,7 @@ export class AdminModule {
     try {
       const res = await this.api.requestGuestSession(vId, alias, 180);
       this.guestSession = res;
+      this.onGuestSessionChange(true);
       this.notify(`¡Sesión concedida para la unidad #${vId}! Tienes 3 minutos de prueba exclusiva.`, 'success', 5000);
 
       if (window.bootstrap) {
@@ -1847,15 +1849,8 @@ export class AdminModule {
       }
       if (remaining <= 0) {
         window.clearInterval(this.guestTimer);
-        // Parada física obligatoria al expirar
-        if (typeof window.requestStop === 'function') {
-          window.requestStop(true);
-        }
         this.notify('Tu tiempo de prueba ha finalizado. La unidad se ha detenido de forma segura.', 'warning', 6000);
         this.handleReleaseGuestSession();
-        // Redirigir a vista de administración
-        const adminTab = document.getElementById('adminTab');
-        if (adminTab) adminTab.click();
       }
       remaining--;
     };
@@ -1866,18 +1861,16 @@ export class AdminModule {
 
   async handleReleaseGuestSession() {
     window.clearInterval(this.guestTimer);
-    // Parada física obligatoria inmediata
-    if (typeof window.requestStop === 'function') {
-      window.requestStop(true);
-    }
-    if (this.guestSession?.token_sesion) {
+    const sessionToken = this.guestSession?.token_sesion;
+    this.guestSession = null;
+    this.onGuestSessionChange(false);
+    if (sessionToken) {
       try {
-        await this.api.releaseGuestSession(this.guestSession.token_sesion);
+        await this.api.releaseGuestSession(sessionToken);
       } catch (e) {
         // Ignorar si expiró en backend
       }
     }
-    this.guestSession = null;
     const banner = document.getElementById('guestSessionBanner');
     if (banner) {
       banner.classList.add('d-none');
