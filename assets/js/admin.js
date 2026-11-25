@@ -1477,6 +1477,7 @@ export class AdminModule {
             this.addDemoStepRow({
               movementId: m.id_demo_movimiento,
               commandId: m.id_comando,
+              order: m.orden,
               duration: m.duracion_ms,
               pause: m.pausa_ms,
               isNew: false,
@@ -1550,7 +1551,10 @@ export class AdminModule {
     const row = document.createElement('div');
     row.className = 'demo-step-row d-flex gap-2 align-items-center mb-2 p-2 bg-dark rounded border border-secondary';
     row.dataset.commandGroup = currentCmd.group;
-    if (movementId) row.dataset.movementId = movementId;
+    if (movementId) {
+      row.dataset.movementId = movementId;
+      row.dataset.originalOrder = String(options.order ?? stepIndex);
+    }
     row.dataset.isNew = isNew ? 'true' : 'false';
 
     const optionsHtml = commandsList.map((c) =>
@@ -1791,17 +1795,36 @@ export class AdminModule {
         let movimientosEliminados = 0;
         if (this.pendingDeletedMovementIds && this.pendingDeletedMovementIds.length) {
           for (const movId of this.pendingDeletedMovementIds) {
-            await this.api.deleteDemoMovement(vId, demoId, movId).catch((err) =>
-              console.warn('Eliminación de movimiento omitida o no soportada:', err)
-            );
+            await this.api.deleteDemoMovement(vId, demoId, movId);
             movimientosEliminados++;
           }
           this.pendingDeletedMovementIds = [];
         }
 
-        // 3. Agregar las filas de movimientos nuevos agregados por el usuario
+        // 3. Si se reordenaron pasos existentes, moverlos primero a órdenes temporales
+        // para evitar colisiones con la restricción única (demo, orden).
+        const existingRows = [...rows].filter((row) => row.dataset.isNew !== 'true');
+        const orderChanged = existingRows.some((row) =>
+          Number(row.dataset.originalOrder) !== Array.from(rows).indexOf(row) + 1
+        );
+        if (orderChanged) {
+          const maxOldOrder = Math.max(rows.length, ...existingRows.map((row) => Number(row.dataset.originalOrder) || 0));
+          let temporaryOrder = maxOldOrder + rows.length + 10;
+          for (const row of existingRows) {
+            const movementId = Number(row.dataset.movementId);
+            await this.api.updateDemoMovement(vId, demoId, movementId, {
+              id_comando: Number(row.querySelector('.step-command').value),
+              orden: temporaryOrder++,
+              duracion_ms: Number(row.querySelector('.step-duration').value),
+              pausa_ms: Number(row.querySelector('.step-pause').value),
+            });
+          }
+        }
+
+        // 4. Agregar pasos nuevos y actualizar los que ya existen.
         let orden = 1;
         let movimientosAgregados = 0;
+        let movimientosActualizados = 0;
         for (const r of rows) {
           const id_comando = Number(r.querySelector('.step-command').value);
           const duracion_ms = Number(r.querySelector('.step-duration').value);
@@ -1816,6 +1839,14 @@ export class AdminModule {
               pausa_ms,
             });
             movimientosAgregados++;
+          } else {
+            await this.api.updateDemoMovement(vId, demoId, Number(r.dataset.movementId), {
+              id_comando,
+              orden,
+              duracion_ms,
+              pausa_ms,
+            });
+            movimientosActualizados++;
           }
           orden++;
         }
@@ -1823,6 +1854,7 @@ export class AdminModule {
         const detalles = [];
         if (nombreActualizado) detalles.push(`Nombre cambiado a "${nombre}"`);
         if (movimientosAgregados > 0) detalles.push(`${movimientosAgregados} paso(s) agregado(s)`);
+        if (movimientosActualizados > 0) detalles.push(`${movimientosActualizados} paso(s) actualizado(s)`);
         if (movimientosEliminados > 0) detalles.push(`${movimientosEliminados} paso(s) eliminado(s)`);
         const resumen = detalles.length ? detalles.join(', ') : 'Secuencia sincronizada';
 
