@@ -210,8 +210,6 @@ export class AdminModule {
     if (addStepBtn) {
       addStepBtn.addEventListener('click', () => this.addDemoStepRow({ isNew: true }));
     }
-    document.getElementById('createDemoComboCommandsBtn')?.addEventListener('click', () => this.createDemoComboCommands());
-
     const demoVehicleSelect = document.getElementById('demoVehicleSelect');
     if (demoVehicleSelect) {
       demoVehicleSelect.addEventListener('change', () => {
@@ -932,75 +930,34 @@ export class AdminModule {
     }
   }
 
-  async createDemoComboCommands() {
-    if ((this.currentUser?.rol || '').toUpperCase() !== 'ADMINISTRADOR') {
-      this.notify('Solo el administrador puede preparar estos comandos.', 'error');
-      return;
-    }
-    const vehicleId = document.getElementById('demoVehicleSelect')?.value;
-    if (!vehicleId) {
-      this.notify('Selecciona primero el vehículo destino de la demo.', 'warning');
-      this.showDemoEditorStage(1);
-      return;
+  async ensureDemoComboCommands(vehicleId, currentCommands = []) {
+    const byName = new Map((currentCommands || []).map((command) => [command.nombre, command]));
+    const codeConflicts = DEMO_COMBO_COMMANDS.filter((combo) =>
+      (currentCommands || []).some((command) => Number(command.codigo) === combo.codigo && command.nombre !== combo.nombre)
+    );
+    if (codeConflicts.length) {
+      throw new Error(`Los códigos ${codeConflicts.map((item) => item.codigo).join(', ')} ya están ocupados.`);
     }
 
-    const button = document.getElementById('createDemoComboCommandsBtn');
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'Preparando…';
+    const wrongMappings = DEMO_COMBO_COMMANDS.filter((combo) => {
+      const existing = byName.get(combo.nombre);
+      return existing && Number(existing.codigo) !== combo.codigo;
+    });
+    if (wrongMappings.length) {
+      throw new Error(`Los comandos ${wrongMappings.map((item) => item.nombre).join(', ')} tienen un código distinto al esperado.`);
     }
-    try {
-      const commands = await this.api.getCommands(vehicleId);
-      const byName = new Map((commands || []).map((command) => [command.nombre, command]));
-      const codeConflicts = DEMO_COMBO_COMMANDS.filter((combo) =>
-        (commands || []).some((command) => Number(command.codigo) === combo.codigo && command.nombre !== combo.nombre)
-      );
-      if (codeConflicts.length) {
-        throw new Error(`Los códigos ${codeConflicts.map((item) => item.codigo).join(', ')} ya están ocupados. No se crearon las combinaciones.`);
-      }
 
-      const wrongMappings = DEMO_COMBO_COMMANDS.filter((combo) => {
-        const existing = byName.get(combo.nombre);
-        return existing && Number(existing.codigo) !== combo.codigo;
-      });
-      if (wrongMappings.length) {
-        throw new Error(`Los comandos ${wrongMappings.map((item) => item.nombre).join(', ')} tienen un código distinto al esperado.`);
-      }
-
-      let created = 0;
-      for (const combo of DEMO_COMBO_COMMANDS) {
-        if (byName.has(combo.nombre)) continue;
-        await this.api.createCommand(vehicleId, combo);
-        created++;
-      }
-
-      this.demoCommandRecords = await this.api.getCommands(vehicleId);
-      this.refreshDemoStepCommands();
-      this.notify(created ? 'Se agregaron los cuatro giros combinados al catálogo del vehículo.' : 'Los cuatro giros combinados ya estaban en el catálogo.', 'success');
-    } catch (err) {
-      this.notify(`No se pudieron preparar los giros combinados: ${err.message}`, 'error', 6000);
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = 'Configurar giros combinados';
-      }
+    let created = 0;
+    for (const combo of DEMO_COMBO_COMMANDS) {
+      if (byName.has(combo.nombre)) continue;
+      await this.api.createCommand(vehicleId, combo);
+      created++;
     }
-  }
 
-  refreshDemoStepCommands() {
-    const container = document.getElementById('demoStepsContainer');
-    if (!container) return;
-    const rows = [...container.querySelectorAll('.demo-step-row')].map((row) => ({
-      movementId: row.dataset.movementId || '',
-      commandId: Number(row.querySelector('.step-command')?.value),
-      duration: Number(row.querySelector('.step-duration')?.value || 1500),
-      pause: Number(row.querySelector('.step-pause')?.value || 0),
-      isNew: row.dataset.isNew === 'true',
-    }));
-    if (!rows.length) return;
-    container.innerHTML = '';
-    rows.forEach((row) => this.addDemoStepRow(row));
-    this.updateDemoStepsSummary();
+    return {
+      commands: await this.api.getCommands(vehicleId),
+      created,
+    };
   }
 
   toggleAllCommands(enable) {
@@ -1297,10 +1254,6 @@ export class AdminModule {
   // ---------------------------------------------------------------------------
   async loadDemoEditor() {
     this.showDemoEditorStage(1);
-    document.getElementById('demoComboSetup')?.classList.toggle(
-      'd-none',
-      (this.currentUser?.rol || '').toUpperCase() !== 'ADMINISTRADOR'
-    );
     this.demoSteps = [];
     this.pendingDeletedMovementIds = [];
     const container = document.getElementById('demoStepsContainer');
@@ -1416,6 +1369,17 @@ export class AdminModule {
 
     try {
       this.demoCommandRecords = await this.api.getCommands(vId);
+      if ((this.currentUser?.rol || '').toUpperCase() === 'ADMINISTRADOR') {
+        try {
+          const setup = await this.ensureDemoComboCommands(vId, this.demoCommandRecords);
+          this.demoCommandRecords = setup.commands;
+          if (setup.created) {
+            this.notify('Se añadieron al catálogo los cuatro giros combinados para este vehículo.', 'success');
+          }
+        } catch (error) {
+          this.notify(`No se pudieron preparar los giros combinados: ${error.message}`, 'warning', 6000);
+        }
+      }
       const demos = await this.api.getDemos(vId);
       this.vehicleDemosMap = this.vehicleDemosMap || {};
       this.vehicleDemosMap[vId] = demos || [];
