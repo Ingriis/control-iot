@@ -1,6 +1,6 @@
 import { createApi } from './api.js';
 import { loadConfig, validateConfig } from './config.js';
-import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js?v=20261125-direction-disabled';
+import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js?v=20261125-global-keyboard-controls';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
 import { AdminModule } from './admin.js?v=20261125-stop-zero-ms';
@@ -40,6 +40,10 @@ let holdGeneration = 0;
 let heldDirection = null;
 let heldDriveDirection = null;
 let heldSteerDirection = null;
+const keyboardDirections = new Map();
+let keyboardDirectionOrder = 0;
+let keyboardDriveDirection = null;
+let keyboardSteerDirection = null;
 let controlStateQueue = Promise.resolve();
 let driveJoystick;
 let steerJoystick;
@@ -740,6 +744,7 @@ async function sendCommand(command, { priorityStop = false } = {}) {
 
 async function shutdownGuestVehicle() {
   const wasPoweredOn = isPoweredOn();
+  discardKeyboardDirections();
   holdGeneration += 1;
   heldDirection = null;
   heldDriveDirection = null;
@@ -946,6 +951,62 @@ function handleDirection(name) {
   handleAxisDirection(name === 'forward' || name === 'backward' ? 'drive' : 'steer', name);
 }
 
+const CONTROL_KEY_DIRECTIONS = {
+  ArrowUp: { axis: 'drive', direction: 'forward' }, KeyW: { axis: 'drive', direction: 'forward' }, w: { axis: 'drive', direction: 'forward' }, W: { axis: 'drive', direction: 'forward' },
+  ArrowDown: { axis: 'drive', direction: 'backward' }, KeyS: { axis: 'drive', direction: 'backward' }, s: { axis: 'drive', direction: 'backward' }, S: { axis: 'drive', direction: 'backward' },
+  ArrowLeft: { axis: 'steer', direction: 'left' }, KeyA: { axis: 'steer', direction: 'left' }, a: { axis: 'steer', direction: 'left' }, A: { axis: 'steer', direction: 'left' },
+  ArrowRight: { axis: 'steer', direction: 'right' }, KeyD: { axis: 'steer', direction: 'right' }, d: { axis: 'steer', direction: 'right' }, D: { axis: 'steer', direction: 'right' },
+};
+
+function isTextEntryTarget(target) {
+  return target?.isContentEditable || ['INPUT', 'SELECT', 'TEXTAREA'].includes(target?.tagName);
+}
+
+function keyboardCanMove(direction) {
+  const commandName = direction === 'forward' ? names.forward
+    : direction === 'backward' ? names.backward
+      : direction === 'left' ? names.left : names.right;
+  return !isTextEntryTarget(document.activeElement)
+    && !$('controlView')?.hidden
+    && canUseControl()
+    && isPoweredOn()
+    && apiReady
+    && !demoRunning
+    && !commandPending
+    && Boolean(activeCommandByName(commandName));
+}
+
+function latestAvailableKeyboardDirection(axis) {
+  return [...keyboardDirections.values()]
+    .filter((entry) => entry.axis === axis && keyboardCanMove(entry.direction))
+    .sort((a, b) => b.order - a.order)[0]?.direction || null;
+}
+
+function syncKeyboardDirections() {
+  const drive = latestAvailableKeyboardDirection('drive');
+  const steer = latestAvailableKeyboardDirection('steer');
+
+  if (drive) handleAxisDirection('drive', drive);
+  else if (keyboardDriveDirection) releaseAxis('drive');
+  if (steer) handleAxisDirection('steer', steer);
+  else if (keyboardSteerDirection) releaseAxis('steer');
+
+  keyboardDriveDirection = drive;
+  keyboardSteerDirection = steer;
+  driveJoystick?.setKeyboardDirection(drive);
+  steerJoystick?.setKeyboardDirection(steer);
+}
+
+function discardKeyboardDirections() {
+  keyboardDirections.clear();
+  keyboardDriveDirection = null;
+  keyboardSteerDirection = null;
+}
+
+function controlKeyEntry(event) {
+  return CONTROL_KEY_DIRECTIONS[event.code] || CONTROL_KEY_DIRECTIONS[event.key];
+}
+
 const HOLD_RENEWAL_MS = 600;
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -989,6 +1050,7 @@ function handleForkDirection(direction) {
 
 function requestStop(isEmergencyButton = false) {
   stopReverseBeep();
+  discardKeyboardDirections();
   if (isEmergencyButton) {
     triggerHaptic('stop');
     playStopSound();
@@ -1038,6 +1100,7 @@ async function executeDemo() {
   const demoId = $('demoSelect').value;
   const demo = demos.find((item) => String(item.id_demo) === demoId);
   if (!demo || demoRunning || commandPending) return;
+  discardKeyboardDirections();
   demoRunning = true;
   demoEventsVisible = true;
   window.clearTimeout(demoEventsTimer);
@@ -1078,6 +1141,7 @@ async function boot() {
     driveJoystick = initVerticalStick(driveEl, $('driveJoyKnob'), {
       onDirection: (direction) => handleAxisDirection('drive', direction),
       onRelease: () => releaseAxis('drive'),
+      keyboard: false,
       canMove: (direction) => canUseControl() && isPoweredOn() && apiReady
         && Boolean(activeCommandByName(direction === 'forward' ? names.forward : names.backward))
         && !demoRunning,
@@ -1090,6 +1154,7 @@ async function boot() {
     steerJoystick = initHorizontalStick(steerEl, $('steerJoyKnob'), {
       onDirection: (direction) => handleAxisDirection('steer', direction),
       onRelease: () => releaseAxis('steer'),
+      keyboard: false,
       canMove: (direction) => canUseControl() && isPoweredOn() && apiReady
         && Boolean(activeCommandByName(direction === 'left' ? names.left : names.right))
         && !demoRunning,
@@ -1211,7 +1276,18 @@ async function boot() {
   $('demoDisplayBox')?.addEventListener('click', () => cycleDemo(1));
   $('runDemoButton').addEventListener('click', executeDemo);
   window.addEventListener('keydown', (event) => {
-    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    const controlKey = controlKeyEntry(event);
+    if (controlKey) {
+      if (isTextEntryTarget(document.activeElement) || $('controlView')?.hidden) return;
+      event.preventDefault();
+      if (event.repeat) return;
+      const keyId = event.code || event.key;
+      if (!keyboardCanMove(controlKey.direction)) return;
+      keyboardDirections.set(keyId, { ...controlKey, order: ++keyboardDirectionOrder });
+      syncKeyboardDirections();
+      return;
+    }
+    if (isTextEntryTarget(document.activeElement)) return;
     if (event.key === ' ' || event.key === 'Escape') {
       event.preventDefault();
       requestStop(true);
@@ -1232,6 +1308,13 @@ async function boot() {
     }
   });
   window.addEventListener('keyup', (event) => {
+    const controlKey = controlKeyEntry(event);
+    const keyId = event.code || event.key;
+    if (controlKey && keyboardDirections.has(keyId)) {
+      event.preventDefault();
+      keyboardDirections.delete(keyId);
+      syncKeyboardDirections();
+    }
     if (event.key === 'q' || event.key === 'Q') {
       $('forkUpBtn')?.classList.remove('is-active');
     } else if (event.key === 'e' || event.key === 'E') {
