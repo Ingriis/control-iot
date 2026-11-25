@@ -187,6 +187,23 @@ export class AdminModule {
     document.getElementById('demoWizardNextDetails')?.addEventListener('click', () => this.continueDemoWizardToSteps());
     document.getElementById('demoWizardBackDetails')?.addEventListener('click', () => this.showDemoEditorStage(1));
 
+    const demoDescription = document.getElementById('demoCustomDesc');
+    const demoDescriptionModalEl = document.getElementById('demoDescriptionModal');
+    const demoDescriptionEditor = document.getElementById('demoDescriptionModalInput');
+    if (demoDescription && demoDescriptionModalEl && demoDescriptionEditor) {
+      const demoDescriptionModal = window.bootstrap.Modal.getOrCreateInstance(demoDescriptionModalEl);
+      demoDescription.addEventListener('click', () => {
+        demoDescriptionEditor.value = demoDescription.value;
+        demoDescriptionModal.show();
+      });
+      demoDescriptionModalEl.addEventListener('shown.bs.modal', () => demoDescriptionEditor.focus());
+      document.getElementById('demoDescriptionModalApply')?.addEventListener('click', () => {
+        demoDescription.value = demoDescriptionEditor.value.trim();
+        demoDescription.dispatchEvent(new Event('input', { bubbles: true }));
+        demoDescriptionModal.hide();
+      });
+    }
+
     const demoTargetSelect = document.getElementById('demoTargetSelect');
     if (demoTargetSelect) {
       demoTargetSelect.addEventListener('change', () => this.handleDemoTargetChange());

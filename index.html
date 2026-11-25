@@ -14,7 +14,7 @@
     <link rel="preload" as="image" href="./assets/img/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v81-combined-demo-screen" />
+    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v82-description-modal" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -412,7 +412,7 @@
                           </div>
                           <div class="demo-wizard-field demo-wizard-description">
                             <label class="form-label" for="demoCustomDesc">Descripción</label>
-                            <input type="text" class="form-control bg-dark border-secondary text-white" id="demoCustomDesc" placeholder="Breve explicación de la secuencia">
+                            <input type="text" class="form-control bg-dark border-secondary text-white demo-field-modal-trigger" id="demoCustomDesc" placeholder="Toca para escribir la descripción" readonly aria-haspopup="dialog" aria-controls="demoDescriptionModal">
                           </div>
                         </div>
                       </div>
@@ -449,6 +449,25 @@
                   </div>
                 </div>
               </form>
+            </div>
+            <div class="modal fade" id="demoDescriptionModal" tabindex="-1" aria-labelledby="demoDescriptionModalTitle" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered modal-sm demo-description-modal-dialog">
+                <div class="modal-content bg-dark border-info text-white">
+                  <div class="modal-header py-2">
+                    <h5 class="modal-title fs-6" id="demoDescriptionModalTitle">Editar descripción</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body">
+                    <label class="form-label small" for="demoDescriptionModalInput">Descripción de la demo</label>
+                    <input type="text" class="form-control bg-dark border-secondary text-white" id="demoDescriptionModalInput" placeholder="Ej. Recorrido por el almacén">
+                    <small class="text-muted d-block mt-2">Al terminar de escribir, pulsa Listo para aplicar el texto.</small>
+                  </div>
+                  <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-cyan" id="demoDescriptionModalApply">Listo</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -757,6 +776,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./assets/js/app.js?v=20261124-v78-demo-wizard-flow"></script>
+    <script type="module" src="./assets/js/app.js?v=20261124-v79-description-modal"></script>
   </body>
 </html>

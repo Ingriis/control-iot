@@ -6926,6 +6926,16 @@ main#main {
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-input-pause .step-pause-label { display:none !important; }
 }
 
+.demo-field-modal-trigger { cursor:pointer !important; }
+.demo-field-modal-trigger:focus { border-color:#22e3ed !important; box-shadow:0 0 0 .2rem rgba(34,227,237,.18) !important; }
+.demo-description-modal-dialog { max-width:520px !important; }
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 950px) {
+  .demo-description-modal-dialog { width:min(94vw,560px) !important; max-width:560px !important; margin:8px auto !important; }
+  #demoDescriptionModal .modal-content { max-height:calc(100dvh - 16px) !important; }
+  #demoDescriptionModal .modal-body { padding:12px 16px !important; }
+  #demoDescriptionModal .modal-body .form-control { min-height:42px !important; }
+}
+
 /* Pantalla inicial del asistente: controles compactos y botón siempre visible en horizontal. */
 @media (orientation: landscape) and (max-height: 520px) and (max-width: 950px) {
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-card { padding:3px 8px !important; }
