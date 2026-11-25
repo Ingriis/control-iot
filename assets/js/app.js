@@ -212,6 +212,10 @@ function updateControls() {
 
   // Cada dirección se bloquea y se marca por separado dentro de cada palanca.
   const controlsUnavailable = !guestCanControl || !powered || !apiReady || demoRunning || commandPending;
+  const forwardDisabledByAdmin = disabledList.includes(names.forward);
+  const backwardDisabledByAdmin = disabledList.includes(names.backward);
+  const leftDisabledByAdmin = disabledList.includes(names.left);
+  const rightDisabledByAdmin = disabledList.includes(names.right);
   const forwardDisabled = controlsUnavailable || !activeCommandByName(names.forward);
   const backwardDisabled = controlsUnavailable || !activeCommandByName(names.backward);
   const leftDisabled = controlsUnavailable || !activeCommandByName(names.left);
@@ -226,10 +230,10 @@ function updateControls() {
     const wrap = driveEl.closest('.joystick-wrap');
     const north = wrap?.querySelector('.direction-label.north');
     const south = wrap?.querySelector('.direction-label.south');
-    north?.classList.toggle('is-disabled', forwardDisabled);
-    south?.classList.toggle('is-disabled', backwardDisabled);
-    if (north) north.title = forwardDisabled ? 'Avanzar desactivado' : 'Avanzar';
-    if (south) south.title = backwardDisabled ? 'Retroceder desactivado' : 'Retroceder';
+    north?.classList.toggle('is-disabled', forwardDisabledByAdmin);
+    south?.classList.toggle('is-disabled', backwardDisabledByAdmin);
+    if (north) north.title = forwardDisabledByAdmin ? 'Avanzar desactivado por el administrador' : 'Avanzar';
+    if (south) south.title = backwardDisabledByAdmin ? 'Retroceder desactivado por el administrador' : 'Retroceder';
     if (driveDisabled) driveJoystick?.reset();
   }
 
@@ -240,10 +244,10 @@ function updateControls() {
     const wrap = steerEl.closest('.joystick-wrap');
     const west = wrap?.querySelector('.direction-label.west');
     const east = wrap?.querySelector('.direction-label.east');
-    west?.classList.toggle('is-disabled', leftDisabled);
-    east?.classList.toggle('is-disabled', rightDisabled);
-    if (west) west.title = leftDisabled ? 'Girar a la izquierda desactivado' : 'Girar a la izquierda';
-    if (east) east.title = rightDisabled ? 'Girar a la derecha desactivado' : 'Girar a la derecha';
+    west?.classList.toggle('is-disabled', leftDisabledByAdmin);
+    east?.classList.toggle('is-disabled', rightDisabledByAdmin);
+    if (west) west.title = leftDisabledByAdmin ? 'Girar a la izquierda desactivado por el administrador' : 'Girar a la izquierda';
+    if (east) east.title = rightDisabledByAdmin ? 'Girar a la derecha desactivado por el administrador' : 'Girar a la derecha';
     if (steerDisabled) steerJoystick?.reset();
   }
 
