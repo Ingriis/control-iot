@@ -139,7 +139,6 @@ export function createApi(config) {
       body: JSON.stringify(payload),
     }),
     assignUnit: (vId, payload) => request(`/admin/units/${encodeURIComponent(vId)}/assignment`, { method: 'PUT', body: JSON.stringify(payload) }),
-    toggleSupport: (vId, payload) => request(`/admin/units/${encodeURIComponent(vId)}/support`, { method: 'PUT', body: JSON.stringify(payload) }),
 
     getClients: () => request('/admin/clients'),
     createClient: (payload) => request('/admin/clients', { method: 'POST', body: JSON.stringify(payload) }),

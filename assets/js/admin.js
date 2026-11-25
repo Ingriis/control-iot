@@ -674,11 +674,21 @@ export class AdminModule {
   async handleCreateModel(e) {
     e.preventDefault();
     const nombre = document.getElementById('modelName').value.trim();
-    const codigo_modelo = document.getElementById('modelCode').value.trim();
     const categoria = document.getElementById('modelCategory').value;
     const descripcion = document.getElementById('modelDesc').value.trim();
 
     try {
+      const existingModels = await this.api.getModels();
+      const usedCodes = new Set((existingModels || []).map((model) => String(model.codigo_modelo || '').toUpperCase()));
+      const slug = nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 43) || 'MODELO';
+      const baseCode = `MOD_${slug}`;
+      let codigo_modelo = baseCode;
+      let suffix = 2;
+      while (usedCodes.has(codigo_modelo.toUpperCase())) {
+        const suffixText = `_${suffix++}`;
+        codigo_modelo = `${baseCode.slice(0, 50 - suffixText.length)}${suffixText}`;
+      }
       await this.api.createModel({ nombre, codigo_modelo, categoria, descripcion });
       this.notify('Modelo comercial creado con éxito en Amazon RDS.', 'success');
       this.loadModels();
@@ -695,13 +705,13 @@ export class AdminModule {
   async loadUnits() {
     const tableBody = document.getElementById('unitsTableBody');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Cargando unidades...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">Cargando unidades...</td></tr>';
 
     try {
       const units = await this.api.getUnits();
       this.currentUnits = units;
       if (!units.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin unidades registradas. Pulsa [+ Nueva Unidad Física] para dar de alta una.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">Sin unidades registradas. Pulsa [+ Nueva Unidad Física] para dar de alta una.</td></tr>';
         return;
       }
 
@@ -720,12 +730,6 @@ export class AdminModule {
             <td><span class="badge bg-${stateColor} text-uppercase">${u.estado_comercial}</span></td>
             <td>${u.nombre_propietario ? `<b>${u.nombre_propietario}</b>` : '<span class="text-muted">Empresa</span>'}</td>
             <td>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="sup_${u.id_vehiculo}" ${u.soporte_autorizado ? 'checked' : ''} onchange="window.adminModule.toggleUnitSupport(${u.id_vehiculo}, this.checked)">
-                <label class="form-check-label small" for="sup_${u.id_vehiculo}">${u.soporte_autorizado ? 'Autorizado' : 'Sin permiso'}</label>
-              </div>
-            </td>
-            <td>
               <div class="d-flex gap-1 flex-wrap">
                 <button class="btn btn-sm btn-outline-cyan" onclick="window.adminModule.openAssignModal(${u.id_vehiculo}, '${safeName}', ${u.propietario_id || 'null'}, '${u.estado_comercial}')" title="Editar nombre y asignación">
                   ✏️ Editar
@@ -739,18 +743,7 @@ export class AdminModule {
         `;
       }).join('');
     } catch (err) {
-      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Error: ${err.message}</td></tr>`;
-    }
-  }
-
-  async toggleUnitSupport(vehicleId, authorized) {
-    try {
-      await this.api.toggleSupport(vehicleId, { soporte_autorizado: authorized });
-      this.notify(`Soporte técnico ${authorized ? 'autorizado' : 'desactivado'}.`, 'info');
-      this.loadUnits();
-    } catch (err) {
-      this.notify(`No se pudo actualizar soporte: ${err.message}`, 'error', 4500);
-      this.loadUnits();
+      tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">Error: ${err.message}</td></tr>`;
     }
   }
 
