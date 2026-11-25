@@ -113,6 +113,10 @@ export function createApi(config) {
 
     // Control y Monitoreo (4.1 y 4.2)
     getCommands: (vId = activeVehicleId) => request(`/vehicles/${encodeURIComponent(vId)}/commands`),
+    createCommand: (vId, payload) => request(`/vehicles/${encodeURIComponent(vId)}/commands`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
     updateCommand: (vId, commandId, payload) => request(
       '/vehicles/' + encodeURIComponent(vId) + '/commands/' + encodeURIComponent(commandId) + '/update',
       { method: 'POST', body: JSON.stringify(payload) },

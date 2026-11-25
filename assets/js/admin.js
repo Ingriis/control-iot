@@ -6,6 +6,29 @@
 import { setAuthToken } from './api.js';
 import { playBip, triggerHaptic } from './feedback.js';
 
+const DEMO_COMBO_COMMANDS = [
+  { nombre: 'AVANZAR_IZQUIERDA', codigo: 14, descripcion: 'Avanzar y girar a la izquierda (salidas 13 y 5).' },
+  { nombre: 'AVANZAR_DERECHA', codigo: 15, descripcion: 'Avanzar y girar a la derecha (salidas 13 y 6).' },
+  { nombre: 'RETROCEDER_IZQUIERDA', codigo: 16, descripcion: 'Retroceder y girar a la izquierda (salidas 14 y 5).' },
+  { nombre: 'RETROCEDER_DERECHA', codigo: 17, descripcion: 'Retroceder y girar a la derecha (salidas 14 y 6).' },
+];
+
+const DEMO_COMMAND_PRESENTATION = {
+  1: { name: '⬆ AVANZAR', group: 'drive' },
+  2: { name: '⬇ RETROCEDER', group: 'drive' },
+  3: { name: '⬅ GIRAR IZQUIERDA', group: 'steer' },
+  4: { name: '➡ GIRAR DERECHA', group: 'steer' },
+  5: { name: '▲ SUBIR HORQUILLAS', group: 'forks' },
+  6: { name: '▼ BAJAR HORQUILLAS', group: 'forks' },
+  8: { name: '💡 LUCES', group: 'signal' },
+  9: { name: '🛑 DETENER', group: 'stop' },
+  11: { name: '🔊 SONIDO', group: 'signal' },
+  14: { name: '↖ AVANZAR + IZQUIERDA', group: 'combo' },
+  15: { name: '↗ AVANZAR + DERECHA', group: 'combo' },
+  16: { name: '↙ RETROCEDER + IZQUIERDA', group: 'combo' },
+  17: { name: '↘ RETROCEDER + DERECHA', group: 'combo' },
+};
+
 /**
  * Notificación flotante estilo Arcade Cyberpunk no bloqueante
  */
@@ -71,6 +94,7 @@ export class AdminModule {
     this.onGuestSessionChange = options.onGuestSessionChange || (() => {});
     this.activeSubtab = 'dashboard';
     this.demoEditorStage = 1;
+    this.demoCommandRecords = [];
   }
 
   notify(message, type = 'info', duration = 3500) {
@@ -186,6 +210,7 @@ export class AdminModule {
     if (addStepBtn) {
       addStepBtn.addEventListener('click', () => this.addDemoStepRow({ isNew: true }));
     }
+    document.getElementById('createDemoComboCommandsBtn')?.addEventListener('click', () => this.createDemoComboCommands());
 
     const demoVehicleSelect = document.getElementById('demoVehicleSelect');
     if (demoVehicleSelect) {
@@ -850,6 +875,10 @@ export class AdminModule {
       { id: 2, name: 'RETROCEDER', icon: '⬇️', desc: 'Tracción reversa', category: 'Tracción' },
       { id: 3, name: 'GIRAR_IZQUIERDA', icon: '⬅️', desc: 'Dirección izquierda', category: 'Dirección' },
       { id: 4, name: 'GIRAR_DERECHA', icon: '➡️', desc: 'Dirección derecha', category: 'Dirección' },
+      { id: 14, name: 'AVANZAR_IZQUIERDA', icon: '↖️', desc: 'Avanzar y girar a la izquierda', category: 'Giro combinado' },
+      { id: 15, name: 'AVANZAR_DERECHA', icon: '↗️', desc: 'Avanzar y girar a la derecha', category: 'Giro combinado' },
+      { id: 16, name: 'RETROCEDER_IZQUIERDA', icon: '↙️', desc: 'Retroceder y girar a la izquierda', category: 'Giro combinado' },
+      { id: 17, name: 'RETROCEDER_DERECHA', icon: '↘️', desc: 'Retroceder y girar a la derecha', category: 'Giro combinado' },
       { id: 5, name: 'SUBIR_HORQUILLAS', icon: '🏗️', desc: 'Elevación del mástil', category: 'Horquillas' },
       { id: 6, name: 'BAJAR_HORQUILLAS', icon: '📦', desc: 'Descenso de horquillas', category: 'Horquillas' },
       { id: 8, name: 'LUCES', icon: '💡', desc: 'Faros delanteros LED', category: 'Accesorios' },
@@ -898,9 +927,80 @@ export class AdminModule {
 
     if (window.bootstrap) {
       const modalEl = document.getElementById('vehicleCommandsModal');
-      const modal = new window.bootstrap.Modal(modalEl);
+      const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
       modal.show();
     }
+  }
+
+  async createDemoComboCommands() {
+    if ((this.currentUser?.rol || '').toUpperCase() !== 'ADMINISTRADOR') {
+      this.notify('Solo el administrador puede preparar estos comandos.', 'error');
+      return;
+    }
+    const vehicleId = document.getElementById('demoVehicleSelect')?.value;
+    if (!vehicleId) {
+      this.notify('Selecciona primero el vehículo destino de la demo.', 'warning');
+      this.showDemoEditorStage(1);
+      return;
+    }
+
+    const button = document.getElementById('createDemoComboCommandsBtn');
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Preparando…';
+    }
+    try {
+      const commands = await this.api.getCommands(vehicleId);
+      const byName = new Map((commands || []).map((command) => [command.nombre, command]));
+      const codeConflicts = DEMO_COMBO_COMMANDS.filter((combo) =>
+        (commands || []).some((command) => Number(command.codigo) === combo.codigo && command.nombre !== combo.nombre)
+      );
+      if (codeConflicts.length) {
+        throw new Error(`Los códigos ${codeConflicts.map((item) => item.codigo).join(', ')} ya están ocupados. No se crearon las combinaciones.`);
+      }
+
+      const wrongMappings = DEMO_COMBO_COMMANDS.filter((combo) => {
+        const existing = byName.get(combo.nombre);
+        return existing && Number(existing.codigo) !== combo.codigo;
+      });
+      if (wrongMappings.length) {
+        throw new Error(`Los comandos ${wrongMappings.map((item) => item.nombre).join(', ')} tienen un código distinto al esperado.`);
+      }
+
+      let created = 0;
+      for (const combo of DEMO_COMBO_COMMANDS) {
+        if (byName.has(combo.nombre)) continue;
+        await this.api.createCommand(vehicleId, combo);
+        created++;
+      }
+
+      this.demoCommandRecords = await this.api.getCommands(vehicleId);
+      this.refreshDemoStepCommands();
+      this.notify(created ? 'Se agregaron los cuatro giros combinados al catálogo del vehículo.' : 'Los cuatro giros combinados ya estaban en el catálogo.', 'success');
+    } catch (err) {
+      this.notify(`No se pudieron preparar los giros combinados: ${err.message}`, 'error', 6000);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Configurar giros combinados';
+      }
+    }
+  }
+
+  refreshDemoStepCommands() {
+    const container = document.getElementById('demoStepsContainer');
+    if (!container) return;
+    const rows = [...container.querySelectorAll('.demo-step-row')].map((row) => ({
+      movementId: row.dataset.movementId || '',
+      commandId: Number(row.querySelector('.step-command')?.value),
+      duration: Number(row.querySelector('.step-duration')?.value || 1500),
+      pause: Number(row.querySelector('.step-pause')?.value || 0),
+      isNew: row.dataset.isNew === 'true',
+    }));
+    if (!rows.length) return;
+    container.innerHTML = '';
+    rows.forEach((row) => this.addDemoStepRow(row));
+    this.updateDemoStepsSummary();
   }
 
   toggleAllCommands(enable) {
@@ -1197,6 +1297,10 @@ export class AdminModule {
   // ---------------------------------------------------------------------------
   async loadDemoEditor() {
     this.showDemoEditorStage(1);
+    document.getElementById('demoComboSetup')?.classList.toggle(
+      'd-none',
+      (this.currentUser?.rol || '').toUpperCase() !== 'ADMINISTRADOR'
+    );
     this.demoSteps = [];
     this.pendingDeletedMovementIds = [];
     const container = document.getElementById('demoStepsContainer');
@@ -1308,8 +1412,10 @@ export class AdminModule {
 
     const vId = vSelect.value || this.api.getVehicleId();
     targetSelect.innerHTML = '<option value="new">➕ [Crear Nueva DEMO]</option><option disabled>Cargando demos existentes...</option>';
+    this.demoCommandRecords = [];
 
     try {
+      this.demoCommandRecords = await this.api.getCommands(vId);
       const demos = await this.api.getDemos(vId);
       this.vehicleDemosMap = this.vehicleDemosMap || {};
       this.vehicleDemosMap[vId] = demos || [];
@@ -1438,24 +1544,29 @@ export class AdminModule {
 
     const stepIndex = container.querySelectorAll('.demo-step-row').length + 1;
     const movementId = options.movementId || '';
-    const commandId = options.commandId || 1;
+    const firstForward = this.demoCommandRecords.find((command) => Number(command.codigo) === 1);
+    const commandId = options.commandId ?? Number(firstForward?.id_comando || 1);
     const duration = options.duration !== undefined ? options.duration : 1500;
     const pause = options.pause !== undefined ? options.pause : 300;
     const isNew = options.isNew !== undefined ? options.isNew : !movementId;
 
-    const commandsList = [
-      { id: 1, name: '⬆ AVANZAR', group: 'drive' },
-      { id: 2, name: '⬇ RETROCEDER', group: 'drive' },
-      { id: 3, name: '⬅ GIRAR IZQUIERDA', group: 'steer' },
-      { id: 4, name: '➡ GIRAR DERECHA', group: 'steer' },
-      { id: 5, name: '▲ SUBIR HORQUILLAS', group: 'forks' },
-      { id: 6, name: '▼ BAJAR HORQUILLAS', group: 'forks' },
-      { id: 8, name: '💡 LUCES', group: 'signal' },
-      { id: 11, name: '🔊 SONIDO', group: 'signal' },
-      { id: 9, name: '🛑 DETENER', group: 'stop' },
-    ];
+    const records = Array.isArray(this.demoCommandRecords) ? this.demoCommandRecords : [];
+    const commandsList = records.length
+      ? records.flatMap((record) => {
+        const presentation = DEMO_COMMAND_PRESENTATION[Number(record.codigo)];
+        const selected = Number(record.id_comando) === Number(commandId);
+        const active = record.activo === undefined || Number(record.activo) === 1;
+        return presentation && (active || selected)
+          ? [{ id: Number(record.id_comando), name: presentation.name, group: presentation.group }]
+          : [];
+      })
+      : Object.entries(DEMO_COMMAND_PRESENTATION).map(([code, presentation]) => ({
+        id: Number(code),
+        name: presentation.name,
+        group: presentation.group,
+      }));
 
-    const currentCmd = commandsList.find((c) => Number(c.id) === Number(commandId)) || commandsList[0];
+    const currentCmd = commandsList.find((c) => Number(c.id) === Number(commandId)) || commandsList[0] || { group: 'drive' };
 
     const row = document.createElement('div');
     row.className = 'demo-step-row d-flex gap-2 align-items-center mb-2 p-2 bg-dark rounded border border-secondary';
@@ -1476,8 +1587,8 @@ export class AdminModule {
         <button type="button" class="btn btn-outline-secondary demo-step-up-btn py-0 px-1" title="Subir orden">▲</button>
         <button type="button" class="btn btn-outline-secondary demo-step-down-btn py-0 px-1" title="Bajar orden">▼</button>
       </div>
-      <select class="form-select form-select-sm step-command" required>
-        ${optionsHtml}
+      <select class="form-select form-select-sm step-command" required ${commandsList.length ? '' : 'disabled'}>
+        ${optionsHtml || '<option value="">Sin comandos configurados para este vehículo</option>'}
       </select>
       <div class="input-group input-group-sm demo-input-duration" title="Duración del movimiento">
         <input type="number" class="form-control step-duration" value="${duration}" min="200" max="10000" step="100">
@@ -1600,6 +1711,7 @@ export class AdminModule {
         const groupColors = {
           drive: '#22e3ed',
           steer: '#00d2d3',
+          combo: '#a78bfa',
           forks: '#ff9f43',
           signal: '#feca57',
           stop: '#ff4757',
@@ -1643,6 +1755,10 @@ export class AdminModule {
     const rows = container ? container.querySelectorAll('.demo-step-row') : [];
     if (!rows.length) {
       this.notify('Debe agregar al menos un paso a la secuencia DEMO.', 'warning');
+      return;
+    }
+    if ([...rows].some((row) => !row.querySelector('.step-command')?.value)) {
+      this.notify('Este vehículo no tiene comandos disponibles para los pasos de la demo.', 'warning');
       return;
     }
 
