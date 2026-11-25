@@ -307,7 +307,7 @@
             </div>
             <div class="table-responsive">
               <table class="table table-dark table-hover table-striped align-middle">
-                <thead><tr><th>ID</th><th>Nombre</th><th>Código</th><th>Categoría</th><th>Descripción</th><th>Estado</th></tr></thead>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Código</th><th>Categoría</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody id="modelsTableBody"></tbody>
               </table>
             </div>
@@ -705,6 +705,51 @@
       </div>
     </div>
 
+    <!-- MODAL: Editar Modelo -->
+    <div class="modal fade" id="editModelModal" tabindex="-1" aria-labelledby="editModelModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-info text-white">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title text-cyan" id="editModelModalTitle">Editar modelo</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <form id="editModelForm">
+            <input type="hidden" id="editModelId">
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label small" for="editModelName">Nombre del Modelo</label>
+                <input type="text" class="form-control bg-dark border-secondary text-white" id="editModelName" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Código Único de Modelo</label>
+                <div class="form-control bg-dark border-secondary text-muted" id="editModelCode"></div>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small" for="editModelCategory">Categoría</label>
+                <select class="form-select bg-dark border-secondary text-white" id="editModelCategory">
+                  <option value="Montacargas">Montacargas</option>
+                  <option value="Deportivo">Deportivo / Todoterreno</option>
+                  <option value="Industrial">Industrial</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small" for="editModelDesc">Descripción</label>
+                <textarea class="form-control bg-dark border-secondary text-white" id="editModelDesc" rows="3" required></textarea>
+              </div>
+              <div class="form-check form-switch mt-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="editModelActive">
+                <label class="form-check-label" for="editModelActive">Activo en el catálogo</label>
+              </div>
+            </div>
+            <div class="modal-footer border-secondary">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-cyan btn-sm">Guardar cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL: Crear Unidad Física -->
     <div class="modal fade" id="newUnitModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -792,6 +837,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./assets/js/app.js?v=20261124-v89-field-specific-title"></script>
+    <script type="module" src="./assets/js/app.js?v=20261124-v90-model-actions"></script>
   </body>
 </html>

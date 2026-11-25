@@ -148,6 +148,11 @@ export class AdminModule {
       newModelForm.addEventListener('submit', (e) => this.handleCreateModel(e));
     }
 
+    const editModelForm = document.getElementById('editModelForm');
+    if (editModelForm) {
+      editModelForm.addEventListener('submit', (e) => this.handleEditModel(e));
+    }
+
     const newUnitForm = document.getElementById('newUnitForm');
     if (newUnitForm) {
       newUnitForm.addEventListener('submit', (e) => this.handleCreateUnit(e));
@@ -570,12 +575,13 @@ export class AdminModule {
   async loadModels() {
     const tableBody = document.getElementById('modelsTableBody');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-3">Cargando catálogo...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3">Cargando catálogo...</td></tr>';
 
     try {
       const models = await this.api.getModels();
+      this.modelsById = new Map((models || []).map((model) => [String(model.id_modelo), model]));
       if (!models.length) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">Sin modelos registrados.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin modelos registrados.</td></tr>';
         return;
       }
       tableBody.innerHTML = models.map((m) => `
@@ -586,10 +592,77 @@ export class AdminModule {
           <td>${m.categoria}</td>
           <td>${m.descripcion}</td>
           <td><span class="badge ${m.activo ? 'bg-success' : 'bg-danger'}">${m.activo ? 'ACTIVO' : 'INACTIVO'}</span></td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-info me-1" data-model-edit="${m.id_modelo}">Editar</button>
+            <button type="button" class="btn btn-sm ${m.activo ? 'btn-outline-warning' : 'btn-outline-success'}" data-model-toggle="${m.id_modelo}">${m.activo ? 'Retirar' : 'Reactivar'}</button>
+          </td>
         </tr>
       `).join('');
+      tableBody.querySelectorAll('[data-model-edit]').forEach((button) => {
+        button.addEventListener('click', () => this.openEditModel(button.dataset.modelEdit));
+      });
+      tableBody.querySelectorAll('[data-model-toggle]').forEach((button) => {
+        button.addEventListener('click', () => this.toggleModelActive(button.dataset.modelToggle));
+      });
     } catch (err) {
-      tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">Error: ${err.message}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Error: ${err.message}</td></tr>`;
+    }
+  }
+
+  openEditModel(modelId) {
+    const model = this.modelsById?.get(String(modelId));
+    if (!model) return;
+    document.getElementById('editModelId').value = model.id_modelo;
+    document.getElementById('editModelName').value = model.nombre || '';
+    document.getElementById('editModelCode').textContent = model.codigo_modelo || '—';
+    document.getElementById('editModelCategory').value = model.categoria || 'Montacargas';
+    document.getElementById('editModelDesc').value = model.descripcion || '';
+    document.getElementById('editModelActive').checked = Boolean(model.activo);
+    window.bootstrap.Modal.getOrCreateInstance(document.getElementById('editModelModal')).show();
+  }
+
+  async handleEditModel(e) {
+    e.preventDefault();
+    const modelId = document.getElementById('editModelId').value;
+    const model = this.modelsById?.get(String(modelId));
+    if (!model) return;
+    try {
+      await this.api.updateModel(modelId, {
+        nombre: document.getElementById('editModelName').value.trim(),
+        descripcion: document.getElementById('editModelDesc').value.trim(),
+        categoria: document.getElementById('editModelCategory').value,
+        activo: document.getElementById('editModelActive').checked,
+      });
+      window.bootstrap.Modal.getInstance(document.getElementById('editModelModal'))?.hide();
+      this.notify(`Modelo “${model.nombre}” actualizado.`, 'success');
+      await this.loadModels();
+      this.loadDashboardMetrics();
+    } catch (err) {
+      this.notify(`No se pudo actualizar el modelo: ${err.message}`, 'error', 5000);
+    }
+  }
+
+  async toggleModelActive(modelId) {
+    const model = this.modelsById?.get(String(modelId));
+    if (!model) return;
+    const nextActive = !model.activo;
+    const action = nextActive ? 'reactivar' : 'retirar del catálogo';
+    const unitCount = Number(model.total_unidades || 0);
+    const linkedUnits = unitCount ? ` Tiene ${unitCount} unidad(es) vinculada(s); sus registros se conservarán.` : '';
+    if (!window.confirm(`¿Quieres ${action} “${model.nombre}”?${linkedUnits}`)) return;
+
+    try {
+      await this.api.updateModel(modelId, {
+        nombre: model.nombre,
+        descripcion: model.descripcion || '',
+        categoria: model.categoria || 'Montacargas',
+        activo: nextActive,
+      });
+      this.notify(nextActive ? 'Modelo reactivado en el catálogo.' : 'Modelo retirado del catálogo; se conservaron sus vínculos.', 'success');
+      await this.loadModels();
+      this.loadDashboardMetrics();
+    } catch (err) {
+      this.notify(`No se pudo ${action} el modelo: ${err.message}`, 'error', 5000);
     }
   }
 
