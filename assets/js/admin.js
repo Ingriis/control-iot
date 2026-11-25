@@ -195,6 +195,8 @@ export class AdminModule {
       const demoDescriptionModal = window.bootstrap.Modal.getOrCreateInstance(demoDescriptionModalEl);
       const rotatePrompt = window.bootstrap.Modal.getOrCreateInstance(rotatePromptEl);
       let waitingForPortrait = false;
+      let keyboardBaselineHeight = 0;
+      let mobileKeyboardVisible = false;
       const isSmallLandscape = () => window.matchMedia('(orientation: landscape) and (max-height: 600px) and (pointer: coarse)').matches;
       const openDescriptionWhenPortrait = () => {
         if (waitingForPortrait && !isSmallLandscape()) rotatePrompt.hide();
@@ -208,6 +210,18 @@ export class AdminModule {
       });
       window.addEventListener('orientationchange', openDescriptionWhenPortrait);
       window.addEventListener('resize', openDescriptionWhenPortrait);
+      const visualViewport = window.visualViewport;
+      const handleKeyboardViewportChange = () => {
+        if (!demoDescriptionModalEl.classList.contains('show') || !visualViewport || !keyboardBaselineHeight) return;
+        const currentHeight = visualViewport.height;
+        if (currentHeight < keyboardBaselineHeight * 0.72) {
+          mobileKeyboardVisible = true;
+        } else if (mobileKeyboardVisible && currentHeight > keyboardBaselineHeight * 0.84) {
+          mobileKeyboardVisible = false;
+          applyDemoDescription();
+        }
+      };
+      visualViewport?.addEventListener('resize', handleKeyboardViewportChange);
       const applyDemoDescription = () => {
         demoDescription.value = demoDescriptionEditor.value.trim();
         demoDescription.dispatchEvent(new Event('input', { bubbles: true }));
@@ -226,7 +240,15 @@ export class AdminModule {
       document.getElementById('demoRotatePromptCancel')?.addEventListener('click', () => {
         waitingForPortrait = false;
       });
-      demoDescriptionModalEl.addEventListener('shown.bs.modal', () => demoDescriptionEditor.focus());
+      demoDescriptionModalEl.addEventListener('shown.bs.modal', () => {
+        keyboardBaselineHeight = window.visualViewport?.height || window.innerHeight;
+        mobileKeyboardVisible = false;
+        demoDescriptionEditor.focus();
+      });
+      demoDescriptionEditor.addEventListener('input', () => {
+        demoDescription.value = demoDescriptionEditor.value;
+        demoDescription.dispatchEvent(new Event('input', { bubbles: true }));
+      });
       demoDescriptionEditor.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.isComposing) {
           event.preventDefault();
