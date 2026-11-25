@@ -6796,7 +6796,7 @@ main#main {
 #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage select { min-height:52px !important; font-size:16px !important; }
 #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-field small { display:block !important; margin-top:7px !important; }
 #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:22px !important; align-items:start !important; margin-top:18px !important; }
-#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid .demo-wizard-description { grid-column:1/-1 !important; }
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid .demo-wizard-description { grid-column:auto !important; }
 #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid input,
 #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-details-grid select { min-height:44px !important; }
 #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-actions { display:flex !important; align-items:center !important; gap:10px !important; padding-top:14px !important; border-top:1px solid rgba(255,255,255,.1) !important; }
