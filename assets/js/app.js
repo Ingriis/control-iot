@@ -234,7 +234,9 @@ function updateControls() {
     south?.classList.toggle('is-disabled', backwardDisabledByAdmin);
     if (north) north.title = forwardDisabledByAdmin ? 'Avanzar desactivado por el administrador' : 'Avanzar';
     if (south) south.title = backwardDisabledByAdmin ? 'Retroceder desactivado por el administrador' : 'Retroceder';
-    if (driveDisabled) driveJoystick?.reset();
+    // Mantén la palanca visualmente en la dirección elegida mientras se confirma
+    // cada renovación del movimiento sostenido.
+    if (driveDisabled && !commandPending) driveJoystick?.reset();
   }
 
   const steerEl = $('steerJoystick');
@@ -248,7 +250,8 @@ function updateControls() {
     east?.classList.toggle('is-disabled', rightDisabledByAdmin);
     if (west) west.title = leftDisabledByAdmin ? 'Girar a la izquierda desactivado por el administrador' : 'Girar a la izquierda';
     if (east) east.title = rightDisabledByAdmin ? 'Girar a la derecha desactivado por el administrador' : 'Girar a la derecha';
-    if (steerDisabled) steerJoystick?.reset();
+    // Una solicitud pendiente no significa que el usuario haya soltado la palanca.
+    if (steerDisabled && !commandPending) steerJoystick?.reset();
   }
 
   // Compatibilidad con elemento antiguo si existiera
