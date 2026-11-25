@@ -190,11 +190,35 @@ export class AdminModule {
     const demoDescription = document.getElementById('demoCustomDesc');
     const demoDescriptionModalEl = document.getElementById('demoDescriptionModal');
     const demoDescriptionEditor = document.getElementById('demoDescriptionModalInput');
-    if (demoDescription && demoDescriptionModalEl && demoDescriptionEditor) {
+    const rotatePromptEl = document.getElementById('demoRotatePromptModal');
+    if (demoDescription && demoDescriptionModalEl && demoDescriptionEditor && rotatePromptEl) {
       const demoDescriptionModal = window.bootstrap.Modal.getOrCreateInstance(demoDescriptionModalEl);
+      const rotatePrompt = window.bootstrap.Modal.getOrCreateInstance(rotatePromptEl);
+      let waitingForPortrait = false;
+      const isSmallLandscape = () => window.matchMedia('(orientation: landscape) and (max-height: 600px) and (pointer: coarse)').matches;
+      const openDescriptionWhenPortrait = () => {
+        if (waitingForPortrait && !isSmallLandscape()) rotatePrompt.hide();
+      };
+      rotatePromptEl.addEventListener('hidden.bs.modal', () => {
+        if (waitingForPortrait && !isSmallLandscape()) {
+          waitingForPortrait = false;
+          demoDescriptionEditor.value = demoDescription.value;
+          demoDescriptionModal.show();
+        }
+      });
+      window.addEventListener('orientationchange', openDescriptionWhenPortrait);
+      window.addEventListener('resize', openDescriptionWhenPortrait);
       demoDescription.addEventListener('click', () => {
+        if (isSmallLandscape()) {
+          waitingForPortrait = true;
+          rotatePrompt.show();
+          return;
+        }
         demoDescriptionEditor.value = demoDescription.value;
         demoDescriptionModal.show();
+      });
+      document.getElementById('demoRotatePromptCancel')?.addEventListener('click', () => {
+        waitingForPortrait = false;
       });
       demoDescriptionModalEl.addEventListener('shown.bs.modal', () => demoDescriptionEditor.focus());
       document.getElementById('demoDescriptionModalApply')?.addEventListener('click', () => {
