@@ -212,9 +212,15 @@ export class AdminModule {
         if (!activeDemoTextField) return;
         demoDescriptionEditor.value = activeDemoTextField.value;
         demoDescriptionEditor.placeholder = activeDemoTextField.placeholder || 'Escribe aquí';
-        const label = activeDemoTextField.labels?.[0]?.textContent?.trim() || activeDemoTextField.getAttribute('aria-label') || activeDemoTextField.name || 'Texto';
+        const nearbyLabel = activeDemoTextField.closest('.mb-2, .mb-3, .demo-wizard-field, .form-group')?.querySelector('label')?.textContent;
+        const label = (activeDemoTextField.labels?.[0]?.textContent
+          || nearbyLabel
+          || activeDemoTextField.getAttribute('aria-label')
+          || activeDemoTextField.name
+          || activeDemoTextField.placeholder
+          || 'Texto').trim().replace(/[:：]\s*$/, '');
         if (demoTextEditorLabel) demoTextEditorLabel.textContent = label;
-        if (demoTextEditorTitle) demoTextEditorTitle.textContent = `Editar ${label.toLowerCase()}`;
+        if (demoTextEditorTitle) demoTextEditorTitle.textContent = label;
         demoDescriptionEditor.rows = activeDemoTextField.tagName === 'TEXTAREA' ? 5 : 2;
         demoDescriptionModal.show();
       };
