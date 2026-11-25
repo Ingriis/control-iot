@@ -3,7 +3,7 @@ import { loadConfig, validateConfig } from './config.js';
 import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js?v=20261125-global-keyboard-controls';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
-import { AdminModule } from './admin.js?v=20261125-stop-zero-ms';
+import { AdminModule } from './admin.js?v=20261125-demo-active-toggle';
 import {
   triggerHaptic,
   playBip,
@@ -373,7 +373,7 @@ function cycleDemo(direction = 1) {
 
 function renderDemos(selectedId = '') {
   const select = $('demoSelect');
-  const activeDemos = demos.filter((item) => Number(item.activo) === 1);
+  const activeDemos = demos.filter((item) => item.activo === true || item.activo === 'true' || Number(item.activo) === 1);
   select.replaceChildren();
   const placeholder = document.createElement('option');
   placeholder.value = '';

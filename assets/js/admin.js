@@ -1407,7 +1407,8 @@ export class AdminModule {
         demos.forEach((d) => {
           const opt = document.createElement('option');
           opt.value = d.id_demo || d.id;
-          opt.textContent = `📋 #${d.id_demo || d.id} - ${d.nombre}`;
+          const isActive = d.activo === true || d.activo === 'true' || Number(d.activo) === 1;
+          opt.textContent = `${isActive ? '📋' : '⏸️'} #${d.id_demo || d.id} - ${d.nombre}${isActive ? '' : ' (INACTIVA)'}`;
           targetSelect.appendChild(opt);
         });
       }
@@ -1424,6 +1425,8 @@ export class AdminModule {
     const vSelect = document.getElementById('demoVehicleSelect');
     const nameInput = document.getElementById('demoCustomName');
     const descInput = document.getElementById('demoCustomDesc');
+    const activeInput = document.getElementById('demoActive');
+    const activeField = document.getElementById('demoActiveField');
     const submitBtn = document.querySelector('#saveDemoForm button[type="submit"]');
     const deleteBtn = document.getElementById('deleteDemoBtn');
     const container = document.getElementById('demoStepsContainer');
@@ -1447,6 +1450,11 @@ export class AdminModule {
       if (descInput) {
         descInput.value = '';
       }
+      if (activeInput) {
+        activeInput.checked = true;
+        activeInput.disabled = true;
+      }
+      activeField?.classList.add('d-none');
       if (submitBtn) submitBtn.innerHTML = '💾 Guardar DEMO';
       container.innerHTML = '';
       this.addDemoStepRow({ isNew: true });
@@ -1464,6 +1472,13 @@ export class AdminModule {
       if (currentDemo) {
         if (nameInput) nameInput.value = currentDemo.nombre;
         if (descInput) descInput.value = currentDemo.descripcion || '';
+        if (activeInput) {
+          activeInput.checked = currentDemo.activo === true || currentDemo.activo === 'true' || Number(currentDemo.activo) === 1;
+          activeInput.disabled = false;
+        }
+        activeField?.classList.remove('d-none');
+      } else {
+        activeField?.classList.add('d-none');
       }
       if (submitBtn) submitBtn.innerHTML = `💾 Guardar Cambios en DEMO #${demoId}`;
 
@@ -1731,6 +1746,8 @@ export class AdminModule {
     e.preventDefault();
     const nombre = document.getElementById('demoCustomName').value.trim();
     const descripcion = document.getElementById('demoCustomDesc').value.trim();
+    const activeInput = document.getElementById('demoActive');
+    const activo = activeInput ? activeInput.checked : true;
     const vSelect = document.getElementById('demoVehicleSelect');
     const vId = (vSelect && vSelect.value) ? vSelect.value : this.api.getVehicleId();
     const targetSelect = document.getElementById('demoTargetSelect');
@@ -1788,14 +1805,15 @@ export class AdminModule {
         const currentDemo = demos.find((d) => (d.id_demo || d.id) === demoId);
 
         // 1. Actualizar Nombre y Descripción de la DEMO si cambiaron en Amazon RDS
-        let nombreActualizado = false;
-        if (currentDemo && (nombre !== currentDemo.nombre || descripcion !== (currentDemo.descripcion || ''))) {
+        let cabeceraActualizada = false;
+        const currentActive = currentDemo && (currentDemo.activo === true || currentDemo.activo === 'true' || Number(currentDemo.activo) === 1);
+        if (currentDemo && (nombre !== currentDemo.nombre || descripcion !== (currentDemo.descripcion || '') || activo !== currentActive)) {
           await this.api.updateDemo(vId, demoId, {
             nombre,
             descripcion: descripcion || '',
-            activo: currentDemo.activo !== undefined ? currentDemo.activo : true,
-          }).catch((err) => console.warn('Error al actualizar cabecera de la demo:', err));
-          nombreActualizado = true;
+            activo,
+          });
+          cabeceraActualizada = true;
         }
 
         // 2. Eliminar movimientos quitados en backend si existen
@@ -1859,7 +1877,9 @@ export class AdminModule {
         }
 
         const detalles = [];
-        if (nombreActualizado) detalles.push(`Nombre cambiado a "${nombre}"`);
+        if (cabeceraActualizada && nombre !== currentDemo?.nombre) detalles.push(`Nombre cambiado a "${nombre}"`);
+        else if (cabeceraActualizada && descripcion !== (currentDemo?.descripcion || '')) detalles.push('Descripción actualizada');
+        if (currentDemo && activo !== currentActive) detalles.push(activo ? 'DEMO activada' : 'DEMO desactivada');
         if (movimientosAgregados > 0) detalles.push(`${movimientosAgregados} paso(s) agregado(s)`);
         if (movimientosActualizados > 0) detalles.push(`${movimientosActualizados} paso(s) actualizado(s)`);
         if (movimientosEliminados > 0) detalles.push(`${movimientosEliminados} paso(s) eliminado(s)`);
