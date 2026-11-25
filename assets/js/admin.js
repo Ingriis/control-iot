@@ -675,10 +675,17 @@ export class AdminModule {
     e.preventDefault();
     const submitButton = e.submitter || e.target.querySelector('[type="submit"]');
     if (submitButton?.disabled) return;
+    const nameInput = document.getElementById('modelName');
+    const categoryInput = document.getElementById('modelCategory');
+    const descriptionInput = document.getElementById('modelDesc');
+    if (!nameInput || !categoryInput || !descriptionInput) {
+      this.notify('No se pudo cargar el formulario del modelo. Recarga la página e inténtalo de nuevo.', 'error', 5000);
+      return;
+    }
     if (submitButton) submitButton.disabled = true;
-    const nombre = document.getElementById('modelName').value.trim();
-    const categoria = document.getElementById('modelCategory').value;
-    const descripcion = document.getElementById('modelDesc').value.trim();
+    const nombre = nameInput.value.trim();
+    const categoria = categoryInput.value;
+    const descripcion = descriptionInput.value.trim();
 
     try {
       const existingModels = await this.api.getModels();

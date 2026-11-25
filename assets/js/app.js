@@ -3,7 +3,7 @@ import { loadConfig, validateConfig } from './config.js';
 import { initVerticalStick, initHorizontalStick, initJoystick } from './joystick.js';
 import { VehicleSocket } from './websocket.js';
 import { renderLatestMovement, renderHistory, setMonitorVehicle } from './monitor.js';
-import { AdminModule } from './admin.js';
+import { AdminModule } from './admin.js?v=20261124-v96-auto-model-code';
 import {
   triggerHaptic,
   playBip,
