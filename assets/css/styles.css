@@ -7093,3 +7093,31 @@ main#main {
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .demo-step-remove-btn { height:32px !important; min-height:32px !important; font-size:10px !important; }
   #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-step-row .input-group-text small { display:none !important; }
 }
+
+/* En laptop, deja el avance de la primera pantalla a la vista junto al título. */
+@media (min-width: 701px) and (min-height: 521px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage {
+    position:relative !important;
+    padding-top:0 !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage .demo-wizard-stage-content {
+    justify-content:flex-start !important;
+    padding:0 0 8px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage .demo-wizard-stage-content h5 {
+    max-width:calc(100% - 220px) !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage .demo-wizard-actions {
+    position:absolute !important;
+    top:0 !important;
+    right:0 !important;
+    z-index:2 !important;
+    padding:0 !important;
+    border:0 !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-wizard-vehicle-stage #demoWizardNextDetails {
+    min-height:38px !important;
+    padding:7px 14px !important;
+    white-space:nowrap !important;
+  }
+}
