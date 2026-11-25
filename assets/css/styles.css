@@ -6552,3 +6552,82 @@ main#main {
   #controlView .joy-base,
   #controlView .fork-joy-base { width: clamp(78px, 18vw, 90px) !important; height: clamp(78px, 18vw, 90px) !important; }
 }
+
+/* Administrador: filas compactas para permisos de comandos por unidad. */
+#vehicleCommandsModal .modal-dialog { max-width: min(520px, calc(100vw - 24px)); }
+#vehicleCommandsModal .modal-header { padding: 10px 14px; }
+#vehicleCommandsModal .modal-title { font-size: 16px; }
+#vehicleCommandsModal .modal-body { padding: 12px 14px; }
+#vehicleCommandsModal .modal-body > .alert { margin-bottom: 10px !important; font-size: 11px !important; }
+#vehicleCommandsModal #vehicleCommandsList { padding: 4px !important; }
+#vehicleCommandsModal .command-toggle-row {
+  gap: 8px;
+  padding: 6px 7px !important;
+  min-height: 0;
+}
+#vehicleCommandsModal .command-toggle-row > div:first-child { min-width: 0; line-height: 1.2; }
+#vehicleCommandsModal .command-toggle-row strong { font-size: 11px; }
+#vehicleCommandsModal .command-toggle-row .badge { font-size: 8px; padding: 3px 5px; }
+#vehicleCommandsModal .command-toggle-row .small.text-muted { margin-top: 2px; font-size: 9px; line-height: 1.2; }
+#vehicleCommandsModal .command-toggle-row .form-check { margin-left: 8px !important; flex: 0 0 auto; }
+#vehicleCommandsModal .command-toggle-row .form-check-input { width: 2em; height: 1em; margin-top: 2px; }
+#vehicleCommandsModal .command-toggle-row .form-check-label { font-size: 9px !important; }
+#vehicleCommandsModal .modal-footer { padding: 8px 14px; }
+
+/* El guardado queda junto a los pasos, como acción breve y secundaria. */
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  grid-template-areas: "meta" "steps" !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header {
+  flex-wrap: wrap !important;
+  row-gap: 4px !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header-actions {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin-left: auto !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap {
+  grid-area: auto !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  gap: 4px !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap .demo-save-btn,
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap #deleteDemoBtn {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 3px 8px !important;
+  border-radius: 5px !important;
+  box-shadow: none !important;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+#adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap .demo-save-btn:hover {
+  transform: none !important;
+  filter: brightness(1.1) !important;
+}
+
+@media (max-width: 420px) {
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-steps-header-actions #addDemoStepBtn {
+    padding-inline: 5px !important;
+    font-size: 9px !important;
+  }
+  #adminView #subtab-demoEditor:not(.d-none):not([hidden]) .demo-editor-save-wrap .demo-save-btn {
+    padding-inline: 6px !important;
+    font-size: 9px !important;
+  }
+}
