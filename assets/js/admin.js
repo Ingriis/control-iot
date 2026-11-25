@@ -1542,11 +1542,12 @@ export class AdminModule {
       const active = record.activo === undefined || Number(record.activo) === 1;
       const validMapping = presentation && Number(record.codigo) === presentation.codigo;
       return validMapping && (active || selected)
-        ? [{ id: Number(record.id_comando), name: presentation.name, group: presentation.group }]
+        ? [{ id: Number(record.id_comando), code: Number(record.codigo), name: presentation.name, group: presentation.group }]
         : [];
     });
 
     const currentCmd = commandsList.find((c) => Number(c.id) === Number(commandId)) || commandsList[0] || { group: 'drive' };
+    const durationMin = Number(currentCmd.code) === 9 ? 0 : 200;
 
     const row = document.createElement('div');
     row.className = 'demo-step-row d-flex gap-2 align-items-center mb-2 p-2 bg-dark rounded border border-secondary';
@@ -1574,7 +1575,7 @@ export class AdminModule {
         ${optionsHtml || '<option value="">Sin comandos configurados para este vehículo</option>'}
       </select>
       <div class="input-group input-group-sm demo-input-duration" title="Duración del movimiento">
-        <input type="number" class="form-control step-duration" value="${duration}" min="200" max="10000" step="100">
+        <input type="number" class="form-control step-duration" value="${duration}" min="${durationMin}" max="10000" step="100">
         <span class="input-group-text step-dur-label">ms <small class="text-cyan ms-1 step-dur-sec">(${durSec}s)</small></span>
       </div>
       <div class="input-group input-group-sm demo-input-pause" title="Pausa después del movimiento">
@@ -1588,7 +1589,13 @@ export class AdminModule {
     if (select) {
       select.addEventListener('change', (e) => {
         const chosen = commandsList.find((c) => Number(c.id) === Number(e.target.value));
-        if (chosen) row.dataset.commandGroup = chosen.group;
+        if (chosen) {
+          row.dataset.commandGroup = chosen.group;
+          const durationInput = row.querySelector('.step-duration');
+          const minDuration = Number(chosen.code) === 9 ? 0 : 200;
+          durationInput.min = String(minDuration);
+          if (Number(durationInput.value) < minDuration) durationInput.value = String(minDuration);
+        }
         this.updateDemoStepsSummary();
       });
     }
