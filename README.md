@@ -15,7 +15,7 @@ La solución integra tres módulos en un único frontend responsivo (Mobile Firs
 ```mermaid
 flowchart TD
     subgraph Frontend ["Frontend Web (GitHub Pages / Bootstrap 5 + JS ES6+)"]
-        C["1. CONTROL (4.1)<br>Joystick, horquillas, luces, sonido, demos y DETENER"]
+        C["1. CONTROL (4.1)<br>Joysticks independientes, horquillas, luces, sonido, demos y DETENER"]
         M["2. MONITOREO (4.2)<br>Último estado, historial de 10 y telemetría"]
         A["3. ADMINISTRACIÓN (4.3)<br>Dashboard, Modelos, Unidades, Clientes, Editor Demos, Invitados y Auditoría"]
     end
@@ -54,10 +54,22 @@ flowchart TD
 | **Módulo «Mis Vehículos»** | 👁️ Todos |  Solo propias | ❌ Denegado |
 | **Operación en CONTROL** | ⚠️ Requiere soporte en vendidas |  Solo unidades propias | ⚠️ Limitado a unidad de exhibición |
 | **Lectura en MONITOREO** |  Auditoría |  Solo unidades propias | ❌ Denegado |
-| **Editor de DEMOS (Crear/Quitar pasos)** |  Total (Fábrica y Soporte) |  Creación y edición (Propias) | ❌ Denegado |
+| **Editor de DEMOS** |  Total (Fábrica y Soporte) |  Creación y edición (Propias) | ❌ Denegado |
 | **Prueba de Exhibición con Reserva** | 👁️ Monitoreo | ❌ (Usa sus unidades) |  Reserva exclusiva temporal (3 min) |
 
 > **Aislamiento por Recurso (Anti-BOLA/IDOR):** FastAPI valida en cada petición que el `id_usuario` autenticado coincida con el `propietario_id` de la unidad física solicitada. Si se altera el `vehicle_id` desde DevTools o Postman, el backend responde con **`403 Forbidden`**.
+
+### Funcionamiento actualizado de los módulos
+
+- **Control manual:** los joysticks de avance/retroceso y dirección funcionan de forma independiente. La interfaz conserva la animación mientras se mantiene pulsado el control y detiene la acción al soltarlo. Las horquillas, luces y sonido mantienen sus controles separados.
+- **Comandos combinados para demos:** el editor incluye `AVANZAR + IZQUIERDA`, `AVANZAR + DERECHA`, `RETROCEDER + IZQUIERDA` y `RETROCEDER + DERECHA`. Se guardan como comandos propios del vehículo para que la demo ejecute la combinación seleccionada.
+- **Editor de demos:** permite crear demos y modificar las existentes. Se pueden cambiar el comando, la duración, la pausa y el orden de cada paso, además de agregar o quitar pasos. Los movimientos manuales no se incorporan a la secuencia de una demo.
+- **Duraciones:** los pasos de movimiento aceptan de `200` a `10000 ms`, en incrementos de `100 ms`. El comando `DETENER` también acepta `0 ms`. La pausa entre pasos acepta de `0` a `5000 ms`.
+- **Permisos de comandos:** cuando el administrador deshabilita un comando para una unidad, el comprador ve el control deshabilitado y no puede enviar esa acción.
+- **Sesiones de invitado:** el control se habilita después de obtener una reserva exclusiva de la unidad de exhibición. La reserva dura tres minutos; al terminar la sesión, el frontend solicita detener/apagar la unidad.
+- **Administración comercial:** el código único de modelo se genera automáticamente. Los modelos y clientes existentes se pueden editar; el estado del modelo o la cuenta se cambia desde su formulario de edición. Al agregar un modelo, las opciones disponibles en Inventario se actualizan sin recargar la página.
+- **Entrada de texto en móviles:** los campos abren un editor enfocado con el nombre del dato que se está editando para facilitar la escritura con el teclado móvil y volver al formulario al terminar.
+- **Diseño responsivo:** el Editor de Demos se adapta a escritorio, tableta y teléfono, y el panel «Mis Vehículos» ajusta el selector, el estado de conexión y el acceso a Control a pantallas estrechas.
 
 ---
 
@@ -111,14 +123,14 @@ La barra superior muestra tres comprobaciones de red independientes:
 | **P06** | Control manual de movimientos | Usuario | Envío de comandos al vehículo propio y acuse de aceptación | **Correcto** |
 | **P07** | Telemetría WSS en tiempo real | Usuario | Eventos de movimiento recibidos instantáneamente por WebSocket | **Correcto** |
 | **P08** | Historial limitado a 10 | Usuario | Monitoreo conserva únicamente los diez movimientos más recientes | **Correcto** |
-| **P09** | Editor de DEMO persistente | Usuario | Guarda nombre, descripción y pasos en RDS vía API | **Correcto** |
-| **P10** | Ejecución y DETENER de DEMO | Usuario | Ejecución con prioridad de DETENER para parada inmediata | **Correcto** |
+| **P09** | Editor de DEMO persistente | Usuario | Crea una demo o edita sus datos y pasos (comando, duración, pausa y orden) en RDS vía API | **Correcto** |
+| **P10** | Ejecución y DETENER de DEMO | Usuario | Ejecuta la secuencia y permite que el paso `DETENER` tenga duración de `0 ms` | **Correcto** |
 | **P11** | Prueba de Invitado | Invitado | Catálogo público y solicitud de sesión de 3 minutos | **Correcto** |
 | **P12** | Rechazo de acceso a Invitado | Invitado | Intento de consultar endpoints administrativos devuelve `401`/`403` | **Correcto** |
 | **P13** | Rechazo de vehículo ajeno | Usuario | Envío de comando a vehículo no asignado devuelve `403 Forbidden` | **Correcto** |
 | **P14** | Exclusividad de control | Invitado / Usuario | Segunda sesión simultánea en unidad de exhibición recibe `409 Conflict` | **Correcto** |
 | **P15** | Reconexión y reconciliación | Todos | Al reconectar WSS se reconcilia el último estado con REST | **Correcto** |
-| **P16** | Diseño responsivo Mobile First | Todos | Interfaz adaptable a celulares, tabletas y computadoras | **Correcto** |
+| **P16** | Diseño responsivo Mobile First | Todos | Control, Editor de Demos y «Mis Vehículos» se adaptan a celulares, tabletas y computadoras | **Correcto** |
 | **P17** | Registro en Auditoría | Administrador | Verificación de bitácora con actor, acción, recurso y fecha | **Correcto** |
 
 ---
