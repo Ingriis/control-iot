@@ -143,6 +143,7 @@ export function createApi(config) {
 
     getClients: () => request('/admin/clients'),
     createClient: (payload) => request('/admin/clients', { method: 'POST', body: JSON.stringify(payload) }),
+    updateClient: (clientId, payload) => request(`/admin/clients/${encodeURIComponent(clientId)}`, { method: 'PUT', body: JSON.stringify(payload) }),
 
     getAuditLogs: (limit = 50) => request(`/admin/audit-logs?limit=${encodeURIComponent(limit)}`),
 

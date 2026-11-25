@@ -163,6 +163,11 @@ export class AdminModule {
       newClientForm.addEventListener('submit', (e) => this.handleCreateClient(e));
     }
 
+    const editClientForm = document.getElementById('editClientForm');
+    if (editClientForm) {
+      editClientForm.addEventListener('submit', (e) => this.handleEditClient(e));
+    }
+
     // Selector Mis Vehículos
     const myVehiclesSelect = document.getElementById('myVehiclesSelect');
     if (myVehiclesSelect) {
@@ -563,7 +568,7 @@ export class AdminModule {
       document.getElementById('kpiUnitsSold').textContent = soldCount;
       document.getElementById('kpiUnitsExhib').textContent = exhibCount;
       document.getElementById('kpiUnitsAvail').textContent = availCount;
-      document.getElementById('kpiClients').textContent = clientsData.length;
+      document.getElementById('kpiClients').textContent = clientsData.filter((client) => client.activo).length;
     } catch (err) {
       console.error('Error cargando KPIs:', err);
     }
@@ -990,12 +995,13 @@ export class AdminModule {
   async loadClients() {
     const tableBody = document.getElementById('clientsTableBody');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">Cargando clientes...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Cargando clientes...</td></tr>';
 
     try {
       const clients = await this.api.getClients();
+      this.clientsById = new Map((clients || []).map((client) => [String(client.id_usuario), client]));
       if (!clients.length) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">Sin clientes registrados.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin clientes registrados.</td></tr>';
         return;
       }
       tableBody.innerHTML = clients.map((c) => `
@@ -1005,10 +1011,75 @@ export class AdminModule {
           <td><code>@${c.username}</code></td>
           <td>${c.email}</td>
           <td><span class="badge bg-info text-dark">${c.total_unidades} vehículo(s)</span></td>
+          <td><span class="badge ${c.activo ? 'bg-success' : 'bg-danger'}">${c.activo ? 'ACTIVO' : 'INACTIVO'}</span></td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-info me-1" data-client-edit="${c.id_usuario}">Editar</button>
+            <button type="button" class="btn btn-sm ${c.activo ? 'btn-outline-warning' : 'btn-outline-success'}" data-client-toggle="${c.id_usuario}">${c.activo ? 'Retirar' : 'Reactivar'}</button>
+          </td>
         </tr>
       `).join('');
+      tableBody.querySelectorAll('[data-client-edit]').forEach((button) => {
+        button.addEventListener('click', () => this.openEditClient(button.dataset.clientEdit));
+      });
+      tableBody.querySelectorAll('[data-client-toggle]').forEach((button) => {
+        button.addEventListener('click', () => this.toggleClientActive(button.dataset.clientToggle));
+      });
     } catch (err) {
-      tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">Error: ${err.message}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Error: ${err.message}</td></tr>`;
+    }
+  }
+
+  openEditClient(clientId) {
+    const client = this.clientsById?.get(String(clientId));
+    if (!client) return;
+    document.getElementById('editClientId').value = client.id_usuario;
+    document.getElementById('editClientName').value = client.nombre_completo || '';
+    document.getElementById('editClientUsername').textContent = `@${client.username || ''}`;
+    document.getElementById('editClientEmail').value = client.email || '';
+    document.getElementById('editClientActive').checked = Boolean(client.activo);
+    window.bootstrap.Modal.getOrCreateInstance(document.getElementById('editClientModal')).show();
+  }
+
+  async handleEditClient(e) {
+    e.preventDefault();
+    const clientId = document.getElementById('editClientId').value;
+    const client = this.clientsById?.get(String(clientId));
+    if (!client) return;
+    try {
+      await this.api.updateClient(clientId, {
+        nombre_completo: document.getElementById('editClientName').value.trim(),
+        email: document.getElementById('editClientEmail').value.trim(),
+        activo: document.getElementById('editClientActive').checked,
+      });
+      window.bootstrap.Modal.getInstance(document.getElementById('editClientModal'))?.hide();
+      this.notify(`Cliente “${client.username}” actualizado.`, 'success');
+      await this.loadClients();
+      this.loadDashboardMetrics();
+    } catch (err) {
+      this.notify(`No se pudo actualizar el cliente: ${err.message}`, 'error', 5000);
+    }
+  }
+
+  async toggleClientActive(clientId) {
+    const client = this.clientsById?.get(String(clientId));
+    if (!client) return;
+    const nextActive = !client.activo;
+    const action = nextActive ? 'reactivar' : 'retirar';
+    const unitCount = Number(client.total_unidades || 0);
+    const linkedUnits = unitCount ? ` Sus ${unitCount} unidad(es) vinculada(s) y registros se conservarán.` : '';
+    if (!window.confirm(`¿Quieres ${action} la cuenta de “${client.username}”?${linkedUnits}`)) return;
+
+    try {
+      await this.api.updateClient(clientId, {
+        nombre_completo: client.nombre_completo,
+        email: client.email,
+        activo: nextActive,
+      });
+      this.notify(nextActive ? 'Cuenta de cliente reactivada.' : 'Cuenta retirada; se conservaron sus unidades y registros.', 'success');
+      await this.loadClients();
+      this.loadDashboardMetrics();
+    } catch (err) {
+      this.notify(`No se pudo ${action} la cuenta: ${err.message}`, 'error', 5000);
     }
   }
 
