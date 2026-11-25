@@ -14,7 +14,7 @@
     <link rel="preload" as="image" href="./assets/img/joystick-handle.webp" />
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v86-clean-wizard-header" />
+    <link rel="stylesheet" href="./assets/css/styles.css?v=20261124-v87-all-text-fields" />
   </head>
   <body>
     <a class="skip-link" href="#main">Saltar al control</a>
@@ -407,11 +407,11 @@
                           </div>
                           <div class="demo-wizard-field">
                             <label class="form-label" for="demoCustomName">Nombre de la demo</label>
-                            <input type="text" class="form-control bg-dark border-secondary text-white demo-field-modal-trigger" id="demoCustomName" placeholder="Toca para escribir el nombre" required readonly aria-haspopup="dialog" aria-controls="demoDescriptionModal">
+                            <input type="text" class="form-control bg-dark border-secondary text-white" id="demoCustomName" placeholder="Ej. Recorrido Almacén A" required>
                           </div>
                           <div class="demo-wizard-field demo-wizard-description">
                             <label class="form-label" for="demoCustomDesc">Descripción</label>
-                            <input type="text" class="form-control bg-dark border-secondary text-white demo-field-modal-trigger" id="demoCustomDesc" placeholder="Toca para escribir la descripción" readonly aria-haspopup="dialog" aria-controls="demoDescriptionModal">
+                            <input type="text" class="form-control bg-dark border-secondary text-white" id="demoCustomDesc" placeholder="Breve explicación de la secuencia">
                           </div>
                         </div>
                       </div>
@@ -447,41 +447,6 @@
                   </div>
                 </div>
               </form>
-            </div>
-            <div class="modal fade" id="demoDescriptionModal" tabindex="-1" aria-labelledby="demoDescriptionModalTitle" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered modal-sm demo-description-modal-dialog">
-                <div class="modal-content bg-dark border-info text-white">
-                  <div class="modal-header py-2">
-                    <h5 class="modal-title fs-6" id="demoDescriptionModalTitle">Editar texto</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                  </div>
-                  <div class="modal-body">
-                    <label class="form-label small" id="demoTextEditorLabel" for="demoDescriptionModalInput">Texto</label>
-                    <input type="text" class="form-control bg-dark border-secondary text-white" id="demoDescriptionModalInput" placeholder="Escribe aquí" enterkeyhint="done">
-                    <small class="text-muted d-block mt-2">El texto se aplica mientras escribes. Oculta el teclado al terminar.</small>
-                  </div>
-                  <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-sm btn-cyan" id="demoDescriptionModalApply">Listo</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="modal fade" id="demoRotatePromptModal" tabindex="-1" aria-labelledby="demoRotatePromptTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-              <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content bg-dark border-warning text-white">
-                  <div class="modal-header py-2 border-warning">
-                    <h5 class="modal-title fs-6 text-warning" id="demoRotatePromptTitle">Gira el teléfono para escribir</h5>
-                  </div>
-                  <div class="modal-body text-center">
-                    <div class="display-5 mb-2" aria-hidden="true">📱 ↻</div>
-                    <p class="mb-0">Este campo se abre en vertical para que el teclado no cubra la pantalla.</p>
-                  </div>
-                  <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demoRotatePromptCancel" data-bs-dismiss="modal">Cancelar</button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -521,6 +486,43 @@
         <span>CONTROL IoT · PLATAFORMA INTEGRADA</span>
         <span>Desarrollado por <strong>Ingrid Hernández Gómez</strong> · 2026</span>
       </footer>
+    </div>
+
+    <!-- Editor de texto universal para campos que se escriben en móviles -->
+    <div class="modal fade" id="demoDescriptionModal" tabindex="-1" aria-labelledby="demoDescriptionModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm demo-description-modal-dialog">
+        <div class="modal-content bg-dark border-info text-white">
+          <div class="modal-header py-2">
+            <h5 class="modal-title fs-6" id="demoDescriptionModalTitle">Editar texto</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label small" id="demoTextEditorLabel" for="demoDescriptionModalInput">Texto</label>
+            <textarea class="form-control bg-dark border-secondary text-white" id="demoDescriptionModalInput" rows="3" placeholder="Escribe aquí" enterkeyhint="done"></textarea>
+            <small class="text-muted d-block mt-2">El texto se aplica mientras escribes. Oculta el teclado al terminar.</small>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-sm btn-cyan" id="demoDescriptionModalApply">Listo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="demoRotatePromptModal" tabindex="-1" aria-labelledby="demoRotatePromptTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content bg-dark border-warning text-white">
+          <div class="modal-header py-2 border-warning">
+            <h5 class="modal-title fs-6 text-warning" id="demoRotatePromptTitle">Gira el teléfono para escribir</h5>
+          </div>
+          <div class="modal-body text-center">
+            <div class="display-5 mb-2" aria-hidden="true">📱 ↻</div>
+            <p class="mb-0">Este campo se abre en vertical para que el teclado no cubra la pantalla.</p>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="demoRotatePromptCancel" data-bs-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- MODAL: Iniciar Sesión (con pruebas rápidas) -->
@@ -790,6 +792,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="./assets/js/app.js?v=20261124-v85-all-demo-text-fields"></script>
+    <script type="module" src="./assets/js/app.js?v=20261124-v86-all-text-fields"></script>
   </body>
 </html>

@@ -187,30 +187,59 @@ export class AdminModule {
     document.getElementById('demoWizardNextDetails')?.addEventListener('click', () => this.continueDemoWizardToSteps());
     document.getElementById('demoWizardBackDetails')?.addEventListener('click', () => this.showDemoEditorStage(1));
 
-    const demoTextFields = [
-      { element: document.getElementById('demoCustomName'), label: 'Nombre de la demo', title: 'Editar nombre', placeholder: 'Ej. Recorrido Almacén A' },
-      { element: document.getElementById('demoCustomDesc'), label: 'Descripción de la demo', title: 'Editar descripción', placeholder: 'Ej. Recorrido por el almacén' },
-    ].filter((field) => field.element);
     const demoDescriptionModalEl = document.getElementById('demoDescriptionModal');
     const demoDescriptionEditor = document.getElementById('demoDescriptionModalInput');
     const demoTextEditorLabel = document.getElementById('demoTextEditorLabel');
     const demoTextEditorTitle = document.getElementById('demoDescriptionModalTitle');
     const rotatePromptEl = document.getElementById('demoRotatePromptModal');
-    if (demoTextFields.length && demoDescriptionModalEl && demoDescriptionEditor && rotatePromptEl) {
+    if (demoDescriptionModalEl && demoDescriptionEditor && rotatePromptEl) {
       const demoDescriptionModal = window.bootstrap.Modal.getOrCreateInstance(demoDescriptionModalEl);
       const rotatePrompt = window.bootstrap.Modal.getOrCreateInstance(rotatePromptEl);
       let waitingForPortrait = false;
       let activeDemoTextField = null;
+      let parentModalToResume = null;
       let keyboardBaselineHeight = 0;
       let mobileKeyboardVisible = false;
       const isSmallLandscape = () => window.matchMedia('(orientation: landscape) and (max-height: 600px) and (pointer: coarse)').matches;
+      const textFieldSelector = 'input[type="text"], input[type="email"], input[type="search"], input[type="tel"], input[type="url"], textarea';
+      const resumeParentModal = () => {
+        if (!parentModalToResume) return;
+        const parent = parentModalToResume;
+        parentModalToResume = null;
+        window.bootstrap.Modal.getOrCreateInstance(parent).show();
+      };
+      const showEditorForActiveField = () => {
+        if (!activeDemoTextField) return;
+        demoDescriptionEditor.value = activeDemoTextField.value;
+        demoDescriptionEditor.placeholder = activeDemoTextField.placeholder || 'Escribe aquí';
+        const label = activeDemoTextField.labels?.[0]?.textContent?.trim() || activeDemoTextField.getAttribute('aria-label') || activeDemoTextField.name || 'Texto';
+        if (demoTextEditorLabel) demoTextEditorLabel.textContent = label;
+        if (demoTextEditorTitle) demoTextEditorTitle.textContent = `Editar ${label.toLowerCase()}`;
+        demoDescriptionEditor.rows = activeDemoTextField.tagName === 'TEXTAREA' ? 5 : 2;
+        demoDescriptionModal.show();
+      };
       const openTextEditor = (field) => {
         activeDemoTextField = field;
-        demoDescriptionEditor.value = field.element.value;
-        demoDescriptionEditor.placeholder = field.placeholder;
-        if (demoTextEditorLabel) demoTextEditorLabel.textContent = field.label;
-        if (demoTextEditorTitle) demoTextEditorTitle.textContent = field.title;
-        demoDescriptionModal.show();
+        const parentModal = field.closest('.modal.show');
+        if (parentModal && parentModal !== demoDescriptionModalEl && parentModal !== rotatePromptEl) {
+          parentModalToResume = parentModal;
+          parentModal.addEventListener('hidden.bs.modal', () => {
+            if (isSmallLandscape()) {
+              waitingForPortrait = true;
+              rotatePrompt.show();
+            } else {
+              showEditorForActiveField();
+            }
+          }, { once: true });
+          window.bootstrap.Modal.getOrCreateInstance(parentModal).hide();
+          return;
+        }
+        if (isSmallLandscape()) {
+          waitingForPortrait = true;
+          rotatePrompt.show();
+          return;
+        }
+        showEditorForActiveField();
       };
       const openDescriptionWhenPortrait = () => {
         if (waitingForPortrait && !isSmallLandscape()) rotatePrompt.hide();
@@ -218,8 +247,8 @@ export class AdminModule {
       rotatePromptEl.addEventListener('hidden.bs.modal', () => {
         if (waitingForPortrait && !isSmallLandscape()) {
           waitingForPortrait = false;
-          openTextEditor(activeDemoTextField);
-        }
+          showEditorForActiveField();
+        } else resumeParentModal();
       });
       window.addEventListener('orientationchange', openDescriptionWhenPortrait);
       window.addEventListener('resize', openDescriptionWhenPortrait);
@@ -231,31 +260,33 @@ export class AdminModule {
           mobileKeyboardVisible = true;
         } else if (mobileKeyboardVisible && currentHeight > keyboardBaselineHeight * 0.84) {
           mobileKeyboardVisible = false;
-          applyDemoTextField();
+          finishTextEntry();
         }
       };
       visualViewport?.addEventListener('resize', handleKeyboardViewportChange);
-      const applyDemoTextField = () => {
+      const finishTextEntry = () => {
         if (!activeDemoTextField) return;
-        activeDemoTextField.element.value = demoDescriptionEditor.value.trim();
-        activeDemoTextField.element.dispatchEvent(new Event('input', { bubbles: true }));
+        activeDemoTextField.value = demoDescriptionEditor.value;
+        activeDemoTextField.dispatchEvent(new Event('input', { bubbles: true }));
         demoDescriptionEditor.blur();
         demoDescriptionModal.hide();
       };
-      demoTextFields.forEach((field) => {
-        field.element.addEventListener('click', () => {
-          activeDemoTextField = field;
-          if (isSmallLandscape()) {
-            waitingForPortrait = true;
-            rotatePrompt.show();
-            return;
-          }
-          openTextEditor(field);
-        });
-      });
       document.getElementById('demoRotatePromptCancel')?.addEventListener('click', () => {
         waitingForPortrait = false;
       });
+      document.addEventListener('pointerdown', (event) => {
+        const field = event.target.closest?.(textFieldSelector);
+        if (!field || field === demoDescriptionEditor || field.disabled) return;
+        event.preventDefault();
+        event.stopPropagation();
+        openTextEditor(field);
+      }, true);
+      document.addEventListener('focusin', (event) => {
+        const field = event.target.closest?.(textFieldSelector);
+        if (!field || field === demoDescriptionEditor || field.disabled || field === activeDemoTextField) return;
+        field.blur();
+        openTextEditor(field);
+      }, true);
       demoDescriptionModalEl.addEventListener('shown.bs.modal', () => {
         keyboardBaselineHeight = window.visualViewport?.height || window.innerHeight;
         mobileKeyboardVisible = false;
@@ -263,16 +294,17 @@ export class AdminModule {
       });
       demoDescriptionEditor.addEventListener('input', () => {
         if (!activeDemoTextField) return;
-        activeDemoTextField.element.value = demoDescriptionEditor.value;
-        activeDemoTextField.element.dispatchEvent(new Event('input', { bubbles: true }));
+        activeDemoTextField.value = demoDescriptionEditor.value;
+        activeDemoTextField.dispatchEvent(new Event('input', { bubbles: true }));
       });
       demoDescriptionEditor.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.isComposing) {
+        if (event.key === 'Enter' && !event.isComposing && activeDemoTextField?.tagName !== 'TEXTAREA') {
           event.preventDefault();
-          applyDemoTextField();
+          finishTextEntry();
         }
       });
-      document.getElementById('demoDescriptionModalApply')?.addEventListener('click', applyDemoTextField);
+      demoDescriptionModalEl.addEventListener('hidden.bs.modal', resumeParentModal);
+      document.getElementById('demoDescriptionModalApply')?.addEventListener('click', finishTextEntry);
     }
 
     const demoTargetSelect = document.getElementById('demoTargetSelect');
