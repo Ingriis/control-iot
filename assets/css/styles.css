@@ -6389,3 +6389,166 @@ main#main {
   #controlView .demo-progress-heading { font-size: 8px !important; }
   #controlView #demoMovementList > li { padding: 3px 4px !important; font-size: 8px !important; }
 }
+/* Corrección ergonómica: DEMO vuelve debajo de los controles; solo crecen los joysticks. */
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1023px) {
+  #controlView .control-card {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    gap: 4px !important;
+    padding: 3px 6px !important;
+  }
+
+  #controlView .direction-console {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: min(100%, 640px) !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding: 2px !important;
+    gap: 3px !important;
+  }
+
+  #controlView .primary-controls {
+    max-width: min(100%, 640px) !important;
+    margin: 0 auto !important;
+    gap: clamp(5px, 1.2vw, 12px) !important;
+  }
+
+  #controlView .primary-controls > .joystick-wrap,
+  #controlView .primary-controls > .fork-control {
+    flex: 0 0 clamp(112px, 30vh, 142px) !important;
+    width: clamp(112px, 30vh, 142px) !important;
+    height: clamp(112px, 30vh, 142px) !important;
+    min-width: 112px !important;
+    min-height: 112px !important;
+    max-width: 142px !important;
+    max-height: 142px !important;
+  }
+
+  #controlView .joy-base,
+  #controlView .fork-joy-base {
+    width: clamp(96px, 25vh, 116px) !important;
+    height: clamp(96px, 25vh, 116px) !important;
+    max-width: calc(100% - 8px) !important;
+    max-height: calc(100% - 8px) !important;
+  }
+
+  #controlView .demo-side-panel {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 380px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    gap: 2px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  #controlView .demo-control-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) clamp(44px, 6vw, 56px) !important;
+    grid-template-rows: auto !important;
+    width: 100% !important;
+    padding: 0 !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  #controlView .demo-control-panel .action-button {
+    min-height: clamp(24px, 5vh, 28px) !important;
+    height: clamp(24px, 5vh, 28px) !important;
+    font-size: clamp(9px, 1.05vw, 10.5px) !important;
+  }
+
+  #controlView .demo-carousel {
+    min-height: clamp(24px, 5vh, 28px) !important;
+    height: clamp(24px, 5vh, 28px) !important;
+    grid-template-columns: clamp(26px, 3.8vw, 34px) minmax(0, 1fr) clamp(26px, 3.8vw, 34px) !important;
+  }
+
+  #controlView .demo-progress {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: clamp(18px, 3.6vh, 22px) !important;
+    max-height: clamp(18px, 3.6vh, 22px) !important;
+    height: clamp(18px, 3.6vh, 22px) !important;
+    padding: 1px 6px !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 !important;
+    border-radius: 4px !important;
+  }
+
+  #controlView .demo-progress-heading { display: none !important; }
+
+  #controlView #demoMovementList {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #controlView #demoMovementList > li {
+    flex: 0 0 auto !important;
+    padding: 0 4px !important;
+    font-size: clamp(7px, 0.85vw, 8.5px) !important;
+    white-space: nowrap !important;
+    line-height: 1.1 !important;
+    overflow-wrap: normal !important;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 600px) {
+  #controlView .primary-controls > .joystick-wrap,
+  #controlView .primary-controls > .fork-control {
+    flex-basis: clamp(96px, 20vw, 108px) !important;
+    width: clamp(96px, 20vw, 108px) !important;
+    height: clamp(96px, 20vw, 108px) !important;
+    min-width: 96px !important;
+    min-height: 96px !important;
+  }
+  #controlView .joy-base,
+  #controlView .fork-joy-base { width: clamp(84px, 18vw, 94px) !important; height: clamp(84px, 18vw, 94px) !important; }
+  #controlView .primary-controls > .stop-panel { flex-basis: clamp(78px, 16vw, 92px) !important; max-width: 92px !important; }
+}
+
+@media (orientation: landscape) and (max-height: 360px) and (max-width: 1023px) {
+  #controlView .primary-controls > .joystick-wrap,
+  #controlView .primary-controls > .fork-control {
+    flex-basis: clamp(82px, 20vw, 96px) !important;
+    width: clamp(82px, 20vw, 96px) !important;
+    height: clamp(82px, 20vw, 96px) !important;
+    min-width: 82px !important;
+    min-height: 82px !important;
+  }
+  #controlView .joy-base,
+  #controlView .fork-joy-base { width: clamp(78px, 18vw, 90px) !important; height: clamp(78px, 18vw, 90px) !important; }
+}
